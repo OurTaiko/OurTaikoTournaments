@@ -1,6 +1,6 @@
-export type GroupId = "siamese" | "tabby" | "ragdoll";
+import { rosters, resolvePlayer, type GroupId, type Player } from "./players";
+export type { GroupId, Player } from "./players";
 export type Song = { id: string; title: string; stars: number; ura?: boolean };
-export type Player = { id: string; name: string; seed: number };
 export type SongScore = { songId: string; a: number | null; b: number | null };
 export type Match = {
   id: string;
@@ -23,6 +23,38 @@ export type Tournament = {
   updatedAt: string;
   matches: Match[];
 };
+type PlayerRef = Pick<Player, "id" | "seed">;
+export type StoredTournament = Omit<Tournament, "matches"> & {
+  matches: (Omit<Match, "a" | "b"> & {
+    a: PlayerRef | null;
+    b: PlayerRef | null;
+  })[];
+};
+
+// Old snapshots may contain names. Always resolve the current JSON profile by ID.
+export function hydrateTournament(stored: StoredTournament): Tournament {
+  return {
+    ...stored,
+    matches: stored.matches.map((match) => ({
+      ...match,
+      a: match.a ? resolvePlayer(match.a) : null,
+      b: match.b ? resolvePlayer(match.b) : null,
+    })),
+  };
+}
+
+export function tournamentState(tournament: Tournament): StoredTournament {
+  const ref = (player: Player | null): PlayerRef | null =>
+    player ? { id: player.id, seed: player.seed } : null;
+  return {
+    ...tournament,
+    matches: tournament.matches.map((match) => ({
+      ...match,
+      a: ref(match.a),
+      b: ref(match.b),
+    })),
+  };
+}
 export const groups: {
   id: GroupId;
   name: string;
@@ -33,62 +65,6 @@ export const groups: {
     { id: "tabby", name: "狸花组", en: "TABBY", range: "★ 9–10" },
     { id: "ragdoll", name: "布偶组", en: "RAGDOLL", range: "★ 9–10" },
   ];
-const rosters: Record<GroupId, string[]> = {
-  siamese: [
-    "Andywyl",
-    "遗沙",
-    "Aimyon",
-    "菜坤yyd",
-    "hty",
-    "盐汽水",
-    "AKIRO",
-    "眩晕群星",
-    "卡卡",
-    "句号",
-    "FORRRRRCE",
-    "蛋挞汽水",
-    "榕",
-    "栗子",
-    "丰川祥子",
-    "安东",
-  ],
-  tabby: [
-    "6Lwater",
-    "薄利零梦",
-    "bebenk",
-    "传奇牢机长",
-    "泥歌咚",
-    "子和",
-    "Husky",
-    "煎饼狗子",
-    "小新",
-    "磁光",
-    "97",
-    "君子橙",
-    "杏",
-    "Tnxn",
-    "洛天依",
-    "五条闲",
-  ],
-  ragdoll: [
-    "oLaf",
-    "五元",
-    "Buttercake",
-    "好丽友",
-    "dbruce",
-    "社畜桑",
-    "pkdkar",
-    "孫咲钏",
-    "露露",
-    "红豆麻薯派",
-    "WY_Keith",
-    "阿紫",
-    "xs",
-    "路人咚",
-    "yzj",
-    "阿双",
-  ],
-};
 const rawSongs: Record<GroupId, [string, number, boolean?][]> = {
   siamese: [
     ["KOKUSHIN CHRONICLE", 7],
@@ -145,6 +121,14 @@ export const songs = Object.fromEntries(
   ]),
 ) as Record<GroupId, Song[]>;
 export const roundNames = ["16 进 8", "8 进 4", "半决赛", "决赛", "季军赛"];
+export function firstAttack(m: Match): string | null {
+  if (m.round > 1 || m.status === "bye" || !m.a || !m.b) return null;
+  if (!Number.isFinite(m.a.rating) || !Number.isFinite(m.b.rating)) return null;
+  // Ratings use two decimals; compare hundredths to keep the 0.50 boundary exact.
+  const difference = Math.round(m.a.rating * 100) - Math.round(m.b.rating * 100);
+  if (Math.abs(difference) < 50) return null;
+  return difference < 0 ? m.a.id : m.b.id;
+}
 export function totals(m: Match): [number, number] {
   return [
     m.scores.reduce((n, s) => n + (s.a ?? 0), 0),
@@ -167,22 +151,8 @@ export function makeTournament(demo = false): Tournament {
           group: g.id,
           round: r,
           index: i,
-          a:
-            r === 0
-              ? {
-                id: `${g.id}-p${i * 2}`,
-                name: rosters[g.id][i * 2],
-                seed: i * 2 + 1,
-              }
-              : null,
-          b:
-            r === 0
-              ? {
-                id: `${g.id}-p${i * 2 + 1}`,
-                name: rosters[g.id][i * 2 + 1],
-                seed: i * 2 + 2,
-              }
-              : null,
+          a: r === 0 ? { ...rosters[g.id][i * 2] } : null,
+          b: r === 0 ? { ...rosters[g.id][i * 2 + 1] } : null,
           status: "pending",
           winner: null,
           station: "A",

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import PlayerRating from "@/components/player-rating";
 import {
   Check,
   ChevronRight,
@@ -208,6 +209,9 @@ export default function MatchEditor({
         {([0, 1] as const).map((side) => (
           <div className="pick-side" key={side}>
             <h4>{(side === 0 ? match.a : match.b)?.name ?? "等待晋级"}</h4>
+            {(side === 0 ? match.a : match.b) && (
+              <PlayerRating rating={(side === 0 ? match.a : match.b)!.rating} />
+            )}
             {[0, 1].map((i) => (
               <Picker
                 key={i}

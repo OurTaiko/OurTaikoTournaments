@@ -1,0 +1,296 @@
+{
+  "siamese": [
+    {
+      "id": "siamese-p0",
+      "name": "Andywyl",
+      "seed": 1,
+      "rating": 7.5
+    },
+    {
+      "id": "siamese-p1",
+      "name": "遗沙",
+      "seed": 2,
+      "rating": 6.68
+    },
+    {
+      "id": "siamese-p2",
+      "name": "Aimyon",
+      "seed": 3,
+      "rating": 6.14
+    },
+    {
+      "id": "siamese-p3",
+      "name": "菜坤yyd",
+      "seed": 4,
+      "rating": 5.73
+    },
+    {
+      "id": "siamese-p4",
+      "name": "hty",
+      "seed": 5,
+      "rating": 6.73
+    },
+    {
+      "id": "siamese-p5",
+      "name": "盐汽水",
+      "seed": 6,
+      "rating": 4.5
+    },
+    {
+      "id": "siamese-p6",
+      "name": "AKIRO",
+      "seed": 7,
+      "rating": 5.38
+    },
+    {
+      "id": "siamese-p7",
+      "name": "眩晕群星",
+      "seed": 8,
+      "rating": 0.22
+    },
+    {
+      "id": "siamese-p8",
+      "name": "卡卡",
+      "seed": 9,
+      "rating": 7.14
+    },
+    {
+      "id": "siamese-p9",
+      "name": "句号",
+      "seed": 10,
+      "rating": 3.0
+    },
+    {
+      "id": "siamese-p10",
+      "name": "FORRRRRCE",
+      "seed": 11,
+      "rating": 5.78
+    },
+    {
+      "id": "siamese-p11",
+      "name": "蛋挞汽水",
+      "seed": 12,
+      "rating": 5.81
+    },
+    {
+      "id": "siamese-p12",
+      "name": "榕",
+      "seed": 13,
+      "rating": 7.09
+    },
+    {
+      "id": "siamese-p13",
+      "name": "栗子",
+      "seed": 14,
+      "rating": 1.76
+    },
+    {
+      "id": "siamese-p14",
+      "name": "丰川祥子",
+      "seed": 15,
+      "rating": 6.67
+    },
+    {
+      "id": "siamese-p15",
+      "name": "安东",
+      "seed": 16,
+      "rating": 4.8
+    }
+  ],
+  "tabby": [
+    {
+      "id": "tabby-p0",
+      "name": "6Lwater",
+      "seed": 1,
+      "rating": 10.63
+    },
+    {
+      "id": "tabby-p1",
+      "name": "薄利零梦",
+      "seed": 2,
+      "rating": 9.85
+    },
+    {
+      "id": "tabby-p2",
+      "name": "bebenk",
+      "seed": 3,
+      "rating": 10.42
+    },
+    {
+      "id": "tabby-p3",
+      "name": "传奇牢机长",
+      "seed": 4,
+      "rating": 7.76
+    },
+    {
+      "id": "tabby-p4",
+      "name": "泥歌咚",
+      "seed": 5,
+      "rating": 10.52
+    },
+    {
+      "id": "tabby-p5",
+      "name": "子和",
+      "seed": 6,
+      "rating": 9.0
+    },
+    {
+      "id": "tabby-p6",
+      "name": "Husky",
+      "seed": 7,
+      "rating": 9.4
+    },
+    {
+      "id": "tabby-p7",
+      "name": "煎饼狗子",
+      "seed": 8,
+      "rating": 9.18
+    },
+    {
+      "id": "tabby-p8",
+      "name": "小新",
+      "seed": 9,
+      "rating": 10.68
+    },
+    {
+      "id": "tabby-p9",
+      "name": "磁光",
+      "seed": 10,
+      "rating": 8.94
+    },
+    {
+      "id": "tabby-p10",
+      "name": "97",
+      "seed": 11,
+      "rating": 9.53
+    },
+    {
+      "id": "tabby-p11",
+      "name": "君子橙",
+      "seed": 12,
+      "rating": 8.56
+    },
+    {
+      "id": "tabby-p12",
+      "name": "杏",
+      "seed": 13,
+      "rating": 10.54
+    },
+    {
+      "id": "tabby-p13",
+      "name": "Tnxn",
+      "seed": 14,
+      "rating": 8.2
+    },
+    {
+      "id": "tabby-p14",
+      "name": "洛天依",
+      "seed": 15,
+      "rating": 10.4
+    },
+    {
+      "id": "tabby-p15",
+      "name": "五条闲",
+      "seed": 16,
+      "rating": 9.49
+    }
+  ],
+  "ragdoll": [
+    {
+      "id": "ragdoll-p0",
+      "name": "oLaf",
+      "seed": 1,
+      "rating": 11.73
+    },
+    {
+      "id": "ragdoll-p1",
+      "name": "五元",
+      "seed": 2,
+      "rating": 11.22
+    },
+    {
+      "id": "ragdoll-p2",
+      "name": "Buttercake",
+      "seed": 3,
+      "rating": 10.87
+    },
+    {
+      "id": "ragdoll-p3",
+      "name": "好丽友",
+      "seed": 4,
+      "rating": 11.4
+    },
+    {
+      "id": "ragdoll-p4",
+      "name": "dbruce",
+      "seed": 5,
+      "rating": 11.77
+    },
+    {
+      "id": "ragdoll-p5",
+      "name": "社畜桑",
+      "seed": 6,
+      "rating": 11.06
+    },
+    {
+      "id": "ragdoll-p6",
+      "name": "pkdkar",
+      "seed": 7,
+      "rating": 11.64
+    },
+    {
+      "id": "ragdoll-p7",
+      "name": "孫咲钏",
+      "seed": 8,
+      "rating": 11.22
+    },
+    {
+      "id": "ragdoll-p8",
+      "name": "露露",
+      "seed": 9,
+      "rating": 11.84
+    },
+    {
+      "id": "ragdoll-p9",
+      "name": "红豆麻薯派",
+      "seed": 10,
+      "rating": 11.03
+    },
+    {
+      "id": "ragdoll-p10",
+      "name": "WY_Keith",
+      "seed": 11,
+      "rating": 10.68
+    },
+    {
+      "id": "ragdoll-p11",
+      "name": "阿紫",
+      "seed": 12,
+      "rating": 11.11
+    },
+    {
+      "id": "ragdoll-p12",
+      "name": "xs",
+      "seed": 13,
+      "rating": 12.05
+    },
+    {
+      "id": "ragdoll-p13",
+      "name": "路人咚",
+      "seed": 14,
+      "rating": 11.01
+    },
+    {
+      "id": "ragdoll-p14",
+      "name": "yzj",
+      "seed": 15,
+      "rating": 11.71
+    },
+    {
+      "id": "ragdoll-p15",
+      "name": "阿双",
+      "seed": 16,
+      "rating": 11.08
+    }
+  ]
+}

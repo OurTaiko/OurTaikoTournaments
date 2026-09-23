@@ -1,6 +1,12 @@
 import { runtime } from "@/lib/runtime";
 export { runtime } from "@/lib/runtime";
-import { makeTournament, type Tournament } from "./tournament";
+import {
+  makeTournament,
+  hydrateTournament,
+  tournamentState,
+  type StoredTournament,
+  type Tournament,
+} from "./tournament";
 import { RuleError } from "./rules";
 export function db() {
   return runtime.DB;
@@ -20,14 +26,14 @@ export async function readTournament() {
       .prepare(
         "INSERT OR IGNORE INTO tournaments (id, revision, body) VALUES (?, ?, ?)",
       )
-      .bind(id, 0, JSON.stringify(initial))
+      .bind(id, 0, JSON.stringify(tournamentState(initial)))
       .run();
     row = await db()
       .prepare("SELECT body FROM tournaments WHERE id = ?")
       .bind(id)
       .first<{ body: string }>();
   }
-  return JSON.parse(row!.body) as Tournament;
+  return hydrateTournament(JSON.parse(row!.body) as StoredTournament);
 }
 export async function writeTournament(next: Tournament, previous: number) {
   const result = await db()
@@ -35,7 +41,7 @@ export async function writeTournament(next: Tournament, previous: number) {
       "UPDATE tournaments SET body = ?, revision = ? WHERE id = ? AND revision = ?",
     )
     .bind(
-      JSON.stringify(next),
+      JSON.stringify(tournamentState(next)),
       next.revision,
       isDemo() ? "demo" : "edition-1",
       previous,

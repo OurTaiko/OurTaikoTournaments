@@ -11,6 +11,7 @@ import {
   Music2,
   GitBranch,
   ShieldCheck,
+  Flag,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -21,6 +22,7 @@ import {
   SheetHeader,
 } from "@/components/ui/sheet";
 import MatchEditor from "@/components/match-editor";
+import PlayerRating from "@/components/player-rating";
 import { toast, Toaster } from "sonner";
 import type { Viewer } from "@/lib/auth";
 import {
@@ -28,6 +30,7 @@ import {
   songs,
   roundNames,
   makeTournament,
+  firstAttack,
   totals,
   songName,
   type GroupId,
@@ -209,6 +212,7 @@ export default function Home() {
     return () => lifecycle.abort();
   }, []);
   const matches = tournament.matches.filter((m) => m.group === group);
+  const firstAttacker = selected ? firstAttack(selected) : null;
   const live = matches.filter((m) => m.status === "live");
   const completed = matches.filter(
     (m) => m.status === "complete" || m.status === "bye",
@@ -250,7 +254,10 @@ export default function Home() {
             className={`player ${m.winner === m[side]?.id ? "winner" : ""}`}
           >
             <span className="seed">{m[side]?.seed ?? "—"}</span>
-            <span className="player-name">{m[side]?.name ?? "等待晋级"}</span>
+            <span className="player-profile">
+              <span className="player-name">{m[side]?.name ?? "等待晋级"}</span>
+              {m[side] && <PlayerRating rating={m[side].rating} />}
+            </span>
             <span className="score">
               {m.scores.length ? score[i].toLocaleString() : "—"}
             </span>
@@ -416,6 +423,7 @@ export default function Home() {
                             {m.a?.name.slice(0, 1).toUpperCase()}
                           </span>
                           <b>{m.a?.name}</b>
+                          {m.a && <PlayerRating rating={m.a.rating} />}
                           <span className="live-total">
                             {totals(m)[0].toLocaleString()}
                           </span>
@@ -426,6 +434,7 @@ export default function Home() {
                             {m.b?.name.slice(0, 1).toUpperCase()}
                           </span>
                           <b>{m.b?.name}</b>
+                          {m.b && <PlayerRating rating={m.b.rating} />}
                           <span className="live-total">
                             {totals(m)[1].toLocaleString()}
                           </span>
@@ -580,7 +589,7 @@ export default function Home() {
                 <span>03</span>
                 <h3>每一分，都算数</h3>
                 <p>
-                  16 进 8 和 8 进 4 中，rating 低于对手超过 0.5
+                  16 进 8 和 8 进 4 中，rating 低于对手 0.50 及以上
                   的选手可先攻，否则猜拳决定。16 进 8
                   至半决赛计算两首总分。季军赛、决赛增加一首指定曲。总分相同则抽取额外曲目加赛。
                 </p>
@@ -659,10 +668,21 @@ export default function Home() {
           </SheetHeader>
           {selected && (
             <div className="sheet-body">
-              <h2>
-                {selected.a?.name ?? "待定"} <small>VS</small>{" "}
-                {selected.b?.name ?? "待定"}
-              </h2>
+              <div className="match-contestants">
+                {(["a", "b"] as const).map((side) => (
+                  <div key={side}>
+                    <h2>{selected[side]?.name ?? "待定"}</h2>
+                    {selected[side] && firstAttacker === selected[side].id && (
+                      <span className="first-attack" title="Rating 低于对手至少 0.50，可先攻">
+                        <Flag size={12} aria-hidden="true" />先攻
+                      </span>
+                    )}
+                    {selected[side] && <PlayerRating rating={selected[side].rating} />}
+                  </div>
+                ))}
+                <span className="contestants-vs">VS</span>
+              </div>
+              <p className="rating-source">RT 为报名时的 rating v2</p>
               {user?.admin && manage ? (
                 <MatchEditor
                   key={selected.id + "-" + editorRevision}
