@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {build} from 'esbuild';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {spawnSync} from 'node:child_process';
+const dir=await mkdtemp(tmpdir()+'/hachicats-storage-');
+await build({entryPoints:['lib/runtime.ts'],bundle:true,platform:'node',format:'esm',outfile:dir+'/runtime.mjs'});
+const env={...process.env,DATABASE_PATH:dir+'/test.sqlite'};
+const run=(code)=>{const p=spawnSync(process.execPath,['--input-type=module','-e',`import {runtime} from '${dir}/runtime.mjs'; const db=runtime.DB; ${code}`],{env,encoding:'utf8'});assert.equal(p.status,0,p.stderr);return p.stdout.trim();};
+assert.equal(run(`await db.prepare('INSERT INTO tournaments VALUES (?,?,?)').bind('test',0,'initial').run(); console.log((await db.prepare('SELECT body FROM tournaments WHERE id=?').bind('test').first()).body)`),'initial');
+assert.equal(run(`const a=await db.prepare('UPDATE tournaments SET revision=?,body=? WHERE id=? AND revision=?').bind(1,'updated','test',0).run(); const b=await db.prepare('UPDATE tournaments SET revision=?,body=? WHERE id=? AND revision=?').bind(1,'stale','test',0).run();console.log(a.meta.changes,b.meta.changes,(await db.prepare('SELECT body FROM tournaments WHERE id=?').bind('test').first()).body)`),'1 0 updated');
+assert.equal(run(`console.log((await db.prepare('SELECT body FROM tournaments WHERE id=?').bind('test').first()).body)`),'updated');
+await rm(dir,{recursive:true}); console.log('PASS SQLite survives process restart; stale compare-and-swap changes 0 rows.');

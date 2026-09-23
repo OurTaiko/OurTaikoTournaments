@@ -16,7 +16,8 @@
     "test:api": "node tests/api.test.mjs",
     "typecheck": "tsc --noEmit",
     "build:server": "next build --webpack",
-    "start:server": "node .next/standalone/server.js"
+    "start:server": "node .next/standalone/server.js",
+    "test:storage": "node tests/storage.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

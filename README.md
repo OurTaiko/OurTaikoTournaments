@@ -108,3 +108,26 @@ curl --fail http://127.0.0.1:5188/api/health
 - 更新前备份数据，建议使用 SQLite online backup；普通复制数据库时应先停止容器并同时备份整个数据卷。
 - 本地生产构建检查：`npm run build:server`。
 - 仓库私有，含未公布指定曲；不要改为公开仓库。
+
+### 当前服务器与后续更新
+
+GitHub 私有仓库：`KirisameVanilla/HachiCats`；服务器 SSH 预设 `ourtaiko-prod`，项目目录 `/opt/hachicats`，容器名 `hachicats`。代码以与 GitHub 相同的 Git commit 通过 SSH 传送，服务器不保存个人 GitHub token。
+
+本机修改并提交、推送 GitHub 后，可用 Git bundle 更新服务器：
+
+```sh
+git push origin main
+git bundle create /tmp/hachicats-release.bundle main
+scp /tmp/hachicats-release.bundle ourtaiko-prod:/home/kv/
+ssh ourtaiko-prod
+cd /opt/hachicats
+git fetch /home/kv/hachicats-release.bundle main
+git merge --ff-only FETCH_HEAD
+# 更新前备份 /app/data 中的 SQLite 数据库，然后构建：
+sudo docker compose up -d --build
+curl --fail http://127.0.0.1:5188/api/health
+```
+
+上线已执行 SQLite 完整性检查，并在数据卷中保存初始备份 `/app/data/backups/initial-deployment.sqlite`。备份包含登录数据，应与数据库使用相同的访问控制，且不能提交仓库。
+
+`npm run test:storage` 验证 SQLite 在进程重启后保留数据，以及过期版本更新不能覆盖新赛况。
