@@ -123,7 +123,7 @@ const rawSongs: Record<GroupId, [string, number, boolean?][]> = {
     ["Heaven’s Rider", 9],
     ["卡恰咚2000", 9],
     ["IOSYS Autumn Carnivorous Festival 2014", 9],
-    ["赫喜毕吒蜘补", 10],
+    ["恭喜毕业典礼", 10],
     ["Chronomia", 10],
     ["Dogbite", 10],
     ["Evidence of evil", 10],
