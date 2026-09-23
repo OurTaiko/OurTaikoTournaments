@@ -184,7 +184,7 @@ export default function Home() {
           name: "read_hachicats_tournament",
           title: "读取八猫杯公开赛况",
           description:
-            "读取当前公开的三组比赛状态、比分与晋级对阵，不包含暗选草稿。",
+            "读取当前公开的三组比赛状态、比分与晋级对阵。",
           inputSchema: {
             type: "object",
             properties: {},
@@ -570,7 +570,7 @@ export default function Home() {
               </article>
               <article>
                 <span>02</span>
-                <h3>暗选两首，禁用一首</h3>
+                <h3>选择两首，禁用一首</h3>
                 <p>
                   双方各选 2 首，再各禁用对手的 1
                   首。此前选择并游玩过的曲目不可再选；允许重复禁用。重复选曲由裁判从未禁用曲目中抽签补足。

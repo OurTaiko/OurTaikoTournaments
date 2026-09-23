@@ -4,7 +4,7 @@ import {
   Check,
   ChevronRight,
   Shuffle,
-  LockKeyhole,
+  Music2,
   Radio,
   Trophy,
   Save,
@@ -195,8 +195,8 @@ export default function MatchEditor({
   return (
     <div className="editor">
       <div className="private-note">
-        <LockKeyhole size={15} />
-        <span>选曲草稿仅主办方可见，开始比赛后公开。</span>
+        <Music2 size={15} />
+        <span>双方各选择两首曲目，再各禁用对手一首。</span>
       </div>
       <div className="form-heading">
         <h3>
@@ -336,7 +336,7 @@ export default function MatchEditor({
               onClick={() => submit({ type: "draft" })}
             >
               <Save size={16} />
-              保存暗选草稿
+              保存选曲
             </button>
             <button
               className="primary-button"
