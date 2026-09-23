@@ -29,15 +29,15 @@ export const groups: {
   en: string;
   range: string;
 }[] = [
-  { id: "siamese", name: "暹罗组", en: "SIAMESE", range: "★ 7–9" },
-  { id: "tabby", name: "狸花组", en: "TABBY", range: "★ 9–10" },
-  { id: "ragdoll", name: "布偶组", en: "RAGDOLL", range: "★ 9–10" },
-];
+    { id: "siamese", name: "暹罗组", en: "SIAMESE", range: "★ 7–9" },
+    { id: "tabby", name: "狸花组", en: "TABBY", range: "★ 9–10" },
+    { id: "ragdoll", name: "布偶组", en: "RAGDOLL", range: "★ 9–10" },
+  ];
 const rosters: Record<GroupId, string[]> = {
   siamese: [
     "Andywyl",
     "遗沙",
-    "Ainyon",
+    "Aimyon",
     "菜坤yyd",
     "hty",
     "盐汽水",
@@ -49,15 +49,15 @@ const rosters: Record<GroupId, string[]> = {
     "蛋挞汽水",
     "榕",
     "栗子",
-    "圭川祥子",
+    "丰川祥子",
     "安东",
   ],
   tabby: [
     "6Lwater",
     "薄利零梦",
-    "hehenk",
+    "bebenk",
     "传奇牢机长",
-    "泥凯咚",
+    "泥歌咚",
     "子和",
     "Husky",
     "煎饼狗子",
@@ -78,7 +78,7 @@ const rosters: Record<GroupId, string[]> = {
     "dbruce",
     "社畜桑",
     "pkdkar",
-    "孙咲刬",
+    "孫咲钏",
     "露露",
     "红豆麻薯派",
     "WY_Keith",
@@ -170,18 +170,18 @@ export function makeTournament(demo = false): Tournament {
           a:
             r === 0
               ? {
-                  id: `${g.id}-p${i * 2}`,
-                  name: rosters[g.id][i * 2],
-                  seed: i * 2 + 1,
-                }
+                id: `${g.id}-p${i * 2}`,
+                name: rosters[g.id][i * 2],
+                seed: i * 2 + 1,
+              }
               : null,
           b:
             r === 0
               ? {
-                  id: `${g.id}-p${i * 2 + 1}`,
-                  name: rosters[g.id][i * 2 + 1],
-                  seed: i * 2 + 2,
-                }
+                id: `${g.id}-p${i * 2 + 1}`,
+                name: rosters[g.id][i * 2 + 1],
+                seed: i * 2 + 2,
+              }
               : null,
           status: "pending",
           winner: null,
