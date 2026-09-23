@@ -609,7 +609,7 @@ export default function Home() {
             <ShieldCheck size={34} />
             <h2>主办方工作台</h2>
             <p>
-              使用 OurTaiko 账号登录。当前仅 kirisamevanilla 拥有赛事管理权限。
+              使用 OurTaiko 账号登录。已获主办方授权的账号可管理赛事。
             </p>
             <a className="primary-button" href="/api/auth/login">
               使用 OurTaiko 登录 <ArrowUpRight size={16} />

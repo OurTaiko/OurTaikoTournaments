@@ -1,6 +1,7 @@
 import * as oidc from "openid-client";
 import { db, runtime, isDemo } from "./store";
 import { RuleError } from "./rules";
+import { resolveAdmin } from "./admins";
 type AuthSession = {
   kind: "user" | "demo";
   sub: string;
@@ -104,16 +105,11 @@ export async function viewer(req: Request): Promise<Viewer | null> {
     }
     throw new RuleError("暂时无法向 OurTaiko 验证登录状态，请稍后重试。", 503);
   }
-  const admin = await db()
-    .prepare(
-      "SELECT subject FROM admins WHERE username = ? AND issuer = ? AND subject = ?",
-    )
-    .bind(
-      runtime.ADMIN_USERNAME || "kirisamevanilla",
-      runtime.SSO_ISSUER,
-      s.sub,
-    )
-    .first();
+  const admin = await resolveAdmin(db(), runtime, {
+    username: String(info.preferred_username || ""),
+    subject: s.sub,
+    issuer: runtime.SSO_ISSUER,
+  });
   return {
     name: String(info.nickname || info.preferred_username || s.name),
     username: String(info.preferred_username || s.username),
@@ -183,14 +179,11 @@ export async function callback(req: Request) {
   if (!claims?.sub) throw new RuleError("登录身份无效。");
   const info = await oidc.fetchUserInfo(c, tokens.access_token, claims.sub);
   const username = String(info.preferred_username || "");
-  // One-time binding from the provider's immutable login name to its stable subject.
-  if (username === (runtime.ADMIN_USERNAME || "kirisamevanilla"))
-    await db()
-      .prepare(
-        "INSERT OR IGNORE INTO admins (username, subject, issuer) VALUES (?, ?, ?)",
-      )
-      .bind(username, claims.sub, runtime.SSO_ISSUER)
-      .run();
+  await resolveAdmin(db(), runtime, {
+    username,
+    subject: claims.sub,
+    issuer: runtime.SSO_ISSUER,
+  });
   const lifetime = Math.max(1, Math.min(tokens.expires_in ?? 3600, 3600));
   const id = await saveSession(
     {

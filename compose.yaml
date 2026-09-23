@@ -12,7 +12,7 @@ services:
       DEMO_MODE: "false"
       APP_ORIGIN: https://hachicats.ourtaiko.org
       SSO_ISSUER: https://sso.ourtaiko.org
-      ADMIN_USERNAME: kirisamevanilla
+      ADMIN_USERNAMES: kirisamevanilla,grace0512,Touka16
       DATABASE_PATH: /app/data/hachicats.sqlite
     volumes:
       - hachicats-data:/app/data

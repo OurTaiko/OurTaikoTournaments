@@ -55,7 +55,7 @@ npm run dev
 
 密钥仅存本地 `.dev.vars`，未写入源码或前端。使用 `openid-client` 实现 Authorization Code + S256 PKCE、浏览器绑定的 state、nonce、RS256 签名 / issuer / audience / 有效期校验和 UserInfo subject 一致性检查。
 
-正式管理员只允许 SSO 验证后的登录名 `kirisamevanilla`。首次登录将其绑定到稳定的 `(issuer, sub)`；后续根据稳定 ID 验权，不按昵称判定。童话没有被授予权限。SSO 本机开发库没有用户的正式账号，不能把生产账号密码误认为本地账号凭证。
+正式管理员通过 `ADMIN_USERNAMES` 配置，当前为 `kirisamevanilla,grace0512,Touka16`。填写逗号分隔、大小写准确的 SSO 登录用户名，不按昵称判定。首次验证登录身份时将用户名绑定到稳定的 `(issuer, sub)`，绑定不会被同名的新账号覆盖。每次操作都检查当前管理员名单；移除名字即撤销权限。兼容旧的 `ADMIN_USERNAME` 单用户配置，但新配置优先，明确设置为空则禁用全部管理员。SSO 本机开发库没有用户的正式账号，不能把生产账号密码误认为本地账号凭证。
 
 每次受保护操作重新调用 UserInfo；上游 token 撤销后本站拒绝操作。登录会话不超过 access token 有效期；退出会清理本地会话并尝试撤销上游 token。
 
@@ -86,7 +86,7 @@ npm run build
 
 ## 本轮 demo 的边界
 
-已确认赛果暂不支持撤销 / 改判；名单调整、现场替补、审计日志和管理员扩展留待下一轮确认需求。图片中的少数字符按原图人工录入，正式比赛前需核对选手名和曲名。正式域名为 https://hachicats.ourtaiko.org；手机适配已在 390px 视口检查。
+已确认赛果暂不支持撤销 / 改判；名单调整、现场替补、审计日志留待下一轮确认需求。图片中的少数字符按原图人工录入，正式比赛前需核对选手名和曲名。正式域名为 https://hachicats.ourtaiko.org；手机适配已在 390px 视口检查。
 
 ## 服务器部署（1Panel）
 
@@ -131,3 +131,7 @@ curl --fail http://127.0.0.1:5188/api/health
 上线已执行 SQLite 完整性检查，并在数据卷中保存初始备份 `/app/data/backups/initial-deployment.sqlite`。备份包含登录数据，应与数据库使用相同的访问控制，且不能提交仓库。
 
 `npm run test:storage` 验证 SQLite 在进程重启后保留数据，以及过期版本更新不能覆盖新赛况。
+
+### 管理员配置
+
+在服务器 `/opt/hachicats/compose.yaml` 的 `environment` 中修改 `ADMIN_USERNAMES`，然后运行 `sudo docker compose up -d`。当前三位管理员是 `kirisamevanilla`、`grace0512`、`Touka16`。新管理员用自己的 OurTaiko 账号登录即可；已登录的用户刷新页面即可重新验证权限。SSO 后台的 Application 所有者、工作人员或超级用户标记不影响本站权限。
