@@ -37,20 +37,14 @@ export function sessionId(req: Request) {
 }
 export async function saveSession(body: AuthSession | Attempt, seconds = 3600) {
   const id = oidc.randomState();
-  await db()
-    .prepare("INSERT INTO sessions (id, body, expires) VALUES (?, ?, ?)")
-    .bind(id, JSON.stringify(body), Date.now() + seconds * 1000)
-    .run();
+  await db().saveSession({ id, body: JSON.stringify(body), expires: Date.now() + seconds * 1000 });
   return id;
 }
 export async function removeSession(id: string) {
-  await db().prepare("DELETE FROM sessions WHERE id = ?").bind(id).run();
+  await db().deleteSession(id);
 }
 async function readSession(req: Request) {
-  const row = await db()
-    .prepare("SELECT body FROM sessions WHERE id = ? AND expires > ?")
-    .bind(sessionId(req), Date.now())
-    .first<{ body: string }>();
+  const row = await db().getSession(sessionId(req), Date.now());
   return row ? (JSON.parse(row.body) as AuthSession | Attempt) : null;
 }
 export async function config() {
@@ -160,11 +154,8 @@ export async function callback(req: Request) {
   const attempt = await readSession(req);
   if (!attempt || attempt.kind !== "attempt")
     throw new RuleError("登录请求已失效，请重新登录。");
-  const consumed = await db()
-    .prepare("DELETE FROM sessions WHERE id = ?")
-    .bind(sessionId(req))
-    .run();
-  if (!consumed.meta.changes) throw new RuleError("此登录回调已使用。");
+  const consumed = await db().deleteSession(sessionId(req));
+  if (!consumed) throw new RuleError("此登录回调已使用。");
   const c = await config();
   // Reconstruct the public callback behind the trusted reverse proxy.
   const callbackUrl = new URL("/api/auth/callback", runtime.APP_ORIGIN);

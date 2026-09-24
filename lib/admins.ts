@@ -16,13 +16,8 @@ export async function resolveAdmin(
   const names = adminUsernames(config);
   if (!names.length || !identity.subject || !identity.issuer) return false;
   if (names.includes(identity.username)) {
-    await database.prepare(
-      "INSERT OR IGNORE INTO admins (username, subject, issuer) VALUES (?, ?, ?)",
-    ).bind(identity.username, identity.subject, identity.issuer).run();
+    await database.bindAdmin(identity);
   }
   // Existing bindings cannot be reassigned by a renamed/recreated SSO account.
-  const bound = await database.prepare(
-    `SELECT subject FROM admins WHERE username IN (${names.map(() => "?").join(",")}) AND issuer = ? AND subject = ?`,
-  ).bind(...names, identity.issuer, identity.subject).first();
-  return !!bound;
+  return database.hasAdmin(names, identity.issuer, identity.subject);
 }

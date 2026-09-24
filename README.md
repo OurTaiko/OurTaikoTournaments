@@ -1,6 +1,6 @@
 # HachiCats · 第一届八猫杯
 
-手机优先的赛事网站。正式部署使用 Next.js / Node.js 24、SQLite 持久化与 OurTaiko SSO；本地 Vinext / D1 demo 仍可运行。
+手机优先的赛事网站。正式部署使用 Vercel（Next.js / Node.js 24）与 MongoDB Atlas 持久化，OurTaiko SSO 保持原服务。本地 Node / SQLite 和 Vinext / D1 demo 仍可运行。
 
 ## 现在查看
 
@@ -61,7 +61,7 @@ npm run dev
 
 每次受保护操作重新调用 UserInfo；上游 token 撤销后本站拒绝操作。登录会话不超过 access token 有效期；退出会清理本地会话并尝试撤销上游 token。
 
-正式 SSO 已登记 HachiCats，回调为 `https://hachicats.ourtaiko.org/api/auth/callback`。客户端凭证只保存在服务器的 `.env.production`，不进入 GitHub、Docker 构建上下文或前端。正式环境 `DEMO_MODE=false`。
+正式 SSO 已登记 HachiCats，回调为 `https://hachicats.ourtaiko.org/api/auth/callback`。客户端凭证保存在 Vercel 的生产环境变量中，不进入 GitHub 或前端。旧服务器的 `.env.production` 仅用于回滚备份。正式环境 `DEMO_MODE=false`。
 
 `DEMO_MODE=false` 使用独立的 `edition-1` 数据记录，初始比赛全部待开始，不复用演示赛果。
 
@@ -154,3 +154,32 @@ curl --fail http://127.0.0.1:5188/api/health
 ### 管理员配置
 
 在服务器 `/opt/hachicats/compose.yaml` 的 `environment` 中修改 `ADMIN_USERNAMES`，然后运行 `sudo docker compose up -d`。当前三位管理员是 `kirisamevanilla`、`grace0512`、`Touka16`。新管理员用自己的 OurTaiko 账号登录即可；已登录的用户刷新页面即可重新验证权限。SSO 后台的 Application 所有者、工作人员或超级用户标记不影响本站权限。
+
+## Vercel + MongoDB Atlas
+
+Vercel 项目 `vanillaaaa/hachicats` 连接 GitHub 主分支，使用 `vercel.json` 中的 `npm run build:server` 构建。后端区域 `hnd1` 对应 Atlas 东京集群。前端和 API 在同一项目部署。
+
+生产环境配置：
+
+- `MONGODB_URI`：专用 `hachicats_app` 用户的连接字符串，保存为 Secret。
+- `MONGODB_DB=hachicats`，该用户只允许读写此库。
+- `APP_ORIGIN=https://hachicats.ourtaiko.org`、`DEMO_MODE=false`。
+- `SSO_ISSUER=https://sso.ourtaiko.org`、既有 `SSO_CLIENT_ID`、`SSO_CLIENT_SECRET`（Secret）。
+- `ADMIN_USERNAMES=kirisamevanilla,grace0512,Touka16`。
+
+不要把生产数据库或 SSO 密钥复制到 Preview 环境。Vercel 缺少 MongoDB 配置时会拒绝提供服务，不会回退到临时 SQLite。正式 MongoDB 缺少赛事记录时也不会自动生成空赛况，必须先迁移已有数据。
+
+MongoDB 的 `tournaments`、`admins`、`sessions` 分别保存赛况、不可重新绑定的管理员身份及有期限的会话。并发录分通过 revision 原子比较更新，避免多位工作人员互相覆盖。会话读取始终校验有效期，`sessions_expiry` TTL 索引负责清理。每个后端实例复用最多 5 条连接。
+
+迁移工具（包含登录凭证的备份必须放在私有、被 Git 忽略的目录中）：
+
+```sh
+node scripts/export-sqlite.mjs <旧数据库文件> <私有快照.json>
+node --env-file=<私有MongoDB配置> scripts/import-mongodb.mjs <私有快照.json> --apply
+node --env-file=<私有MongoDB配置> scripts/import-mongodb.mjs <私有快照.json> --verify
+node --env-file=<私有MongoDB配置> tests/mongodb.test.mjs
+```
+
+导出使用一致性读事务；导入先校验所有记录，拒绝覆盖冲突记录。导入时暂停旧站点写入，验证后再切换流量，防止两个数据库出现不同赛况。保留原始快照和旧 SQLite 卷作为回滚备份；上线后的新成绩必须另外导出，不能直接回滚到旧数据。集成测试只清理自己创建的唯一命名记录。
+
+Atlas 网络访问当前使用经授权的 `0.0.0.0/0` 规则，适配 Hobby 动态出口；连接仍需 TLS 与专用账号密码。SSO 服务、OAuth 应用和回调地址无需因本次托管迁移而改变。

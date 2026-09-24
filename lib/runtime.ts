@@ -2,6 +2,8 @@ import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import type { Database, PreparedQuery } from "./database";
+import { sqlDatabase } from "./sql-database";
+import { database as mongo } from "./mongodb";
 
 let connection: DatabaseSync | undefined;
 function sqlite() {
@@ -25,7 +27,12 @@ function query(sql: string, values: (string | number | null)[] = []): PreparedQu
     async run() { return { meta: { changes: Number(sqlite().prepare(sql).run(...values).changes) } }; },
   };
 }
-const database: Database = { prepare: (sql) => query(sql) };
+const local = sqlDatabase({ prepare: (sql) => query(sql) });
+function database(): Database {
+  if (process.env.MONGODB_URI) return mongo;
+  if (process.env.VERCEL) throw new Error("MongoDB must be configured on Vercel");
+  return local;
+}
 export const runtime = new Proxy({} as Record<string, string> & { DB: Database }, {
-  get: (_, key) => key === "DB" ? database : process.env[String(key)],
+  get: (_, key) => key === "DB" ? database() : process.env[String(key)],
 });

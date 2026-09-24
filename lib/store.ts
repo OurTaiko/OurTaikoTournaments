@@ -16,38 +16,23 @@ export function isDemo() {
 }
 export async function readTournament() {
   const id = isDemo() ? "demo" : "edition-1";
-  let row = await db()
-    .prepare("SELECT body FROM tournaments WHERE id = ?")
-    .bind(id)
-    .first<{ body: string }>();
+  let row = await db().getTournament(id);
   if (!row) {
+    if (runtime.MONGODB_URI && !isDemo())
+      throw new Error("Production tournament must be imported before serving requests");
     const initial = makeTournament(isDemo());
-    await db()
-      .prepare(
-        "INSERT OR IGNORE INTO tournaments (id, revision, body) VALUES (?, ?, ?)",
-      )
-      .bind(id, 0, JSON.stringify(tournamentState(initial)))
-      .run();
-    row = await db()
-      .prepare("SELECT body FROM tournaments WHERE id = ?")
-      .bind(id)
-      .first<{ body: string }>();
+    await db().createTournament({ id, revision: 0, body: JSON.stringify(tournamentState(initial)) });
+    row = await db().getTournament(id);
   }
   return hydrateTournament(JSON.parse(row!.body) as StoredTournament);
 }
 export async function writeTournament(next: Tournament, previous: number) {
-  const result = await db()
-    .prepare(
-      "UPDATE tournaments SET body = ?, revision = ? WHERE id = ? AND revision = ?",
-    )
-    .bind(
-      JSON.stringify(tournamentState(next)),
-      next.revision,
-      isDemo() ? "demo" : "edition-1",
-      previous,
-    )
-    .run();
-  if (!result.meta.changes)
+  const updated = await db().updateTournament({
+    id: isDemo() ? "demo" : "edition-1",
+    body: JSON.stringify(tournamentState(next)),
+    revision: next.revision,
+  }, previous);
+  if (!updated)
     throw new RuleError("赛况刚被另一位工作人员更新，请刷新比赛后重试。", 409);
 }
 export function errorResponse(e: unknown) {

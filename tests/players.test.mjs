@@ -7,6 +7,8 @@ import { pathToFileURL } from "node:url";
 const dir = await mkdtemp(tmpdir() + "/hachicats-players-");
 process.env.DATABASE_PATH = dir + "/test.sqlite";
 process.env.DEMO_MODE = "false";
+process.env.MONGODB_URI = "";
+process.env.VERCEL = "";
 try {
   await build({
     stdin: {
@@ -15,11 +17,11 @@ try {
     },
     bundle: true,
     platform: "node",
-    format: "esm",
-    outfile: dir + "/players.mjs",
+    format: "cjs",
+    outfile: dir + "/players.cjs",
   });
   const { rosters, makeTournament, hydrateTournament, tournamentState, readTournament, writeTournament, db, applyAction, publicTournament, firstAttack } =
-    await import(pathToFileURL(dir + "/players.mjs").href);
+    (await import(pathToFileURL(dir + "/players.cjs").href)).default;
   const profiles = Object.values(rosters).flat();
   assert.equal(profiles.length, 48);
   assert.equal(new Set(profiles.map((p) => p.id)).size, 48);
@@ -63,8 +65,7 @@ try {
     match[side].name = "旧的错误姓名";
     delete match[side].rating;
   }
-  await db().prepare("INSERT INTO tournaments (id, revision, body) VALUES (?, ?, ?)")
-    .bind("edition-1", legacy.revision, JSON.stringify(legacy)).run();
+  await db().createTournament({ id: "edition-1", revision: legacy.revision, body: JSON.stringify(legacy) });
   const current = await readTournament();
   assert.deepEqual(tournamentState(current), tournamentState(legacy));
   for (const match of current.matches) for (const side of ["a", "b"]) {
@@ -74,16 +75,14 @@ try {
   assert.equal(current.matches.find((m) => m.id === "siamese-r1-0").a.rating, 7.5);
   assert.equal(publicTournament(current).matches[0].a.rating, 7.5);
   assert.equal(current.matches.find((m) => m.id === "ragdoll-r3-0").a, null);
-  const unchanged = await db().prepare("SELECT body FROM tournaments WHERE id = ?")
-    .bind("edition-1").first();
+  const unchanged = await db().getTournament("edition-1");
   assert.deepEqual(JSON.parse(unchanged.body), legacy);
   console.log("PASS legacy names refreshed across all rounds without changing scores, winners, revision or stored data");
 
   const match = current.matches.find((m) => m.id === "ragdoll-r0-2");
   const next = applyAction(current, match.id, { type: "bye", winner: match.b.id });
   await writeTournament(next, current.revision);
-  const saved = JSON.parse((await db().prepare("SELECT body FROM tournaments WHERE id = ?")
-    .bind("edition-1").first()).body);
+  const saved = JSON.parse((await db().getTournament("edition-1")).body);
   assert.deepEqual(saved.matches.find((m) => m.id === match.id).b, { id: "ragdoll-p5", seed: 6 });
   assert.deepEqual(hydrateTournament(saved), next);
   assert.deepEqual(await readTournament(), next);
