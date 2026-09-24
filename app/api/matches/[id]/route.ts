@@ -1,4 +1,4 @@
-import { designated } from "@/lib/special.server";
+import { designatedSong, songMetadata } from "@/lib/song-catalog.server";
 import { requireAdmin } from "@/lib/auth";
 import {
   readTournament,
@@ -23,7 +23,7 @@ export async function GET(
         revision: t.revision,
         designated:
           match.round >= 3
-            ? designated[match.group][match.round === 3 ? "final" : "third"]
+            ? designatedSong(match, (await songMetadata()).metadata)
             : null,
       },
       { headers: { "Cache-Control": "no-store" } },

@@ -1,0 +1,32 @@
+{
+  "siamese": {
+    "third": {
+      "songID": 310,
+      "difficultyIndex": 4
+    },
+    "final": {
+      "songID": 187,
+      "difficultyIndex": 4
+    }
+  },
+  "tabby": {
+    "third": {
+      "songID": 1249,
+      "difficultyIndex": 4
+    },
+    "final": {
+      "songID": 1033,
+      "difficultyIndex": 5
+    }
+  },
+  "ragdoll": {
+    "third": {
+      "songID": 1499,
+      "difficultyIndex": 5
+    },
+    "final": {
+      "songID": 1379,
+      "difficultyIndex": 4
+    }
+  }
+}

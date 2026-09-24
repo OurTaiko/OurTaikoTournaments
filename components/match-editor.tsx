@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import PlayerRating from "@/components/player-rating";
+import { difficultyNames, type Song, type SongCatalog } from "@/lib/songs";
 import {
   Check,
   ChevronRight,
@@ -81,12 +82,14 @@ export default function MatchEditor({
   revision,
   tournament,
   designated,
+  catalog: publicCatalog,
   onSaved,
 }: {
   match: Match;
   revision: number;
   tournament: Tournament;
-  designated: string | null;
+  designated: Song | null;
+  catalog: SongCatalog;
   onSaved: (m: Match, r: number) => void;
 }) {
   const [picks, setPicks] = useState<Match["picks"]>(match.picks);
@@ -102,7 +105,9 @@ export default function MatchEditor({
     picks.every((p) => p.length === 2 && p.every(Boolean)) &&
     bans.every(Boolean);
   const sum = totals({ ...match, scores });
-  const pool = songs[match.group];
+  const catalog = designated ? { ...publicCatalog, [designated.id]: designated } : publicCatalog;
+  const pool = songs[match.group].map((ref) => catalog[ref.id] ?? ref);
+  const displaySongName = (group: Match["group"], id: string) => songName(group, id, catalog);
   function changePick(side: number, index: number, value: string) {
     const next = structuredClone(picks);
     next[side][index] = value;
@@ -135,7 +140,7 @@ export default function MatchEditor({
         )[0].id,
       );
     }
-    if (designated) retained.push("special:" + designated);
+    if (designated) retained.push(designated.id);
     setScores(retained.map((songId) => ({ songId, a: null, b: null })));
     setError("");
   }
@@ -221,7 +226,7 @@ export default function MatchEditor({
                 disabled={match.status === "live"}
                 options={pool.map((s) => ({
                   value: s.id,
-                  label: `${s.title}${s.ura ? "（里）" : ""} · ★${s.stars}`,
+                  label: `${s.title}${s.difficultyIndex !== 4 ? `（${difficultyNames[s.difficultyIndex]}）` : ""} · ★${s.stars ?? "—"}`,
                   disabled:
                     picks[side][1 - i] === s.id ||
                     usedSongs(
@@ -244,7 +249,7 @@ export default function MatchEditor({
               }}
               options={picks[1 - side]
                 .filter(Boolean)
-                .map((s) => ({ value: s, label: songName(match.group, s) }))}
+                .map((s) => ({ value: s, label: displaySongName(match.group, s) }))}
             />
           </div>
         ))}
@@ -297,12 +302,12 @@ export default function MatchEditor({
                       ? "加赛曲"
                       : "比赛曲"}
                 </small>
-                <span>{songName(match.group, s.songId)}</span>
+                <span>{displaySongName(match.group, s.songId)}</span>
               </div>
               {(["a", "b"] as const).map((side) => (
                 <input
                   key={side}
-                  aria-label={`${songName(match.group, s.songId)} ${side === "a" ? match.a?.name : match.b?.name}成绩`}
+                  aria-label={`${displaySongName(match.group, s.songId)} ${side === "a" ? match.a?.name : match.b?.name}成绩`}
                   inputMode="numeric"
                   type="number"
                   min="0"

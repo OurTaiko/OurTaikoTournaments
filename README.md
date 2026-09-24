@@ -82,6 +82,8 @@ npm run build
 - `components/match-editor.tsx`：管理操作与录分。
 - `lib/tournament.ts`：赛事资料、类型与对阵推进。
 - `data/players.json` / `lib/players.ts`：选手资料及稳定 ID 查询。
+- `data/songs.json`：正赛曲库，仅保存 `songID`、`difficultyIndex`。
+- `data/designated-songs.json`：指定曲配置，仅由服务端读取，比赛公布前不发送给观众。
 - `lib/rules.ts`：服务端赛制校验。
 - `lib/special.server.ts`：仅服务端的未公开指定曲。
 - `lib/auth.ts`：SSO 和本地演示会话。
@@ -96,6 +98,14 @@ npm run build
 `data/players.json` 按组保存 `id`、`name`、`seed`、`rating`。资料来自 `报名表.numbers`：“名单”页 A2:B49 提供姓名和 rating v2，三组对阵页提供出场顺序。“社畜桑”采用主办方确认的对阵页名称，对应名单页“社畜”的 11.06。数字昵称 97 保存为字符串；rating 保存为数字，界面统一显示两位小数。
 
 修改姓名或 rating 后重新部署即可更新所有轮次。不要修改既有选手的 `id`，也不要为了 rating 排名重排对阵。赛事数据库仅保存选手 ID 和对阵序号；读取时关联 JSON 资料，兼容历史记录中保存的旧姓名，无需重置比分或晋级结果。待定席位不显示虚构 rating。
+
+## 曲目信息
+
+曲库 JSON 的值为 `{ "songID": 433, "difficultyIndex": 4 }`，分别对应 OurTaiko API 的 `id` 和谱面索引 1–5（简单、普通、困难、魔王、里谱面）。外层 `siamese-1` 等键是既有赛事记录的稳定引用，请勿重排或更改；无需保存曲名、星级或额外的里谱面标记。
+
+`/api/songs` 在运行时从 `https://cdn.ourtaiko.org/api/cnsongs` 获取 `song_name` 和 `level_${difficultyIndex}`。页面每 30 秒自动刷新，打开比赛时也会刷新；服务端共用 30 秒内存缓存并合并同时发生的请求。上游失败时保留最近成功的数据并显示提示；首次失败或缺少谱面时显示歌曲 ID / 未知星级，不编造难度。Angel Dream 使用主办方确认的原版 ID 433。
+
+指定曲使用独立的稳定引用（例如 `special:siamese:final`）。读取历史赛况时兼容原有 `special:曲名`，保留所有成绩和晋级信息。指定曲的 API ID、曲名和星级只在受保护的管理接口或该场比赛公布后返回；服务端校验固定曲目引用，接口离线仍可保存已有选曲与比分。
 
 ## 服务器部署（1Panel）
 

@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/sheet";
 import MatchEditor from "@/components/match-editor";
 import PlayerRating from "@/components/player-rating";
+import { useSongCatalog } from "@/components/use-song-catalog";
+import { difficultyNames, type Song } from "@/lib/songs";
 import { toast, Toaster } from "sonner";
 import type { Viewer } from "@/lib/auth";
 import {
@@ -39,6 +41,8 @@ import {
 } from "@/lib/tournament";
 const initial = makeTournament(false);
 export default function Home() {
+  const { catalog, notice: songNotice, refresh: refreshSongs } = useSongCatalog();
+  const displaySongName = (group: GroupId, id: string) => songName(group, id, catalog);
   const [group, setGroup] = useState<GroupId>("siamese");
   const [view, setView] = useState("bracket");
   const [round, setRound] = useState(0);
@@ -50,7 +54,7 @@ export default function Home() {
   const [demo, setDemo] = useState(false);
   const [demoAllowed, setDemoAllowed] = useState(false);
   const [editorRevision, setEditorRevision] = useState(0);
-  const [designated, setDesignated] = useState<string | null>(null);
+  const [designated, setDesignated] = useState<Song | null>(null);
   const [manage, setManage] = useState(false);
   const [opening, setOpening] = useState(false);
   const load = useCallback(async () => {
@@ -64,7 +68,7 @@ export default function Home() {
         demoAllowed: boolean;
         match: Match;
         revision: number;
-        designated: string | null;
+        designated: Song | null;
       };
       if (!r.ok) throw Error(d.error);
       setTournament((previous) =>
@@ -87,7 +91,7 @@ export default function Home() {
       demoAllowed: boolean;
       match: Match;
       revision: number;
-      designated: string | null;
+      designated: Song | null;
     };
     if (r.ok) {
       setUser(d.user);
@@ -111,6 +115,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [load]);
   async function openMatch(m: Match) {
+    void refreshSongs();
     if (user?.admin && manage) {
       setOpening(true);
       try {
@@ -123,7 +128,7 @@ export default function Home() {
           demoAllowed: boolean;
           match: Match;
           revision: number;
-          designated: string | null;
+          designated: Song | null;
         };
         if (!r.ok) throw Error(d.error);
         setEditorRevision(d.revision);
@@ -147,7 +152,7 @@ export default function Home() {
         demoAllowed: boolean;
         match: Match;
         revision: number;
-        designated: string | null;
+        designated: Song | null;
       };
       if (!r.ok) throw Error(d.error);
       await loadSession();
@@ -443,7 +448,7 @@ export default function Home() {
                       <div className="live-card-foot">
                         <Music2 size={15} />
                         <span>
-                          {songName(
+                          {displaySongName(
                             group,
                             m.scores.find((s) => s.a === null || s.b === null)
                               ?.songId ??
@@ -540,20 +545,28 @@ export default function Home() {
               <h2>{groups.find((g) => g.id === group)?.name}曲库</h2>
               <span>12 首正赛课题曲</span>
             </div>
+            <p className="song-sync-note" role="status">
+              {songNotice || "曲名与星级来自 OurTaiko，每 30 秒自动更新。"}
+            </p>
             <div className="song-list">
-              {songs[group].map((s, i) => (
-                <div className="song-row" key={s.id}>
-                  <span className="song-index">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <Music2 size={20} />
-                  <span className="song-title">
-                    {s.title}
-                    {s.ura && <small>里谱面</small>}
-                  </span>
-                  <span className="stars">★ {s.stars}</span>
-                </div>
-              ))}
+              {songs[group].map((ref, i) => {
+                const s = catalog[ref.id] ?? ref;
+                return (
+                  <div className="song-row" key={s.id}>
+                    <span className="song-index">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <Music2 size={20} />
+                    <span className="song-title">
+                      {s.title}
+                      {s.difficultyIndex !== 4 && (
+                        <small>{difficultyNames[s.difficultyIndex]}</small>
+                      )}
+                    </span>
+                    <span className="stars">★ {s.stars ?? "—"}</span>
+                  </div>
+                );
+              })}
             </div>
             <div className="designated">
               <Trophy size={22} />
@@ -690,10 +703,12 @@ export default function Home() {
                   revision={editorRevision}
                   tournament={tournament}
                   designated={designated}
+                  catalog={catalog}
                   onSaved={(m, r) => {
                     setSelected(m);
                     setEditorRevision(r);
                     void load();
+                    void refreshSongs();
                     toast.success(
                       m.status === "complete" || m.status === "bye"
                         ? "结果已确认，对阵图已更新"
@@ -704,7 +719,7 @@ export default function Home() {
               ) : selected.scores.length ? (
                 selected.scores.map((s, i) => (
                   <div className="score-detail" key={i}>
-                    <span>{songName(selected.group, s.songId)}</span>
+                    <span>{displaySongName(selected.group, s.songId)}</span>
                     <b>
                       {s.a?.toLocaleString() ?? "待录入"} <small>:</small>{" "}
                       {s.b?.toLocaleString() ?? "待录入"}

@@ -1,6 +1,8 @@
 import { rosters, resolvePlayer, type GroupId, type Player } from "./players";
 export type { GroupId, Player } from "./players";
-export type Song = { id: string; title: string; stars: number; ura?: boolean };
+export { songs, songName } from "./songs";
+export type { Song } from "./songs";
+import { designatedId } from "./songs";
 export type SongScore = { songId: string; a: number | null; b: number | null };
 export type Match = {
   id: string;
@@ -39,6 +41,12 @@ export function hydrateTournament(stored: StoredTournament): Tournament {
       ...match,
       a: match.a ? resolvePlayer(match.a) : null,
       b: match.b ? resolvePlayer(match.b) : null,
+      scores: match.scores.map((score) => ({
+        ...score,
+        songId: score.songId.startsWith("special:") && match.round >= 3
+          ? designatedId(match.group, match.round)!
+          : score.songId,
+      })),
     })),
   };
 }
@@ -65,61 +73,6 @@ export const groups: {
     { id: "tabby", name: "狸花组", en: "TABBY", range: "★ 9–10" },
     { id: "ragdoll", name: "布偶组", en: "RAGDOLL", range: "★ 9–10" },
   ];
-const rawSongs: Record<GroupId, [string, number, boolean?][]> = {
-  siamese: [
-    ["KOKUSHIN CHRONICLE", 7],
-    ["零 -ZERO-", 7],
-    ["OMOI WO TENI NEGAI WO KOMETE", 7],
-    ["Angel Dream", 8],
-    ["百花缭乱", 8],
-    ["宇宙SAMURAI", 8],
-    ["RAGING FIRE", 8],
-    ["月光", 8, true],
-    ["哆哆咔哆～", 8],
-    ["旋风之舞【地】", 9],
-    ["Wrong World", 9, true],
-    ["被遗忘的提尔纳诺", 9],
-  ],
-  tabby: [
-    ["G意识过剩", 9],
-    ["No Way Back", 9, true],
-    ["STAGE 0.ac11", 9],
-    ["Youthful Coaster", 9],
-    ["一世风靡", 9],
-    ["魔导幻想曲", 9],
-    ["最终鬼畜妹Frandre・S", 10],
-    ["Struck Stardust", 10],
-    ["Ka.Ma.Se", 10, true],
-    ["Miracle Meeting", 10],
-    ["The ephemeral dances in the primordial", 10],
-    ["waitin’ for u", 10],
-  ],
-  ragdoll: [
-    ["Little White Witch", 9],
-    ["Heaven’s Rider", 9],
-    ["卡恰咚2000", 9],
-    ["IOSYS Autumn Carnivorous Festival 2014", 9],
-    ["恭喜毕业典礼", 10],
-    ["Chronomia", 10],
-    ["Dogbite", 10],
-    ["Evidence of evil", 10],
-    ["Extreme End", 10],
-    ["God Ray", 10],
-    ["Hung-rock", 10],
-    ["Soulway", 10],
-  ],
-};
-export const songs = Object.fromEntries(
-  groups.map((g) => [
-    g.id,
-    rawSongs[g.id].map(([title, stars, ura], i) => ({
-      id: `${g.id}-${i + 1}`,
-      title,
-      stars,
-      ura,
-    })),
-  ]),
-) as Record<GroupId, Song[]>;
 export const roundNames = ["16 进 8", "8 进 4", "半决赛", "决赛", "季军赛"];
 export function firstAttack(m: Match): string | null {
   if (m.round > 1 || m.status === "bye" || !m.a || !m.b) return null;
@@ -134,12 +87,6 @@ export function totals(m: Match): [number, number] {
     m.scores.reduce((n, s) => n + (s.a ?? 0), 0),
     m.scores.reduce((n, s) => n + (s.b ?? 0), 0),
   ];
-}
-export function songName(group: GroupId, id: string) {
-  return (
-    songs[group].find((s) => s.id === id)?.title ??
-    (id.startsWith("special:") ? id.slice(8) : id)
-  );
 }
 export function makeTournament(demo = false): Tournament {
   const matches: Match[] = [];

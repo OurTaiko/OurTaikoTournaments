@@ -667,6 +667,11 @@ i {
   font-weight: 600;
   white-space: nowrap;
 }
+.song-sync-note {
+  color: #747b87;
+  font-size: 12px;
+  margin: 0 0 18px;
+}
 .designated {
   padding: 27px 0;
   display: flex;

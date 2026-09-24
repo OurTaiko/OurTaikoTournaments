@@ -1,3 +1,4 @@
+import { designatedId } from "./songs";
 import {
   advance,
   songs,
@@ -130,9 +131,7 @@ export function applyAction(
           typeof s.songId === "string" &&
             (songs[m.group].some((x) => x.id === s.songId) ||
               (m.round >= 3 &&
-                s.songId.startsWith("special:") &&
-                s.songId.length > 8 &&
-                s.songId.length < 160)),
+                s.songId === designatedId(m.group, m.round))),
           "曲目不在当前曲库中。",
         );
         for (const v of [s.a, s.b])
