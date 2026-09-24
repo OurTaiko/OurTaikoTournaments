@@ -5,6 +5,7 @@ export interface PreparedQuery {
 }
 export interface SqlDatabase { prepare(sql: string): PreparedQuery }
 export type TournamentRow = { id: string; revision: number; body: string };
+export type TournamentBackup = TournamentRow & { tournamentId: string; createdAt: string; actor: string };
 export type SessionRow = { id: string; body: string; expires: number };
 export type AdminBinding = { username: string; subject: string; issuer: string };
 export interface Database {
@@ -12,6 +13,7 @@ export interface Database {
   getTournament(id: string): Promise<TournamentRow | null>;
   createTournament(row: TournamentRow): Promise<void>;
   updateTournament(row: TournamentRow, previous: number): Promise<boolean>;
+  saveTournamentBackup(row: TournamentBackup): Promise<void>;
   saveSession(row: SessionRow): Promise<void>;
   getSession(id: string, now: number): Promise<SessionRow | null>;
   deleteSession(id: string): Promise<boolean>;

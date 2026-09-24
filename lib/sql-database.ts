@@ -3,6 +3,10 @@ import type { Database, SqlDatabase } from './database';
 // Keep the existing SQLite/D1 storage available for local demos and rollback.
 export function sqlDatabase(sql: SqlDatabase): Database {
   return {
+    async saveTournamentBackup(row) {
+      await sql.prepare('CREATE TABLE IF NOT EXISTS tournament_backups (id TEXT PRIMARY KEY NOT NULL, tournamentId TEXT NOT NULL, revision INTEGER NOT NULL, body TEXT NOT NULL, createdAt TEXT NOT NULL, actor TEXT NOT NULL)').run();
+      await sql.prepare('INSERT INTO tournament_backups (id, tournamentId, revision, body, createdAt, actor) VALUES (?, ?, ?, ?, ?, ?)').bind(row.id, row.tournamentId, row.revision, row.body, row.createdAt, row.actor).run();
+    },
     async ping() { await sql.prepare('SELECT 1 AS ok').first(); },
     getTournament: (id) => sql.prepare('SELECT id, revision, body FROM tournaments WHERE id = ?').bind(id).first(),
     async createTournament(row) {

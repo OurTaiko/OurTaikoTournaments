@@ -16,6 +16,12 @@ try {
   const databases = clients.map(c => c.db(process.env.MONGODB_DB));
   const adapters = databases.map(d => mongoDatabase(async () => d));
   await adapters[0].ping();
+  await adapters[0].saveTournamentBackup({ id, tournamentId: id, revision: 3, body: 'exact prior state', actor: 'integration-test', createdAt: new Date().toISOString() });
+  const backup = await databases[1].collection('tournament_backups').findOne({ _id: id });
+  assert.equal(backup.body, 'exact prior state');
+  assert.equal(backup.revision, 3);
+  await assert.rejects(adapters[1].saveTournamentBackup({ id, tournamentId: id, revision: 4, body: 'overwrite', actor: 'integration-test', createdAt: new Date().toISOString() }));
+  assert.equal((await databases[0].collection('tournament_backups').findOne({ _id: id })).body, 'exact prior state');
   await adapters[0].createTournament({ id, revision: 0, body: 'initial' });
   await adapters[1].createTournament({ id, revision: 0, body: 'overwrite' });
   assert.equal((await adapters[1].getTournament(id)).body, 'initial');
@@ -35,7 +41,7 @@ try {
   console.log('PASS Atlas cross-client persistence, concurrent revision updates, session expiry/one-use deletion and immutable administrator binding.');
 } finally {
   // Only the uniquely named records created by this run are removed.
-  for (const collection of ['tournaments', 'sessions', 'admins'])
+  for (const collection of ['tournaments', 'sessions', 'admins', 'tournament_backups'])
     await clients[0].db(process.env.MONGODB_DB).collection(collection).deleteOne({ _id: id });
   await Promise.all(clients.map(c => c.close()));
   await rm(dir, { recursive: true, force: true });

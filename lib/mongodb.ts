@@ -1,5 +1,5 @@
 import { MongoClient, MongoServerError, type Db } from 'mongodb';
-import type { AdminBinding, Database, SessionRow, TournamentRow } from './database';
+import type { AdminBinding, Database, SessionRow, TournamentRow, TournamentBackup } from './database';
 
 type TournamentDocument = Omit<TournamentRow, 'id'> & { _id: string };
 type SessionDocument = Omit<SessionRow, 'id'> & { _id: string; expiresAt: Date };
@@ -30,6 +30,9 @@ export function mongoDatabase(getDb: () => Promise<Db>): Database {
   const sessions = async () => (await getDb()).collection<SessionDocument>('sessions');
   const admins = async () => (await getDb()).collection<AdminDocument>('admins');
   return {
+    async saveTournamentBackup({ id, ...row }) {
+      await (await getDb()).collection<Omit<TournamentBackup, 'id'> & { _id: string }>('tournament_backups').insertOne({ _id: id, ...row });
+    },
     async ping() { await (await getDb()).command({ ping: 1 }); },
     async getTournament(id) {
       const row = await (await tournaments()).findOne({ _id: id });

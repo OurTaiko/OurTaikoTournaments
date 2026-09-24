@@ -22,6 +22,7 @@ import {
   SheetHeader,
 } from "@/components/ui/sheet";
 import MatchEditor from "@/components/match-editor";
+import ResetTournament from "@/components/reset-tournament";
 import PlayerRating from "@/components/player-rating";
 import { useSongCatalog } from "@/components/use-song-catalog";
 import { difficultyNames, type Song } from "@/lib/songs";
@@ -656,6 +657,21 @@ export default function Home() {
                 ? "本地演示模式中的操作只影响演示赛况。"
                 : "管理员权限由服务端验证。"}
             </p>
+            {user?.admin && <ResetTournament
+              revision={tournament.revision}
+              demo={demo}
+              disabled={!loaded || !!connectionError}
+              onReset={(next) => {
+                setSelected(null);
+                setDesignated(null);
+                setEditorRevision(next.revision);
+                setTournament((previous) => next.revision >= previous.revision ? next : previous);
+                setRound(0);
+                setView("bracket");
+                toast.success("赛事已重置，重置前的赛况已自动备份。");
+                void load();
+              }}
+            />}
           </section>
         )}
         <footer>
