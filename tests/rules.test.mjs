@@ -1,3 +1,4 @@
+import { samplePools } from "./fixtures/song-pools.mjs";
 import assert from "node:assert/strict";
 import { build } from "esbuild";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -16,9 +17,10 @@ try {
     format: "esm",
     outfile: dir + "/rules.mjs",
   });
-  const { makeTournament, applyAction, publicTournament } = await import(
+  const { makeTournament, applyAction: applyWithPool, publicTournament } = await import(
     pathToFileURL(dir + "/rules.mjs").href
   );
+  const applyAction = (t, id, action) => applyWithPool(t, id, action, samplePools[t.matches.find(m => m.id === id)?.group] ?? []);
   let count = 0;
   const check = (name, fn) => {
     fn();

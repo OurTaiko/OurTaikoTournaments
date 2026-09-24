@@ -1,5 +1,7 @@
-import { designated } from "./special.server";
-import { songs, designatedId, parseSongMetadata, resolveSong, type SongCatalog } from "./songs";
+import 'server-only';
+import { designatedId, parseSongMetadata, resolveSong, type SongCatalog, type SongPools } from "./songs";
+import { readSongLibrary } from './song-library.server';
+import type { SongLibrary } from './song-library';
 import type { Match, Tournament } from "./tournament";
 
 const SOURCE = "https://cdn.ourtaiko.org/api/cnsongs";
@@ -24,20 +26,21 @@ export async function songMetadata() {
   return pending;
 }
 
-export function designatedSong(match: Match, metadata: Awaited<ReturnType<typeof songMetadata>>["metadata"]) {
+export function designatedSong(match: Match, metadata: Awaited<ReturnType<typeof songMetadata>>["metadata"], library: SongLibrary) {
   const id = designatedId(match.group, match.round);
-  return id ? resolveSong(id, designated[match.group][match.round === 3 ? "final" : "third"], metadata) : null;
+  return id ? resolveSong(id, library.designated[match.group][match.round === 3 ? "final" : "third"], metadata) : null;
 }
 
 export async function publicSongCatalog(tournament: Tournament) {
-  const state = await songMetadata();
-  const catalog: SongCatalog = Object.fromEntries(Object.values(songs).flat()
+  const [library, state] = await Promise.all([readSongLibrary(), songMetadata()]);
+  const pools = Object.fromEntries(Object.entries(library.pools).map(([group, rows]) => [group, rows.map(row => row.id)])) as SongPools;
+  const catalog: SongCatalog = Object.fromEntries(Object.values(library.pools).flat()
     .map((ref) => [ref.id, resolveSong(ref.id, ref, state.metadata)]));
   for (const match of tournament.matches) {
     if (!match.published || !match.scores.some((score) => score.songId.startsWith("special:"))) continue;
-    const song = designatedSong(match, state.metadata);
+    const song = designatedSong(match, state.metadata, library);
     if (song) catalog[song.id] = song;
   }
-  return { catalog, updatedAt: state.updatedAt, stale: state.stale,
+  return { catalog, pools, updatedAt: state.updatedAt, stale: state.stale,
     incomplete: Object.values(catalog).some((song) => song.stars === null) };
 }

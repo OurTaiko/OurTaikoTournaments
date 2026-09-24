@@ -1,3 +1,4 @@
+import { samplePools } from "./fixtures/song-pools.mjs";
 import assert from "node:assert/strict";
 import { build } from "esbuild";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -20,8 +21,10 @@ try {
     format: "cjs",
     outfile: dir + "/players.cjs",
   });
-  const { rosters, makeTournament, hydrateTournament, tournamentState, readTournament, writeTournament, db, applyAction, publicTournament, firstAttack } =
+  const { rosters, makeTournament, hydrateTournament, tournamentState, readTournament, writeTournament, db, applyAction: applyWithPool, publicTournament, firstAttack } =
     (await import(pathToFileURL(dir + "/players.cjs").href)).default;
+  const applyAction = (t, id, action) => applyWithPool(t, id, action, samplePools[t.matches.find(m => m.id === id)?.group] ?? []);
+
   const profiles = Object.values(rosters).flat();
   assert.equal(profiles.length, 48);
   assert.equal(new Set(profiles.map((p) => p.id)).size, 48);

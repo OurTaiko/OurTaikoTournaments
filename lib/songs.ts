@@ -1,4 +1,3 @@
-import songData from "../data/songs.json";
 import type { GroupId } from "./players";
 
 export type SongRef = { songID: number; difficultyIndex: number };
@@ -8,28 +7,20 @@ export type Song = SongRef & {
   stars: number | null;
 };
 export type SongCatalog = Record<string, Song>;
+export type SongPools = Record<GroupId, string[]>;
+export const emptySongPools: SongPools = { siamese: [], tabby: [], ragdoll: [] };
 export const difficultyNames = ["", "简单", "普通", "困难", "魔王", "里谱面"];
 
 export function placeholderSong(id: string, ref: SongRef): Song {
   return { ...ref, id, title: `曲目 #${ref.songID}`, stars: null };
 }
 
-// Keys are stable tournament references; changing a song's label never changes a score key.
-export const songs = Object.fromEntries(
-  Object.entries(songData).map(([group, pool]) => [group,
-    Object.entries(pool).map(([id, ref]) => placeholderSong(id, ref)),
-  ]),
-) as Record<GroupId, Song[]>;
-export const initialSongCatalog: SongCatalog = Object.fromEntries(
-  Object.values(songs).flat().map((song) => [song.id, song]),
-);
-
 export function designatedId(group: GroupId, round: number): string | null {
   return round === 3 ? `special:${group}:final` : round === 4 ? `special:${group}:third` : null;
 }
 
-export function songName(group: GroupId, id: string, catalog: SongCatalog = initialSongCatalog) {
-  const song = catalog[id] ?? songs[group].find((song) => song.id === id);
+export function songName(group: GroupId, id: string, catalog: SongCatalog = {}) {
+  const song = catalog[id];
   if (!song) return id.startsWith("special:") ? "指定曲信息加载中" : "曲目信息加载中";
   return `${song.title}${song.difficultyIndex === 4 ? "" : `（${difficultyNames[song.difficultyIndex]}）`}`;
 }

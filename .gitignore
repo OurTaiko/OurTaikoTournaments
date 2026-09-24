@@ -51,3 +51,7 @@ next-env.d.ts
 
 *.tsbuildinfo
 *.sqlite*
+
+# Retired private event configuration; import directly into the database.
+/data/songs.json
+/data/designated-songs.json

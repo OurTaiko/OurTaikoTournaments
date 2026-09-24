@@ -9,7 +9,7 @@
 - 观众：三组曲库、对阵与比赛详情，无需登录；每 3 秒向后端同步。
 - 管理：右上角「主办方入口」→「体验演示管理模式」→ 点击一场比赛。
 - 演示管理只在 `DEMO_MODE=true` 且本站地址为 loopback 时开放。它与正式 SSO 管理员身份分离。
-- 初始展示的两场已结束、两场进行中及其比分均为演示数据。真实选手、分组、曲库来自上级目录资料。
+- 初始展示的两场已结束、两场进行中及其比分均为演示数据。选手与分组来自赛事资料；本地演示曲库为独立样例，与正式赛事无关。
 - 验证过程中演示赛况会继续推进；不会修改原始赛事资料。
 
 ## 启动
@@ -82,10 +82,9 @@ npm run build
 - `components/match-editor.tsx`：管理操作与录分。
 - `lib/tournament.ts`：赛事资料、类型与对阵推进。
 - `data/players.json` / `lib/players.ts`：选手资料及稳定 ID 查询。
-- `data/songs.json`：正赛曲库，仅保存 `songID`、`difficultyIndex`。
-- `data/designated-songs.json`：指定曲配置，仅由服务端读取，比赛公布前不发送给观众。
+- MongoDB `song_libraries`：正式曲库和指定曲配置，真实配置不进入 Git。
+- `lib/song-library.server.ts` / `lib/song-catalog.server.ts`：读取曲库、关联曲名与星级、按公布状态过滤。
 - `lib/rules.ts`：服务端赛制校验。
-- `lib/special.server.ts`：仅服务端的未公开指定曲。
 - `lib/auth.ts`：SSO 和本地演示会话。
 - `lib/store.ts` / `db/schema.ts` / `drizzle/`：持久化与版本更新。
 
@@ -101,59 +100,30 @@ npm run build
 
 ## 曲目信息
 
-曲库 JSON 的值为 `{ "songID": 433, "difficultyIndex": 4 }`，分别对应 OurTaiko API 的 `id` 和谱面索引 1–5（简单、普通、困难、魔王、里谱面）。外层 `siamese-1` 等键是既有赛事记录的稳定引用，请勿重排或更改；无需保存曲名、星级或额外的里谱面标记。
+正式曲库存于 MongoDB `song_libraries` 集合，文档 `_id=edition-1`、`version=1`。`pools` 按 `siamese` / `tabby` / `ragdoll` 分组，每组 12 个 `{ id, songID, difficultyIndex }`；`designated` 按组保存 `final` / `third` 的 `{ songID, difficultyIndex }`。难度索引 1–5 对应简单、普通、困难、魔王、里谱面，无需额外里谱面标记。
+
+`siamese-1` 等 `id` 是选曲及成绩的稳定引用，不能重排或改名。曲名、星级不存入赛事配置，仍从 OurTaiko 接口关联。MongoDB 中修改配置后，下一次接口读取即可生效，无需重新部署；已开赛的曲目映射不能随意修改，否则旧成绩会显示为另一首曲目。正式库缺失或配置无效时接口返回错误，不会使用样例曲库兜底。
+
+迁移工具只导入缺失的配置，遇到不同的现有内容会拒绝覆盖。真实输入文件必须置于被忽略的 `.data/` 等私有目录，文件权限设为 600，不要加入测试、Git 或部署文件：
+
+```sh
+node --env-file=<私有MongoDB配置> scripts/import-song-library.mjs <私有曲库.json> --apply
+node --env-file=<私有MongoDB配置> scripts/import-song-library.mjs <私有曲库.json> --verify
+```
+
+本地 `DEMO_MODE=true` 会在自己的 `demo` 曲库文档 / SQLite 表中初始化 `lib/demo-song-library.ts` 的公开样例，既不读取正式指定曲，也不会覆盖已有配置。重置赛事仅清理比赛进度，保留数据库曲库。
 
 `/api/songs` 在运行时从 `https://cdn.ourtaiko.org/api/cnsongs` 获取 `song_name` 和 `level_${difficultyIndex}`。页面每 30 秒自动刷新，打开比赛时也会刷新；服务端共用 30 秒内存缓存并合并同时发生的请求。上游失败时保留最近成功的数据并显示提示；首次失败或缺少谱面时显示歌曲 ID / 未知星级，不编造难度。Angel Dream 使用主办方确认的原版 ID 433。
 
 指定曲使用独立的稳定引用（例如 `special:siamese:final`）。读取历史赛况时兼容原有 `special:曲名`，保留所有成绩和晋级信息。指定曲的 API ID、曲名和星级只在受保护的管理接口或该场比赛公布后返回；服务端校验固定曲目引用，接口离线仍可保存已有选曲与比分。
 
-## 服务器部署（1Panel）
+## 历史服务器部署（已停用）
 
-使用 `Dockerfile` / `compose.yaml` 构建 Next.js standalone 服务。Node.js 24 自带 SQLite，无需另外安装数据库。参考 [Next.js 自托管文档](https://nextjs.org/docs/app/guides/self-hosting)。
+HachiCats 已从 1Panel / Docker / SQLite 迁移至下述 Vercel + Atlas 方案。旧服务器上的 HachiCats 服务已清理，不再使用原来的 SSH / Docker 更新方式。`Dockerfile` 和 SQLite 适配器仅供其他自托管环境参考。
 
-```sh
-# 在仓库目录中创建 .env.production（权限 600），仅填写：
-# SSO_CLIENT_ID=正式客户端 ID
-# SSO_CLIENT_SECRET=正式客户端密钥
-docker compose up -d --build
-curl --fail http://127.0.0.1:5188/api/health
-```
+管理员在 Vercel 生产环境变量 `ADMIN_USERNAMES` 中配置，当前为 `kirisamevanilla,grace0512,Touka16`。SSO Application 的所有者或工作人员标记不决定本站权限。
 
-1Panel 新建反向代理网站 `hachicats.ourtaiko.org`，上游 `http://127.0.0.1:5188`，启用有效 HTTPS 证书并跳转 HTTPS。Docker 端口只监听本机，OpenResty 是公网入口。
-
-- 数据卷：`hachicats-data`，数据库 `/app/data/hachicats.sqlite`。重建容器保留比分及登录绑定。
-- 每次启动自动创建缺失表，已有数据不会重置。SQLite WAL + 原子版本比较避免并发覆盖。
-- 请勿执行 `docker compose down -v`，这会删除赛事数据卷。
-- 更新前备份数据，建议使用 SQLite online backup；普通复制数据库时应先停止容器并同时备份整个数据卷。
-- 本地生产构建检查：`npm run build:server`。
-- 仓库私有，含未公布指定曲；不要改为公开仓库。
-
-### 当前服务器与后续更新
-
-GitHub 私有仓库：`KirisameVanilla/HachiCats`；服务器 SSH 预设 `ourtaiko-prod`，项目目录 `/opt/hachicats`，容器名 `hachicats`。代码以与 GitHub 相同的 Git commit 通过 SSH 传送，服务器不保存个人 GitHub token。
-
-本机修改并提交、推送 GitHub 后，可用 Git bundle 更新服务器：
-
-```sh
-git push origin main
-git bundle create /tmp/hachicats-release.bundle main
-scp /tmp/hachicats-release.bundle ourtaiko-prod:/home/kv/
-ssh ourtaiko-prod
-cd /opt/hachicats
-git fetch /home/kv/hachicats-release.bundle main
-git merge --ff-only FETCH_HEAD
-# 更新前备份 /app/data 中的 SQLite 数据库，然后构建：
-sudo docker compose up -d --build
-curl --fail http://127.0.0.1:5188/api/health
-```
-
-上线已执行 SQLite 完整性检查，并在数据卷中保存初始备份 `/app/data/backups/initial-deployment.sqlite`。备份包含登录数据，应与数据库使用相同的访问控制，且不能提交仓库。
-
-`npm run test:storage` 验证 SQLite 在进程重启后保留数据，以及过期版本更新不能覆盖新赛况。
-
-### 管理员配置
-
-在服务器 `/opt/hachicats/compose.yaml` 的 `environment` 中修改 `ADMIN_USERNAMES`，然后运行 `sudo docker compose up -d`。当前三位管理员是 `kirisamevanilla`、`grace0512`、`Touka16`。新管理员用自己的 OurTaiko 账号登录即可；已登录的用户刷新页面即可重新验证权限。SSO 后台的 Application 所有者、工作人员或超级用户标记不影响本站权限。
+真实指定曲曾被提交到私有仓库。当前版本移除了这些数据，但旧 Git 历史、克隆和历史部署仍可能包含旧配置，不能因本次迁移就公开历史仓库。若需防范已能读取旧源码的人，应由主办方更换未提交过的新指定曲；本次迁移保持原有选曲。
 
 ## Vercel + MongoDB Atlas
 

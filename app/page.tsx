@@ -30,7 +30,6 @@ import { toast, Toaster } from "sonner";
 import type { Viewer } from "@/lib/auth";
 import {
   groups,
-  songs,
   roundNames,
   makeTournament,
   firstAttack,
@@ -42,7 +41,7 @@ import {
 } from "@/lib/tournament";
 const initial = makeTournament(false);
 export default function Home() {
-  const { catalog, notice: songNotice, refresh: refreshSongs } = useSongCatalog();
+  const { catalog, pools, notice: songNotice, refresh: refreshSongs } = useSongCatalog();
   const displaySongName = (group: GroupId, id: string) => songName(group, id, catalog);
   const [group, setGroup] = useState<GroupId>("siamese");
   const [view, setView] = useState("bracket");
@@ -56,6 +55,7 @@ export default function Home() {
   const [demoAllowed, setDemoAllowed] = useState(false);
   const [editorRevision, setEditorRevision] = useState(0);
   const [designated, setDesignated] = useState<Song | null>(null);
+  const [editorPool, setEditorPool] = useState<Song[]>([]);
   const [manage, setManage] = useState(false);
   const [opening, setOpening] = useState(false);
   const load = useCallback(async () => {
@@ -122,6 +122,7 @@ export default function Home() {
       try {
         const r = await fetch("/api/matches/" + m.id);
         const d = (await r.json()) as {
+          pool: Song[];
           error: string;
           tournament: Tournament;
           demo: boolean;
@@ -134,6 +135,7 @@ export default function Home() {
         if (!r.ok) throw Error(d.error);
         setEditorRevision(d.revision);
         setDesignated(d.designated);
+        setEditorPool(d.pool);
         setSelected(d.match);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "打开失败。");
@@ -544,14 +546,14 @@ export default function Home() {
           <section className="song-section">
             <div className="section-heading">
               <h2>{groups.find((g) => g.id === group)?.name}曲库</h2>
-              <span>12 首正赛课题曲</span>
+              <span>{pools[group].length ? `${pools[group].length} 首正赛课题曲` : '曲库加载中'}</span>
             </div>
             <p className="song-sync-note" role="status">
               {songNotice || "曲名与星级来自 OurTaiko，每 30 秒自动更新。"}
             </p>
             <div className="song-list">
-              {songs[group].map((ref, i) => {
-                const s = catalog[ref.id] ?? ref;
+              {pools[group].map((id, i) => {
+                const s = catalog[id];
                 return (
                   <div className="song-row" key={s.id}>
                     <span className="song-index">
@@ -720,6 +722,7 @@ export default function Home() {
                   tournament={tournament}
                   designated={designated}
                   catalog={catalog}
+                  pool={editorPool}
                   onSaved={(m, r) => {
                     setSelected(m);
                     setEditorRevision(r);

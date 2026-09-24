@@ -1,6 +1,6 @@
 import { rosters, resolvePlayer, type GroupId, type Player } from "./players";
 export type { GroupId, Player } from "./players";
-export { songs, songName } from "./songs";
+export { songName } from "./songs";
 export type { Song } from "./songs";
 import { designatedId } from "./songs";
 export type SongScore = { songId: string; a: number | null; b: number | null };

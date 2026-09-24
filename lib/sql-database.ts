@@ -2,7 +2,17 @@ import type { Database, SqlDatabase } from './database';
 
 // Keep the existing SQLite/D1 storage available for local demos and rollback.
 export function sqlDatabase(sql: SqlDatabase): Database {
+  const songTable = () => sql.prepare('CREATE TABLE IF NOT EXISTS song_libraries (id TEXT PRIMARY KEY NOT NULL, body TEXT NOT NULL)').run();
   return {
+    async getSongLibrary(id) {
+      await songTable();
+      const row = await sql.prepare('SELECT body FROM song_libraries WHERE id = ?').bind(id).first<{ body: string }>();
+      return row ? JSON.parse(row.body) : null;
+    },
+    async createSongLibrary(library) {
+      await songTable();
+      await sql.prepare('INSERT OR IGNORE INTO song_libraries (id, body) VALUES (?, ?)').bind(library.id, JSON.stringify(library)).run();
+    },
     async saveTournamentBackup(row) {
       await sql.prepare('CREATE TABLE IF NOT EXISTS tournament_backups (id TEXT PRIMARY KEY NOT NULL, tournamentId TEXT NOT NULL, revision INTEGER NOT NULL, body TEXT NOT NULL, createdAt TEXT NOT NULL, actor TEXT NOT NULL)').run();
       await sql.prepare('INSERT INTO tournament_backups (id, tournamentId, revision, body, createdAt, actor) VALUES (?, ?, ?, ?, ?, ?)').bind(row.id, row.tournamentId, row.revision, row.body, row.createdAt, row.actor).run();

@@ -9,6 +9,8 @@ export type TournamentBackup = TournamentRow & { tournamentId: string; createdAt
 export type SessionRow = { id: string; body: string; expires: number };
 export type AdminBinding = { username: string; subject: string; issuer: string };
 export interface Database {
+  getSongLibrary(id: string): Promise<SongLibrary | null>;
+  createSongLibrary(library: SongLibrary): Promise<void>;
   ping(): Promise<void>;
   getTournament(id: string): Promise<TournamentRow | null>;
   createTournament(row: TournamentRow): Promise<void>;
@@ -20,3 +22,4 @@ export interface Database {
   bindAdmin(binding: AdminBinding): Promise<void>;
   hasAdmin(names: string[], issuer: string, subject: string): Promise<boolean>;
 }
+import type { SongLibrary } from './song-library';

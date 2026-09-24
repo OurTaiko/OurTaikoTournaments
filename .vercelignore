@@ -1,0 +1,7 @@
+.data
+.env*
+.dev.vars*
+.wrangler
+outputs
+work
+.git

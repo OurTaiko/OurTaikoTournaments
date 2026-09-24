@@ -1,5 +1,6 @@
 import { MongoClient, MongoServerError, type Db } from 'mongodb';
 import type { AdminBinding, Database, SessionRow, TournamentRow, TournamentBackup } from './database';
+import type { SongLibrary } from './song-library';
 
 type TournamentDocument = Omit<TournamentRow, 'id'> & { _id: string };
 type SessionDocument = Omit<SessionRow, 'id'> & { _id: string; expiresAt: Date };
@@ -30,6 +31,15 @@ export function mongoDatabase(getDb: () => Promise<Db>): Database {
   const sessions = async () => (await getDb()).collection<SessionDocument>('sessions');
   const admins = async () => (await getDb()).collection<AdminDocument>('admins');
   return {
+    async getSongLibrary(id) {
+      const row = await (await getDb()).collection<Omit<SongLibrary, 'id'> & { _id: string }>('song_libraries').findOne({ _id: id });
+      if (!row) return null;
+      return { id: row._id, version: row.version, pools: row.pools, designated: row.designated };
+    },
+    async createSongLibrary({ id, ...library }) {
+      try { await (await getDb()).collection<Omit<SongLibrary, 'id'> & { _id: string }>('song_libraries').insertOne({ _id: id, ...library }); }
+      catch (error) { if (!(error instanceof MongoServerError && error.code === 11000)) throw error; }
+    },
     async saveTournamentBackup({ id, ...row }) {
       await (await getDb()).collection<Omit<TournamentBackup, 'id'> & { _id: string }>('tournament_backups').insertOne({ _id: id, ...row });
     },

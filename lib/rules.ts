@@ -1,7 +1,6 @@
 import { designatedId } from "./songs";
 import {
   advance,
-  songs,
   totals,
   type Match,
   type Tournament,
@@ -46,6 +45,7 @@ export function applyAction(
   t: Tournament,
   id: string,
   action: Action,
+  pool: readonly { id: string }[],
 ): Tournament {
   const next = structuredClone(t);
   const m = next.matches.find((m) => m.id === id);
@@ -93,7 +93,7 @@ export function applyAction(
         );
         for (const s of p) {
           insist(
-            songs[m.group].some((x) => x.id === s),
+            pool.some((x) => x.id === s),
             "只能选择本组曲库中的曲目。",
           );
           insist(
@@ -129,7 +129,7 @@ export function applyAction(
       for (const s of action.scores) {
         insist(
           typeof s.songId === "string" &&
-            (songs[m.group].some((x) => x.id === s.songId) ||
+            (pool.some((x) => x.id === s.songId) ||
               (m.round >= 3 &&
                 s.songId === designatedId(m.group, m.round))),
           "曲目不在当前曲库中。",

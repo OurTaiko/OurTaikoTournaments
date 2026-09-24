@@ -51,7 +51,7 @@ try {
     "pending",
   );
   assert(
-    !JSON.stringify(p).includes("六兆年零一夜物语"),
+    !p.tournament.matches.some(m => !m.published && m.scores.length),
     "Unpublished designated song leaked",
   );
   console.log(

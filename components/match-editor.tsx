@@ -26,7 +26,6 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import {
-  songs,
   totals,
   songName,
   type Match,
@@ -83,6 +82,7 @@ export default function MatchEditor({
   tournament,
   designated,
   catalog: publicCatalog,
+  pool,
   onSaved,
 }: {
   match: Match;
@@ -90,6 +90,7 @@ export default function MatchEditor({
   tournament: Tournament;
   designated: Song | null;
   catalog: SongCatalog;
+  pool: Song[];
   onSaved: (m: Match, r: number) => void;
 }) {
   const [picks, setPicks] = useState<Match["picks"]>(match.picks);
@@ -105,8 +106,7 @@ export default function MatchEditor({
     picks.every((p) => p.length === 2 && p.every(Boolean)) &&
     bans.every(Boolean);
   const sum = totals({ ...match, scores });
-  const catalog = designated ? { ...publicCatalog, [designated.id]: designated } : publicCatalog;
-  const pool = songs[match.group].map((ref) => catalog[ref.id] ?? ref);
+  const catalog = { ...publicCatalog, ...Object.fromEntries(pool.map(song => [song.id, song])), ...(designated ? { [designated.id]: designated } : {}) };
   const displaySongName = (group: Match["group"], id: string) => songName(group, id, catalog);
   function changePick(side: number, index: number, value: string) {
     const next = structuredClone(picks);

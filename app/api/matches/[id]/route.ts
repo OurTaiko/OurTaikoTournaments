@@ -1,5 +1,7 @@
 import { designatedSong, songMetadata } from "@/lib/song-catalog.server";
 import { requireAdmin } from "@/lib/auth";
+import { readSongLibrary } from '@/lib/song-library.server';
+import { resolveSong } from '@/lib/songs';
 import {
   readTournament,
   writeTournament,
@@ -17,13 +19,15 @@ export async function GET(
     const { id } = await params;
     const match = t.matches.find((m) => m.id === id);
     if (!match) throw new RuleError("比赛不存在。", 404);
+    const [library, { metadata }] = await Promise.all([readSongLibrary(), songMetadata()]);
     return Response.json(
       {
         match,
         revision: t.revision,
+        pool: library.pools[match.group].map(ref => resolveSong(ref.id, ref, metadata)),
         designated:
           match.round >= 3
-            ? designatedSong(match, (await songMetadata()).metadata)
+            ? designatedSong(match, metadata, library)
             : null,
       },
       { headers: { "Cache-Control": "no-store" } },
@@ -46,7 +50,10 @@ export async function POST(
     if (t.revision !== body.revision)
       throw new RuleError("赛况刚被更新，请重新打开比赛后提交。", 409);
     const { id } = await params;
-    const next = applyAction(t, id, body);
+    const match = t.matches.find(match => match.id === id);
+    if (!match) throw new RuleError('比赛不存在。', 404);
+    const library = await readSongLibrary();
+    const next = applyAction(t, id, body, library.pools[match.group]);
     await writeTournament(next, t.revision);
     return Response.json({
       match: next.matches.find((m) => m.id === id),

@@ -11,11 +11,17 @@ const dir = await mkdtemp(resolve('.data/mongodb-test-'));
 const id = 'integration-' + randomUUID();
 const clients = [0, 1].map(() => new MongoClient(process.env.MONGODB_URI, { maxPoolSize: 2, serverSelectionTimeoutMS: 10000 }));
 try {
-  await build({ entryPoints: ['lib/mongodb.ts'], bundle: true, platform: 'node', format: 'cjs', external: ['mongodb'], outfile: dir + '/mongodb.cjs' });
-  const { default: { mongoDatabase } } = await import(dir + '/mongodb.cjs');
+  await build({ stdin: { contents: "export * from './lib/mongodb'; export {demoSongLibrary} from './lib/demo-song-library';", resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', external: ['mongodb'], outfile: dir + '/mongodb.cjs' });
+  const { default: { mongoDatabase, demoSongLibrary } } = await import(dir + '/mongodb.cjs');
   const databases = clients.map(c => c.db(process.env.MONGODB_DB));
   const adapters = databases.map(d => mongoDatabase(async () => d));
   await adapters[0].ping();
+  const library = demoSongLibrary(id);
+  await adapters[0].createSongLibrary(library);
+  assert.deepEqual(await adapters[1].getSongLibrary(id), library);
+  const changed = structuredClone(library); changed.designated.siamese.final.songID = 999999;
+  await adapters[1].createSongLibrary(changed);
+  assert.deepEqual(await adapters[0].getSongLibrary(id), library, 'Cannot overwrite an existing library');
   await adapters[0].saveTournamentBackup({ id, tournamentId: id, revision: 3, body: 'exact prior state', actor: 'integration-test', createdAt: new Date().toISOString() });
   const backup = await databases[1].collection('tournament_backups').findOne({ _id: id });
   assert.equal(backup.body, 'exact prior state');
@@ -38,10 +44,10 @@ try {
   assert(await adapters[0].hasAdmin([id], 'test-issuer', 'original'));
   assert.equal(await adapters[1].hasAdmin([id], 'test-issuer', 'replacement'), false);
   assert.equal(await adapters[1].hasAdmin([], 'test-issuer', 'original'), false);
-  console.log('PASS Atlas cross-client persistence, concurrent revision updates, session expiry/one-use deletion and immutable administrator binding.');
+  console.log('PASS Atlas library persistence/non-overwrite, cross-client persistence, concurrent revision updates, session expiry/one-use deletion and immutable administrator binding.');
 } finally {
   // Only the uniquely named records created by this run are removed.
-  for (const collection of ['tournaments', 'sessions', 'admins', 'tournament_backups'])
+  for (const collection of ['tournaments', 'sessions', 'admins', 'tournament_backups', 'song_libraries'])
     await clients[0].db(process.env.MONGODB_DB).collection(collection).deleteOne({ _id: id });
   await Promise.all(clients.map(c => c.close()));
   await rm(dir, { recursive: true, force: true });

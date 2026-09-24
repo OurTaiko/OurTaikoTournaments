@@ -6,9 +6,11 @@ import { DatabaseSync } from 'node:sqlite';
 const dir = await mkdtemp(tmpdir() + '/hachicats-reset-');
 Object.assign(process.env, { DATABASE_PATH: dir + '/test.sqlite', MONGODB_URI: '', VERCEL: '', DEMO_MODE: 'true', APP_ORIGIN: 'http://127.0.0.1:5192' });
 try {
-  await build({ stdin: { contents: "export { POST } from './app/api/tournament/reset/route'; export { runtime } from './lib/runtime'; export { resetTournament } from './lib/reset-tournament'; export { makeTournament,tournamentState } from './lib/tournament';", resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', outfile: dir + '/test.cjs' });
-  const { POST, runtime, resetTournament, makeTournament, tournamentState } = (await import(dir + '/test.cjs')).default;
+  await build({ stdin: { contents: "export {demoSongLibrary} from './lib/demo-song-library'; export { POST } from './app/api/tournament/reset/route'; export { runtime } from './lib/runtime'; export { resetTournament } from './lib/reset-tournament'; export { makeTournament,tournamentState } from './lib/tournament';", resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', outfile: dir + '/test.cjs' });
+  const { demoSongLibrary, POST, runtime, resetTournament, makeTournament, tournamentState } = (await import(dir + '/test.cjs')).default;
   const db = runtime.DB;
+  const library = demoSongLibrary();
+  await db.createSongLibrary(library);
   const initial = makeTournament(true); initial.revision = 7;
   const row = { id: 'demo', revision: 7, body: JSON.stringify(tournamentState(initial)) };
   await db.createTournament(row);
@@ -53,6 +55,7 @@ try {
   assert(await db.getSession('test-session', Date.now())); assert(await db.hasAdmin(['test-admin'], 'test', 'sub'));
   const production = await resetTournament(db, false, { revision: 7, confirmation: '重置第一届八猫杯' }, 'test-admin');
   assert.equal(production.tournament.revision, 8); assert.equal((await db.getTournament('demo')).revision, 9);
+  assert.deepEqual(await db.getSongLibrary('demo'), library, 'Tournament reset must preserve the configured song library');
   sql.close();
   console.log('PASS reset API auth/origin/body validation, full reset, exact backup, backup failure, racing score save, monotonic revision, replay rejection and demo/production isolation.');
 } finally { await rm(dir, { recursive: true, force: true }); }
