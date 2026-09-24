@@ -1,7 +1,7 @@
+import { makeTournament, rosters } from "./tournament-seed";
 import { runtime } from "@/lib/runtime";
 export { runtime } from "@/lib/runtime";
 import {
-  makeTournament,
   hydrateTournament,
   tournamentState,
   type StoredTournament,
@@ -24,7 +24,13 @@ export async function readTournament() {
     await db().createTournament({ id, revision: 0, body: JSON.stringify(tournamentState(initial)) });
     row = await db().getTournament(id);
   }
-  return hydrateTournament(JSON.parse(row!.body) as StoredTournament);
+  const stored = JSON.parse(row!.body) as StoredTournament;
+  if (!stored.rosters) {
+    if (runtime.MONGODB_URI && !isDemo())
+      throw new Error("Production players must be migrated before serving requests");
+    stored.rosters = structuredClone(rosters);
+  }
+  return hydrateTournament(stored);
 }
 export async function writeTournament(next: Tournament, previous: number) {
   const updated = await db().updateTournament({

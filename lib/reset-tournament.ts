@@ -1,6 +1,7 @@
+import { makeTournament } from "./tournament-seed";
 import type { Database } from './database';
 import { RuleError } from './rules';
-import { makeTournament, tournamentState } from './tournament';
+import { hydrateTournament, tournamentState, type StoredTournament } from './tournament';
 import { resetConfirmation } from './reset-confirmation';
 
 export async function resetTournament(database: Database, demo: boolean, input: unknown, actor: string) {
@@ -13,7 +14,8 @@ export async function resetTournament(database: Database, demo: boolean, input: 
   const current = await database.getTournament(id);
   if (!current) throw new RuleError('未找到赛事，无法重置。', 404);
   if (current.revision !== revision) throw new RuleError('赛况已更新，请重新查看赛事后再次确认重置。', 409);
-  const next = makeTournament(false);
+  const roster = hydrateTournament(JSON.parse(current.body) as StoredTournament).rosters;
+  const next = makeTournament(false, roster);
   next.revision = revision + 1;
   const backupId = crypto.randomUUID();
   // Preserve the exact prior state before attempting the conditional write.

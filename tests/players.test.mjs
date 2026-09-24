@@ -13,7 +13,7 @@ process.env.VERCEL = "";
 try {
   await build({
     stdin: {
-      contents: "export * from './lib/players'; export * from './lib/tournament'; export * from './lib/store'; export * from './lib/rules';",
+      contents: "export * from './lib/players'; export * from './lib/tournament'; export * from './lib/tournament-seed'; export * from './lib/store'; export * from './lib/rules';",
       resolveDir: process.cwd(),
     },
     bundle: true,

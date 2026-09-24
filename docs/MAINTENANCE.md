@@ -44,6 +44,8 @@ flowchart LR
 | 文件 | 职责 |
 | --- | --- |
 | `app/page.tsx` | 观众页面、分组曲库、管理状态及比赛详情 |
+| `components/player-manager.tsx` | 管理员编辑姓名 / rating、新增同组替补 |
+| `lib/player-management.ts` | 首轮互换、替补、锁定规则与选手输入校验 |
 | `components/match-editor.tsx` | 选曲、Ban、生成曲目、录分与轮空操作 |
 | `components/reset-tournament.tsx` | 重置确认文字、旧版本与重复提交保护 |
 | `components/use-song-catalog.ts` | 公开曲库读取，每 30 秒刷新 |
@@ -71,6 +73,7 @@ flowchart LR
 | `GET /api/health` | 数据库 ping；200 不代表 SSO、曲库文档或上游曲名接口一定正常 |
 | `GET /api/matches/[id]` | 仅管理员；该场私有草稿、本组曲库、该场指定曲和赛事 revision |
 | `POST /api/matches/[id]` | 仅管理员；`draft/start/save/finish/bye`，校验 Origin 和 revision |
+| `POST /api/players` | 仅管理员；编辑资料 / 新增替补 / 首轮换人，校验 Origin 和赛事 revision |
 | `POST /api/tournament/reset` | 仅管理员；确认文字、revision、完整备份及条件更新 |
 | `GET /api/auth/login`、`GET /api/auth/callback` | 发起和完成 SSO 登录 |
 | `POST /api/auth/logout` | 清理本站会话，并尝试撤销 SSO token |
@@ -84,7 +87,7 @@ flowchart LR
 
 | 集合 | 关键字段 / 行为 |
 | --- | --- |
-| `tournaments` | `_id: edition-1` 或 `demo`；`revision`；`body` 是 JSON 字符串，内部也有 revision |
+| `tournaments` | `_id: edition-1` 或 `demo`；`revision`；`body` 是 JSON 字符串，内部也有 revision，`rosters` 保存三组选手资料 |
 | `song_libraries` | `_id` 同上；`version: 1`；原生对象 `pools`、`designated` |
 | `admins` | `_id` 为配置中的用户名；`subject`、`issuer` 绑定已验证的 SSO 身份 |
 | `sessions` | `_id` 为随机会话 ID；`body` 含会话数据；`expires` 为毫秒时间戳，`expiresAt` 为 MongoDB Date |
@@ -96,7 +99,20 @@ flowchart LR
 
 ### 选手
 
-姓名、seed、rating 在 `data/players.json`。比赛文档只保存选手 ID 和 seed，读取时关联当前资料，兼容旧文档中的姓名。改姓名或 rating 后重新部署；保留 ID 与对阵顺序，不要为了 rating 排名重排 seed。
+姓名、初始 seed、rating 在 MongoDB `tournaments/edition-1` 的 `body.rosters` 中。每场比赛的 a/b 只保存选手 ID 和位置 seed，读取时关联数据库当前资料。`data/players.json` 仅为一次性迁移 / 本地初始化资料，不再作为正式读取来源，也不进入浏览器依赖图。修改资料立即生效，无需部署。
+
+选手资料、首轮位置和比赛进度共用赛事 revision，单文档 CAS 写入使换人、替补状态、资料和录分不会被并发旧请求覆盖。替补由「本组名册中未占首轮位置的选手」计算，已淘汰选手仍占原首轮位置，不会误入替补区。新增选手分配稳定 UUID，固定组别，先进入替补。已有选手只能编辑姓名与 rating，不能更改 ID / 组别 / 初始 seed。
+
+2026-09-24 已将 48 位资料迁入现有 Atlas，并在 `tournament_backups` 留存完整迁移前文档（actor: `migration:database-players`）；当时 revision 从 11 增至 12，所有比赛内容不变。本版本提供管理前端与 API；功能通过 Git → Vercel 随代码发布，数据库迁移本身不部署代码。
+
+迁移工具仅处理 `hachicats/edition-1`，不覆盖已迁入的名册。正式库缺少 rosters 时新版本拒绝服务，避免静默回退旧资料：
+
+```sh
+node --env-file=.data/migration/atlas.env scripts/migrate-players.mjs --apply
+node --env-file=.data/migration/atlas.env scripts/migrate-players.mjs --verify
+```
+
+上述私有环境文件只存在于当前维护机，其他机器需通过平台 Secret 配置对应凭证。
 
 报名资料中“社畜”已按主办方确认统一为“社畜桑”。数字昵称仍用字符串；rating 用数字，显示两位小数。
 
@@ -149,6 +165,12 @@ SSO Application 的所有者、Django 工作人员 / 超级用户、OAuth Grants
 
 ## 5. 日常操作
 
+### 编辑选手及换人
+
+管理员登录后，在「赛事管理」选择组别，通过「选手资料」编辑姓名 / rating 或「新增替补选手」。姓名为 1～60 字，rating 为 0～100、最多两位小数。表单打开时记住赛事版本，期间任何赛事修改都会要求重新打开表单。
+
+在「赛事对阵」管理视图中，首轮每场下方有上位 / 下位下拉框。选择同组另一名正赛选手会原子互换；选择替补则直接上场，原选手进入下方替补区。跨组换人不允许。仅未开赛、未公布、未录分、无胜者且未晋级的首轮位置允许变更；交换时双方比赛均须满足条件。受影响比赛的未使用选曲 / Ban / 曲目草稿会清空，重新选曲。后续轮次仍由赛果自动晋级。
+
 ### 更新曲库
 
 网页目前没有编辑入口。正式配置在 Atlas `hachicats.song_libraries` 的 `edition-1` 文档中维护。修改前备份完整原文档到私有目录，确认目标组别、用途、`songID` 和 `difficultyIndex`，用 `parseSongLibrary` 校验完整候选配置。
@@ -170,13 +192,13 @@ node --env-file=.data/private-atlas.env scripts/import-song-library.mjs .data/pr
 
 入口：「主办方入口 / 赛事管理 → 第一届赛事维护 → 重置第一届赛事」。输入 `重置第一届八猫杯` 后点击「备份并重置赛事」。
 
-重置三个组全部 48 场的选曲、Ban、成绩、轮空、胜者和晋级状态，恢复 `players.json` 对应的初始对阵。保留选手资料、曲库、管理员绑定及会话。演示模式确认文字为 `重置演示赛事`，只操作 `demo`。
+重置三个组全部 48 场的选曲、Ban、成绩、轮空、胜者和晋级状态，恢复数据库名册前 16 位对应的初始对阵；新增选手仍为替补。保留选手资料、曲库、管理员绑定及会话。演示模式确认文字为 `重置演示赛事`，只操作 `demo`。
 
 后端先保存完整原始赛事文档，再以原 revision 条件更新为当前 revision + 1。备份失败就不重置；竞态失败可能留下一条未用于重置的备份，但不会覆盖其他人刚录入的成绩。旧录分窗口提交会返回 409。网络中断时先重新读取赛况，不要假定失败而连续提交。
 
 ### 备份与恢复
 
-重置快照不自动过期，但也不是定时备份或全库备份：它只包含赛事进度，不包含曲库、账号绑定及会话。不要假定 Atlas 套餐已经提供自动备份。修改曲库、迁移或维护重要数据前，分别保存所需文档；文件放在被忽略的私有目录，权限设为 600，日志仅记录计数 / 哈希 / 版本。
+重置快照不自动过期，但也不是定时备份或全库备份：迁移后它包含赛事进度及选手名册，不包含曲库、账号绑定及会话。恢复迁移前旧快照时必须合入当前 rosters，不能让旧快照删除现有选手资料。不要假定 Atlas 套餐已经提供自动备份。修改曲库、迁移或维护重要数据前，分别保存所需文档；文件放在被忽略的私有目录，权限设为 600，日志仅记录计数 / 哈希 / 版本。
 
 **当前没有恢复脚本或恢复 API。** 下列是维护流程，不是已经实现的命令：
 
@@ -209,7 +231,7 @@ npm run dev
 
 | 改动范围 | 相关验证 |
 | --- | --- |
-| 比赛规则 / 选手 / 曲库 / 公开数据 | `npm test`：含规则、选手、曲库和浏览器依赖边界 |
+| 比赛规则 / 选手 / 曲库 / 公开数据 | `npm test`：含规则、选手、换人 / 替补 / 权限 / 并发 / 迁移、曲库和浏览器依赖边界 |
 | 管理员配置与绑定 | `npm run test:admins`；需要时用测试身份走完整 SSO 流程 |
 | SQLite / 存储适配 | `npm run test:storage` |
 | 重置与备份 | `npm run test:reset`，使用临时 SQLite |

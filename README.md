@@ -1,6 +1,6 @@
 # HachiCats · 第一届八猫杯
 
-手机优先的太鼓赛事网站，支持三组单败淘汰、两台并行比赛、选曲与 Ban、手动录分、自动晋级、轮空及管理员重置。
+手机优先的太鼓赛事网站，支持管理员编辑选手资料、首轮换人及替补管理，以及三组单败淘汰、两台并行比赛、选曲与 Ban、手动录分、自动晋级、轮空及管理员重置。
 
 - 正式网站：[hachicats.ourtaiko.org](https://hachicats.ourtaiko.org)
 - 生产：Next.js / Vercel + MongoDB Atlas，登录使用既有 OurTaiko SSO。
@@ -13,7 +13,7 @@
 | 页面、对阵图、管理表单 | `app/page.tsx`、`components/` |
 | 后端 HTTP 接口 | `app/api/**/route.ts` |
 | 比赛规则、晋级与持久化 | `lib/rules.ts`、`lib/tournament.ts`、`lib/store.ts` |
-| 选手姓名、出场序号、rating | `data/players.json` |
+| 选手姓名、初始出场序号、rating | MongoDB `tournaments/edition-1` 的 `body.rosters` |
 | 正式曲库与指定曲 | MongoDB `song_libraries`，文档 `edition-1` |
 | 正式比分与比赛进度 | MongoDB `tournaments`，文档 `edition-1` |
 | 管理员允许名单 | Vercel Production 环境变量 `ADMIN_USERNAMES` |

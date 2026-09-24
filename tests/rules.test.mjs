@@ -9,7 +9,7 @@ try {
   await build({
     stdin: {
       contents:
-        "export * from './lib/rules'; export * from './lib/tournament';",
+        "export * from './lib/rules'; export * from './lib/tournament'; export * from './lib/tournament-seed';",
       resolveDir: process.cwd(),
     },
     bundle: true,

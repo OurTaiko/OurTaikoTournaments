@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Cat,
   ChevronRight,
@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/sheet";
 import MatchEditor from "@/components/match-editor";
 import ResetTournament from "@/components/reset-tournament";
+import PlayerManager from "@/components/player-manager";
+import { canReplace, reserves, type PlayerAction } from "@/lib/player-management";
 import PlayerRating from "@/components/player-rating";
 import { useSongCatalog } from "@/components/use-song-catalog";
 import { difficultyNames, type Song } from "@/lib/songs";
@@ -31,7 +33,6 @@ import type { Viewer } from "@/lib/auth";
 import {
   groups,
   roundNames,
-  makeTournament,
   firstAttack,
   totals,
   songName,
@@ -39,7 +40,7 @@ import {
   type Match,
   type Tournament,
 } from "@/lib/tournament";
-const initial = makeTournament(false);
+const initial: Tournament = { revision: 0, updatedAt: "", matches: [], rosters: { siamese: [], tabby: [], ragdoll: [] } };
 export default function Home() {
   const { catalog, pools, notice: songNotice, refresh: refreshSongs } = useSongCatalog();
   const displaySongName = (group: GroupId, id: string) => songName(group, id, catalog);
@@ -57,6 +58,8 @@ export default function Home() {
   const [designated, setDesignated] = useState<Song | null>(null);
   const [editorPool, setEditorPool] = useState<Song[]>([]);
   const [manage, setManage] = useState(false);
+  const playerSaveLock = useRef(false);
+  const [savingPlayer, setSavingPlayer] = useState(false);
   const [opening, setOpening] = useState(false);
   const load = useCallback(async () => {
     try {
@@ -82,6 +85,24 @@ export default function Home() {
       setConnectionError(e instanceof Error ? e.message : "赛况连接中断。");
     }
   }, []);
+  async function savePlayer(action: PlayerAction, revision: number) {
+    if (playerSaveLock.current) return false;
+    playerSaveLock.current = true;
+    setSavingPlayer(true);
+    try {
+      const response = await fetch("/api/players", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, revision }) });
+      const result = await response.json() as { error?: string; tournament: Tournament };
+      if (!response.ok) throw new Error(result.error || "保存失败，请稍后重试。");
+      setTournament(previous => result.tournament.revision >= previous.revision ? result.tournament : previous);
+      setSelected(null);
+      toast.success(action.type === "replace" ? "对阵已更新，受影响比赛的选曲草稿已清空。" : "选手资料已保存");
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "连接失败，请刷新确认保存结果。");
+      await load();
+      return false;
+    } finally { playerSaveLock.current = false; setSavingPlayer(false); }
+  }
   async function loadSession() {
     const r = await fetch("/api/session", { cache: "no-store" });
     const d = (await r.json()) as {
@@ -228,8 +249,8 @@ export default function Home() {
   function matchCard(m: Match) {
     const score = totals(m);
     return (
+      <div className="match-slot" key={m.id}>
       <button
-        key={m.id}
         className={`match ${m.status}`}
         onClick={() => void openMatch(m)}
         aria-label={`${roundNames[m.round]} ${m.a?.name ?? "待定"} 对 ${m.b?.name ?? "待定"}`}
@@ -272,6 +293,23 @@ export default function Home() {
           </span>
         ))}
       </button>
+      {user?.admin && manage && m.round === 0 && <div className="lineup-controls">
+        {(["a", "b"] as const).map(side => <label key={side}>
+          <span>{side === "a" ? "上位" : "下位"}</span>
+          <select aria-label={`第 ${m.index + 1} 场${side === "a" ? "上位" : "下位"}选手`}
+            value={m[side]?.id ?? ""} disabled={!loaded || !!connectionError || savingPlayer || !canReplace(m)}
+            onChange={e => void savePlayer({ type: "replace", matchId: m.id, side, playerId: e.target.value }, tournament.revision)}>
+            {!m[side] && <option value="" disabled>选择选手</option>}
+            {tournament.rosters[group].map(p => {
+              const source = matches.find(other => other.round === 0 && (other.a?.id === p.id || other.b?.id === p.id));
+              return <option key={p.id} value={p.id} disabled={!!source && !canReplace(source) && p.id !== m[side]?.id}>
+                {p.name} · {p.rating.toFixed(2)}{source ? ` · 第${source.index + 1}场` : " · 替补"}
+              </option>;
+            })}
+          </select>
+        </label>)}
+      </div>}
+      </div>
     );
   }
   return (
@@ -496,7 +534,8 @@ export default function Home() {
                   ))}
                 </TabsList>
               </Tabs>
-              <div className="bracket-board">
+              {user?.admin && manage && <p className="lineup-note">首轮下拉选择选手：正赛选手互换位置，替补上场则原选手进入替补区。仅限未开赛、未录分的比赛；换人会清空相关选曲草稿。</p>}
+              <div className={`bracket-board ${user?.admin && manage ? "managing-lineup" : ""}`}>
                 {[0, 1, 2, 3].map((r) => (
                   <div
                     key={r}
@@ -539,6 +578,13 @@ export default function Home() {
                 </span>
                 <span>单败淘汰 · 半决赛败者进入季军赛</span>
               </div>
+            </section>
+            <section className="reserve-section" aria-label="替补区">
+              <div className="section-heading"><h2>替补区 <span className="count">{reserves(tournament, group).length}</span></h2>
+                {user?.admin && manage && <button className="secondary-button" onClick={() => setView("admin")}>管理选手资料</button>}
+              </div>
+              <div className="reserve-list">{reserves(tournament, group).map(p => <div className="reserve-player" key={p.id}><b>{p.name}</b><PlayerRating rating={p.rating} /></div>)}</div>
+              {!reserves(tournament, group).length && <p className="muted">本组暂无替补选手。</p>}
             </section>
           </>
         )}
@@ -659,6 +705,8 @@ export default function Home() {
                 ? "本地演示模式中的操作只影响演示赛况。"
                 : "管理员权限由服务端验证。"}
             </p>
+            {user?.admin && <PlayerManager key={group} tournament={tournament} group={group}
+              disabled={!loaded || !!connectionError || savingPlayer} onSave={savePlayer} />}
             {user?.admin && <ResetTournament
               revision={tournament.revision}
               demo={demo}

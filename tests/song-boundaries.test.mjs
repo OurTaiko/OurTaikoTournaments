@@ -4,8 +4,8 @@ import { existsSync } from 'node:fs';
 
 const result = await build({ entryPoints: ['app/page.tsx'], bundle: true, platform: 'browser', write: false, metafile: true, logLevel: 'silent' });
 const forbidden = Object.keys(result.metafile.inputs).filter(path =>
-  /(?:^|\/)lib\/(?:.*\.server|runtime(?:\.cloudflare)?|mongodb|sql-database|demo-song-library|song-library)\.ts$/.test(path) ||
-  /(?:^|\/)data\/(?:songs|designated-songs)\.json$/.test(path) ||
+  /(?:^|\/)lib\/(?:.*\.server|runtime(?:\.cloudflare)?|mongodb|sql-database|demo-song-library|song-library|tournament-seed)\.ts$/.test(path) ||
+  /(?:^|\/)data\/(?:songs|designated-songs|players)\.json$/.test(path) ||
   path.includes('node_modules/server-only/'),
 );
 assert.deepEqual(forbidden, [], 'Browser graph must not contain database, private-library or demo seed modules');
