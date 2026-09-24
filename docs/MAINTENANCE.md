@@ -16,7 +16,7 @@
 | 正式回调 | `https://hachicats.ourtaiko.org/api/auth/callback` |
 | 当前记录的管理员名单 | `kirisamevanilla,grace0512,Touka16`；以生效部署的环境变量为准 |
 
-SSO 继续运行在原来的服务上。HachiCats 原有的 1Panel / Docker 服务已经退役；不要按仓库里保留的 `Dockerfile` / `compose.yaml` 把本站重新部署回旧服务器。它们不是现行发布入口，旧 SQLite / D1 适配器仍用于本地与兼容场景。
+SSO 继续运行在原来的服务上。HachiCats 原有的 1Panel / Docker 服务已经退役，仓库已移除 Docker 构建、Compose 和忽略配置，以及专用于容器部署的 Next.js standalone 输出与启动命令。现行发布入口是 Vercel 的 `npm run build:server`；旧 SQLite / D1 适配器仍用于本地与兼容场景。
 
 **已上线：** 选曲和 Ban、生成比赛曲目、录分、总分判胜、自动晋级、A/B 台并行比赛、轮空、整届重置及重置前备份。16 进 8、8 进 4 中 rating 低于对手至少 0.50 的选手显示先攻标记。
 
