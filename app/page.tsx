@@ -772,12 +772,13 @@ export default function Home() {
                   catalog={catalog}
                   pool={editorPool}
                   onSaved={(m, r) => {
-                    setSelected(m);
+                    const resultConfirmed = m.status === "complete" || m.status === "bye";
+                    setSelected(resultConfirmed ? null : m);
                     setEditorRevision(r);
                     void load();
                     void refreshSongs();
                     toast.success(
-                      m.status === "complete" || m.status === "bye"
+                      resultConfirmed
                         ? "结果已确认，对阵图已更新"
                         : "已保存",
                     );
