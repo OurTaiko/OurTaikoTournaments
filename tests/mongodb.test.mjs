@@ -39,15 +39,11 @@ try {
   assert(await adapters[1].getSession(id, expires - 1));
   assert.equal(await adapters[1].getSession(id, expires), null);
   assert.equal((await Promise.all(adapters.map(a => a.deleteSession(id)))).filter(Boolean).length, 1);
-  await adapters[0].bindAdmin({ username: id, subject: 'original', issuer: 'test-issuer' });
-  await adapters[1].bindAdmin({ username: id, subject: 'replacement', issuer: 'test-issuer' });
-  assert(await adapters[0].hasAdmin([id], 'test-issuer', 'original'));
-  assert.equal(await adapters[1].hasAdmin([id], 'test-issuer', 'replacement'), false);
-  assert.equal(await adapters[1].hasAdmin([], 'test-issuer', 'original'), false);
-  console.log('PASS Atlas library persistence/non-overwrite, cross-client persistence, concurrent revision updates, session expiry/one-use deletion and immutable administrator binding.');
+
+  console.log('PASS Atlas library persistence/non-overwrite, cross-client persistence, concurrent revision updates, session expiry/one-use deletion.');
 } finally {
   // Only the uniquely named records created by this run are removed.
-  for (const collection of ['tournaments', 'sessions', 'admins', 'tournament_backups', 'song_libraries'])
+  for (const collection of ['tournaments', 'sessions', 'tournament_backups', 'song_libraries'])
     await clients[0].db(process.env.MONGODB_DB).collection(collection).deleteOne({ _id: id });
   await Promise.all(clients.map(c => c.close()));
   await rm(dir, { recursive: true, force: true });

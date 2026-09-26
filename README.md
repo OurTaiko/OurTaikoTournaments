@@ -16,8 +16,8 @@
 | 选手姓名、初始出场序号、rating | MongoDB `tournaments/edition-1` 的 `body.rosters` |
 | 正式曲库与指定曲 | MongoDB `song_libraries`，文档 `edition-1` |
 | 正式比分与比赛进度 | MongoDB `tournaments`，文档 `edition-1` |
-| 管理员允许名单 | Vercel Production 环境变量 `ADMIN_USERNAMES` |
-| SSO 身份绑定、登录会话、重置备份 | MongoDB `admins`、`sessions`、`tournament_backups` |
+| 管理员权限 | OurTaiko SSO → Client roles → HachiCats → Is admin |
+| 登录会话、重置备份 | MongoDB `sessions`、`tournament_backups`；旧 `admins` 仅留存回退 |
 
 曲名与星级从 OurTaiko 曲目接口获取。未公布的指定曲不进入公开 API 或浏览器代码；真实配置不要提交进 Git。旧 Git 历史曾保存过指定曲，当前移除不代表历史已清除。
 

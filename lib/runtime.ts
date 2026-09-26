@@ -12,7 +12,6 @@ function sqlite() {
   mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
   const next = new DatabaseSync(path);
   next.exec(`PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;
-    CREATE TABLE IF NOT EXISTS admins (username TEXT PRIMARY KEY NOT NULL, subject TEXT NOT NULL, issuer TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY NOT NULL, body TEXT NOT NULL, expires INTEGER NOT NULL);
     CREATE INDEX IF NOT EXISTS sessions_expires ON sessions(expires);
     CREATE TABLE IF NOT EXISTS tournaments (id TEXT PRIMARY KEY NOT NULL, revision INTEGER NOT NULL, body TEXT NOT NULL);`);

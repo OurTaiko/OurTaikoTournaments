@@ -15,7 +15,6 @@ try {
   const row = { id: 'demo', revision: 7, body: JSON.stringify(tournamentState(initial)) };
   await db.createTournament(row);
   await db.createTournament({ ...row, id: 'edition-1' });
-  await db.bindAdmin({ username: 'test-admin', subject: 'sub', issuer: 'test' });
   await db.saveSession({ id: 'test-session', body: JSON.stringify({ kind: 'demo' }), expires: Date.now() + 60000 });
   const sql = new DatabaseSync(process.env.DATABASE_PATH);
   const request = (body, cookie = true, origin = process.env.APP_ORIGIN) => new Request(process.env.APP_ORIGIN + '/api/tournament/reset', { method: 'POST', headers: { Origin: origin, ...(cookie ? { Cookie: 'hachicats_session=test-session' } : {}) }, body: typeof body === 'string' ? body : JSON.stringify(body) });
@@ -52,7 +51,7 @@ try {
   assert.equal((await POST(request({ ...input, revision: 8 }))).status, 409, 'Duplicate request rejected');
   assert.equal(await db.updateTournament({ ...row, revision: 8 }, 7), false, 'Old editor cannot overwrite reset');
   assert.equal((await db.getTournament('edition-1')).body, row.body, 'Demo reset must not touch production');
-  assert(await db.getSession('test-session', Date.now())); assert(await db.hasAdmin(['test-admin'], 'test', 'sub'));
+  assert(await db.getSession('test-session', Date.now()));
   const production = await resetTournament(db, false, { revision: 7, confirmation: '重置第一届八猫杯' }, 'test-admin');
   assert.equal(production.tournament.revision, 8); assert.equal((await db.getTournament('demo')).revision, 9);
   assert.deepEqual(await db.getSongLibrary('demo'), library, 'Tournament reset must preserve the configured song library');

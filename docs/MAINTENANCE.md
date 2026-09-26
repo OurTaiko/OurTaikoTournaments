@@ -1,6 +1,6 @@
 # HachiCats 维护手册
 
-最后核对：2026-09-24。本文以同一提交中的代码为依据；线上环境变量、账号权限和赛事进度在实际维护时重新核对。文档不保存凭证、真实指定曲或当前比分。
+最后核对：2026-09-25。本文以同一提交中的代码为依据；线上环境变量、账号权限和赛事进度在实际维护时重新核对。文档不保存凭证、真实指定曲或当前比分。
 
 ## 1. 生产环境与已知边界
 
@@ -14,13 +14,13 @@
 | 数据库 | MongoDB Atlas `OurTaiko` 集群，数据库 `hachicats`，东京区域 |
 | SSO | `https://sso.ourtaiko.org`，Application 名称 `HachiCats` |
 | 正式回调 | `https://hachicats.ourtaiko.org/api/auth/callback` |
-| 当前记录的管理员名单 | `kirisamevanilla,grace0512,Touka16`；以生效部署的环境变量为准 |
+| 管理员权限来源 | SSO Client roles，选择 HachiCats Application；按稳定用户 ID 授权 |
 
 SSO 继续运行在原来的服务上。HachiCats 原有的 1Panel / Docker 服务已经退役，仓库已移除 Docker 构建、Compose 和忽略配置，以及专用于容器部署的 Next.js standalone 输出与启动命令。现行发布入口是 Vercel 的 `npm run build:server`；旧 SQLite / D1 适配器仍用于本地与兼容场景。
 
 **已上线：** 选曲和 Ban、生成比赛曲目、录分、总分判胜、自动晋级、A/B 台并行比赛、轮空、整届重置及重置前备份。16 进 8、8 进 4 中 rating 低于对手至少 0.50 的选手显示先攻标记。
 
-**尚未实现：** 独立的赛前「公布决赛曲 / 季军曲」按钮、网页曲库编辑器、网页管理员编辑器、备份恢复按钮、单场赛果撤销 / 改判、完整操作审计日志。讨论过这些功能不代表已经上线。
+**尚未实现：** 独立的赛前「公布决赛曲 / 季军曲」按钮、网页曲库编辑器、本站管理员编辑器（管理员在 SSO 后台维护）、备份恢复按钮、单场赛果撤销 / 改判、完整操作审计日志。讨论过这些功能不代表已经上线。
 
 ## 2. 前后端如何部署
 
@@ -32,12 +32,12 @@ Next.js 按路由和模块依赖生成构建结果，Vercel 按其框架集成�
 flowchart LR
   Browser[观众或管理员浏览器] --> CDN[Vercel 页面与静态资源]
   Browser --> API[Vercel 后端接口]
-  API --> DB[Atlas：赛事、曲库、会话、绑定、备份]
-  API --> SSO[OurTaiko SSO：验证登录身份]
+  API --> DB[Atlas：赛事、曲库、会话、备份]
+  API --> SSO[OurTaiko SSO：验证登录身份及应用角色]
   API --> Catalog[OurTaiko 曲目 API：曲名和星级]
 ```
 
-浏览器通过同一域名请求 `/api/...`，不直接连接 MongoDB。管理员名单和数据库 / SSO 密钥在服务端读取，不能改成 `NEXT_PUBLIC_*` 或放进客户端 props / JSON 响应。
+浏览器通过同一域名请求 `/api/...`，不直接连接 MongoDB。管理员角色在服务端实时查询，数据库 / SSO 密钥仅在服务端读取，不能改成 `NEXT_PUBLIC_*` 或放进客户端 props / JSON 响应。
 
 ### 代码入口
 
@@ -56,7 +56,7 @@ flowchart LR
 | `lib/runtime.ts` | Next.js 运行环境：Atlas 或本地 SQLite |
 | `lib/runtime.cloudflare.ts` / `lib/sql-database.ts` | Vinext/D1 与 SQLite 适配 |
 | `lib/mongodb.ts` | Atlas 连接池与集合读写 |
-| `lib/auth.ts` / `lib/admins.ts` | SSO、会话、管理员身份绑定 |
+| `lib/auth.ts` / `lib/sso-session.ts` | OIDC、会话、本应用 token 验证与实时 ClientRole |
 | `lib/song-library.ts` | 曲库结构校验 |
 | `lib/song-library.server.ts` | 按正式 / 演示赛事读取数据库曲库 |
 | `lib/song-catalog.server.ts` | 获取曲名 / 星级，按比赛公布状态过滤指定曲 |
@@ -89,11 +89,11 @@ flowchart LR
 | --- | --- |
 | `tournaments` | `_id: edition-1` 或 `demo`；`revision`；`body` 是 JSON 字符串，内部也有 revision，`rosters` 保存三组选手资料 |
 | `song_libraries` | `_id` 同上；`version: 1`；原生对象 `pools`、`designated` |
-| `admins` | `_id` 为配置中的用户名；`subject`、`issuer` 绑定已验证的 SSO 身份 |
+| `admins` | 历史身份绑定，仅留存回退，不再读取或写入，不授予权限 |
 | `sessions` | `_id` 为随机会话 ID；`body` 含会话数据；`expires` 为毫秒时间戳，`expiresAt` 为 MongoDB Date |
 | `tournament_backups` | `_id` 为随机备份 ID；`tournamentId`、原 `revision/body`、`createdAt`、`actor` |
 
-`admins` 不是另一份允许名单，`sessions` 也不是所有 SSO 用户的注册表。会话读取始终校验过期时间；`sessions_expiry` TTL 索引按 `expiresAt` 清理，不能只依赖异步 TTL 删除来判断登录有效。
+`admins` 不参与当前认证，`sessions` 也不是所有 SSO 用户的注册表。会话读取始终校验过期时间；`sessions_expiry` TTL 索引按 `expiresAt` 清理，不能只依赖异步 TTL 删除来判断登录有效。
 
 比赛写入使用 `_id + previous revision` 条件更新，只有一位并发写入者成功。数据库外层 `revision` 与 `body` 内的 revision 必须同步。不要把 `song_libraries.version` 当比赛版本号：它目前是固定的数据结构版本。
 
@@ -144,9 +144,9 @@ node --env-file=.data/migration/atlas.env scripts/migrate-players.mjs --verify
 | `MONGODB_DB` | `hachicats` |
 | `SSO_ISSUER` | `https://sso.ourtaiko.org` |
 | `SSO_CLIENT_ID` / `SSO_CLIENT_SECRET` | 已登记的 HachiCats 客户端；密钥保存为 Secret |
-| `ADMIN_USERNAMES` | 逗号分隔的 SSO 登录用户名，大小写准确 |
+| SSO 后台的接口权限 | HachiCats 仅开启“允许网站令牌查询和撤销”；游戏、资料查询无需开启 |
 
-本地 `DATABASE_PATH` 用于 SQLite。`ADMIN_USERNAME` 仅为旧配置兼容；优先使用复数变量。两个管理员变量都缺失时，当前代码默认 `kirisamevanilla`；明确设置 `ADMIN_USERNAMES` 为空会禁用全部管理员。
+本地 `DATABASE_PATH` 用于 SQLite。`ADMIN_USERNAMES` / `ADMIN_USERNAME` 已不再读取，也没有默认管理员。内部请求复用现有 `SSO_CLIENT_ID` / `SSO_CLIENT_SECRET`，不新增服务凭据。
 
 Production 凭证不复制到 Preview。Vercel 缺少 MongoDB 配置时拒绝运行数据库操作，不回退到临时 SQLite；正式 Atlas 缺少赛事或曲库文档时需要明确初始化 / 导入，不能自动生成演示数据。
 
@@ -154,14 +154,24 @@ Atlas 使用专用应用账号 `hachicats_app`，仅有 `hachicats` 库读写权
 
 ### 添加或移除管理员
 
-1. 在 Vercel 的 `hachicats → Settings → Environment Variables` 编辑 Production 的 `ADMIN_USERNAMES`。保留其余名字，用英文逗号追加或删除目标登录用户名。
-2. 保存并重新部署 Production，使新环境变量生效。
-3. 用户使用自己的 OurTaiko 账号登录；已登录用户刷新页面以重新读取权限。受保护接口会再次验证身份与有效名单。
-4. 名单中的身份首次验证通过后，程序自动在 `admins` 建立用户名到 `(issuer, subject)` 的绑定，无需手工插入数据库。
+1. 在 OurTaiko SSO 后台进入 **Client roles**，选择用户及 **HachiCats** Application。
+2. 勾选 **Is admin** 并保存即授权；取消勾选或删除该角色即撤权。不需要修改 Vercel 配置或重新部署。
+3. 后端每次管理请求用当前 access token 调用 `/internal/v1/web/introspect`，核对返回 ID 与本站 session 的 sub 一致，并严格读取布尔值 isAdmin。
+4. 已打开页面可刷新以更新按钮显示；服务端角色变化在下一次请求生效，已发出的请求不追溯取消。
 
-SSO Application 的所有者、Django 工作人员 / 超级用户、OAuth Grants 均不等同于本站管理员。移除名单中的名字后，对应的旧绑定不再授予权限；如果同一身份仍由另一条有效绑定授权，仍有权限。
+SSO Application 所有者、Django 工作人员 / 超级用户、其他 Application 的 ClientRole 均不授予本站管理员权限。
+同名重建账号拥有不同用户 ID，不继承旧角色。OIDC 登录仍使用授权码、state、nonce、PKCE；登录本身不等于管理员。
+SSO 超时、配置错误、格式异常或身份不符均返回 503 并拒绝操作，不回退旧名单；明确的失效 token 清理本站 session。
 
-如果账号删除后同名重建，旧绑定不会自动转给新账号。遇到“名单中有名字但没权限”，先核对当前 SSO subject、issuer、大小写和部署配置。只有明确确认账号替换后，才按身份迁移处理；不要直接删除绑定来绕过保护。
+### 从旧名单切换
+
+先备份当前 Atlas 赛事、曲库及旧绑定，按生效部署的允许名单和 `(issuer, subject)` 绑定核对 SSO 用户，
+仅将对应用户添加到 HachiCats Client roles，并开启该 Application 的网站令牌接口权限。
+先配置 SSO，再通过 main → Vercel 发布本版本；确认 Ready 后验证真实 OIDC 登录、普通用户拒绝和角色即时撤销。
+测试仅读取管理详情，不重置、录分或修改正式赛事；前后比对赛事、曲库及 revision。
+旧 `admins` 文档保持原样作为回退记录，运行时代码已删除其读写方法。旧 ADMIN_USERNAMES 变量可以删除。
+若需回退应用版本，应同时恢复旧环境名单；不要回滚或覆盖赛事库。后续管理员变化以 SSO 为准，旧名单不再自动同步。
+私有备份和验证结果位于执行机器忽略目录 `.data/sso-migration/`，不随 Git 分发。
 
 ## 5. 日常操作
 
@@ -234,7 +244,7 @@ npm run dev
 | 改动范围 | 相关验证 |
 | --- | --- |
 | 比赛规则 / 选手 / 曲库 / 公开数据 | `npm test`：含规则、选手、换人 / 替补 / 权限 / 并发 / 迁移、曲库和浏览器依赖边界 |
-| 管理员配置与绑定 | `npm run test:admins`；需要时用测试身份走完整 SSO 流程 |
+| SSO 应用角色与实时撤权 | `npm run test:admins`；需要时用测试身份走完整 SSO 流程 |
 | SQLite / 存储适配 | `npm run test:storage` |
 | 重置与备份 | `npm run test:reset`，使用临时 SQLite |
 | 接口整体流程 | 本地 demo 启动后，`TEST_ORIGIN=http://127.0.0.1:5192 npm run test:api` |
@@ -268,10 +278,11 @@ node --env-file=.data/private-test-atlas.env tests/mongodb.test.mjs
 
 | 现象 | 先检查什么 |
 | --- | --- |
-| 管理员名单中有名字但没权限 | 生效部署的 `ADMIN_USERNAMES`、大小写、SSO UserInfo、`admins` 的 issuer / subject；不是昵称或 SSO 工作人员标记 |
+| SSO 中设置角色但没权限 | 检查用户稳定 ID、HachiCats Application、Is admin，以及该应用网站令牌权限；不能选择 Fanmade 的角色 |
 | 401 | 会话不存在、过期或 SSO token 无效；重新登录，检查 Cookie 与实际域名 |
 | 403「请求来源不匹配」 | Origin 与 `APP_ORIGIN` 是否完全一致；是否混用 localhost / 127.0.0.1 / Vercel 预览域名 |
-| 403「没有管理权限」 | 服务端名单与稳定身份绑定；不要用前端显示状态代替权限结论 |
+| 403「没有管理权限」 | SSO 返回本应用 isAdmin=false；前端按钮状态不作为权限依据 |
+| 503「无法验证登录权限」 | 检查 SSO 可用性、现有应用凭据及网站令牌接口权限；不得回退旧管理员名单 |
 | 409 | 别的管理员已保存或页面版本过旧；重新读取比赛，不能强制覆盖 |
 | 503 / 数据库连接失败 | MongoDB Secret、数据库名、账号权限、Atlas 网络规则、服务端日志；不要输出连接串 |
 | 健康检查正常但曲库 503 | `song_libraries/edition-1` 是否存在且满足 schema；health 只做 ping |

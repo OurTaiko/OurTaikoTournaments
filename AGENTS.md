@@ -9,7 +9,7 @@
 - 用户要求修改功能或部署，不等于要求重置正式赛事。发布前后保留并核对现有比分、选曲、胜者、晋级和 revision。
 - 选手及 rating 在数据库赛事文档 `body.rosters`，`data/players.json` 仅用于首次迁移 / 本地初始化；正式曲库在数据库 `song_libraries`。不要把真实指定曲写进源码、文档、测试、种子、日志、提交说明或前端构建产物。
 - 未公布的指定曲只通过鉴权后的比赛详情接口返回；公开曲库须按该场比赛的公布状态过滤。保留 `server-only` 边界和前端依赖图测试。旧 Git 历史曾含真实配置，不要据此迁移就把仓库改为公开。
-- 管理员允许名单是 Vercel `ADMIN_USERNAMES`；MongoDB `admins` 只是 SSO 身份绑定。不要通过直接插入数据库记录或客户端判断绕过后端鉴权。
+- 管理员权限来自 SSO 的 HachiCats Application → Client roles。每次管理请求通过内部 web/introspect 验证本应用 token 与稳定用户 ID，读取 isAdmin；不信任旧 ADMIN_USERNAMES、Atlas admins 或前端状态。SSO 失败必须拒绝管理操作。
 - 写入比赛须校验 Origin、管理员和 revision。重置 / 恢复须先备份，再按当前 revision 条件更新；版本只递增。不要删除生产赛事文档来“重新初始化”。
 - 保持选手 ID、曲目内部 ID 与比赛 ID 稳定。已录分曲目的 `songID` / `difficultyIndex` 映射不能因整理数据被改写。
 - 凭证及原始备份仅保存在被忽略的私有目录或对应平台的 Secret 中。不要输出 `.env`、会话 token、完整私有数据库文档。

@@ -1,7 +1,7 @@
 import * as oidc from "openid-client";
 import { db, runtime, isDemo } from "./store";
 import { RuleError } from "./rules";
-import { resolveAdmin } from "./admins";
+import { introspectSession } from "./sso-session";
 type AuthSession = {
   kind: "user" | "demo";
   sub: string;
@@ -84,30 +84,15 @@ export async function viewer(req: Request): Promise<Viewer | null> {
       ? { name: "本地演示管理员", username: "demo", admin: true, demo: true }
       : null;
   }
-  const c = await config();
-  let info;
-  try {
-    info = await oidc.fetchUserInfo(c, s.token!, s.sub);
-  } catch (e) {
-    if (
-      (e instanceof oidc.ResponseBodyError ||
-        e instanceof oidc.WWWAuthenticateChallengeError) &&
-      [400, 401].includes(e.status)
-    ) {
-      await removeSession(sessionId(req));
-      return null;
-    }
-    throw new RuleError("暂时无法向 OurTaiko 验证登录状态，请稍后重试。", 503);
+  const identity = await introspectSession({ SSO_ISSUER: runtime.SSO_ISSUER, SSO_CLIENT_ID: runtime.SSO_CLIENT_ID, SSO_CLIENT_SECRET: runtime.SSO_CLIENT_SECRET }, { subject: s.sub, token: s.token });
+  if (!identity) {
+    await removeSession(sessionId(req));
+    return null;
   }
-  const admin = await resolveAdmin(db(), runtime, {
-    username: String(info.preferred_username || ""),
-    subject: s.sub,
-    issuer: runtime.SSO_ISSUER,
-  });
   return {
-    name: String(info.nickname || info.preferred_username || s.name),
-    username: String(info.preferred_username || s.username),
-    admin: !!admin,
+    name: identity.nickname || identity.username,
+    username: identity.username,
+    admin: identity.isAdmin,
     demo: false,
   };
 }
@@ -170,11 +155,6 @@ export async function callback(req: Request) {
   if (!claims?.sub) throw new RuleError("登录身份无效。");
   const info = await oidc.fetchUserInfo(c, tokens.access_token, claims.sub);
   const username = String(info.preferred_username || "");
-  await resolveAdmin(db(), runtime, {
-    username,
-    subject: claims.sub,
-    issuer: runtime.SSO_ISSUER,
-  });
   const lifetime = Math.max(1, Math.min(tokens.expires_in ?? 3600, 3600));
   const id = await saveSession(
     {

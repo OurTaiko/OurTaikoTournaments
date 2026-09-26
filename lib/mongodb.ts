@@ -1,10 +1,9 @@
 import { MongoClient, MongoServerError, type Db } from 'mongodb';
-import type { AdminBinding, Database, SessionRow, TournamentRow, TournamentBackup } from './database';
+import type { Database, SessionRow, TournamentRow, TournamentBackup } from './database';
 import type { SongLibrary } from './song-library';
 
 type TournamentDocument = Omit<TournamentRow, 'id'> & { _id: string };
 type SessionDocument = Omit<SessionRow, 'id'> & { _id: string; expiresAt: Date };
-type AdminDocument = Omit<AdminBinding, 'username'> & { _id: string };
 
 // Reuse one bounded connection pool per warm serverless instance.
 let connection: Promise<MongoClient> | undefined;
@@ -29,7 +28,6 @@ export async function mongoConnection() {
 export function mongoDatabase(getDb: () => Promise<Db>): Database {
   const tournaments = async () => (await getDb()).collection<TournamentDocument>('tournaments');
   const sessions = async () => (await getDb()).collection<SessionDocument>('sessions');
-  const admins = async () => (await getDb()).collection<AdminDocument>('admins');
   return {
     async getSongLibrary(id) {
       const row = await (await getDb()).collection<Omit<SongLibrary, 'id'> & { _id: string }>('song_libraries').findOne({ _id: id });
@@ -71,14 +69,7 @@ export function mongoDatabase(getDb: () => Promise<Db>): Database {
     async deleteSession(id) {
       return (await (await sessions()).deleteOne({ _id: id })).deletedCount === 1;
     },
-    async bindAdmin(binding) {
-      try { await (await admins()).insertOne({ _id: binding.username, subject: binding.subject, issuer: binding.issuer }); }
-      catch (error) { if (!(error instanceof MongoServerError && error.code === 11000)) throw error; }
-    },
-    async hasAdmin(names, issuer, subject) {
-      if (!names.length) return false;
-      return !!await (await admins()).findOne({ _id: { $in: names }, issuer, subject }, { projection: { _id: 1 } });
-    },
+
   };
 }
 

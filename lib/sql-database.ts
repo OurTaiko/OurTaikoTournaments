@@ -33,12 +33,6 @@ export function sqlDatabase(sql: SqlDatabase): Database {
     async deleteSession(id) {
       return (await sql.prepare('DELETE FROM sessions WHERE id = ?').bind(id).run()).meta.changes > 0;
     },
-    async bindAdmin(binding) {
-      await sql.prepare('INSERT OR IGNORE INTO admins (username, subject, issuer) VALUES (?, ?, ?)').bind(binding.username, binding.subject, binding.issuer).run();
-    },
-    async hasAdmin(names, issuer, subject) {
-      if (!names.length) return false;
-      return !!await sql.prepare(`SELECT subject FROM admins WHERE username IN (${names.map(() => '?').join(',')}) AND issuer = ? AND subject = ?`).bind(...names, issuer, subject).first();
-    },
+
   };
 }
