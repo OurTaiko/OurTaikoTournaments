@@ -32,7 +32,7 @@ MONGODB_URI='' MONGODB_DB='' VERCEL='' DEMO_MODE=true \
   node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 5192
 ```
 
-访问 `http://127.0.0.1:5192`，点击「主办方入口 → 体验演示管理模式」。本地库首次自动初始化，曲库为独立样例。`127.0.0.1` 与 `localhost` 不要混用。
+访问 `http://127.0.0.1:5192`，点击「登录 → 体验演示管理模式」。本地库首次自动初始化，曲库为独立样例。`127.0.0.1` 与 `localhost` 不要混用。
 
 原有 `npm run dev` 使用 Vinext 路线，默认端口 5188，配置与 D1 初始化见维护手册；它与上面的 Next.js / SQLite 环境不是同一个数据库。
 

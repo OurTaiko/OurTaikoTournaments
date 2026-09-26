@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { canReplace } from "@/lib/player-management";
 import PlayerRating from "@/components/player-rating";
 import { difficultyNames, type Song, type SongCatalog } from "@/lib/songs";
 import {
@@ -84,6 +85,8 @@ export default function MatchEditor({
   catalog: publicCatalog,
   pool,
   onSaved,
+  onReplace,
+  disabled = false,
 }: {
   match: Match;
   revision: number;
@@ -92,6 +95,8 @@ export default function MatchEditor({
   catalog: SongCatalog;
   pool: Song[];
   onSaved: (m: Match, r: number) => void;
+  onReplace: (side: "a" | "b", playerId: string) => Promise<boolean>;
+  disabled?: boolean;
 }) {
   const [picks, setPicks] = useState<Match["picks"]>(match.picks);
   const [bans, setBans] = useState<Match["bans"]>(match.bans);
@@ -199,7 +204,32 @@ export default function MatchEditor({
       </div>
     );
   return (
-    <div className="editor">
+    <fieldset className="editor" disabled={saving || disabled}>
+      {match.round === 0 && (
+        <section className="match-lineup" aria-labelledby="lineup-heading">
+          <h3 id="lineup-heading">参赛选手 / 替补</h3>
+          <p className="lineup-note">{canReplace(match)
+            ? "选择同组正赛选手可互换位置；选择替补则由其上场，原选手转为替补。换人会清空相关比赛的选曲草稿。"
+            : "本场已开赛、公布或录分，参赛选手已锁定。"}</p>
+          <div className="lineup-controls">
+            {(["a", "b"] as const).map(side => (
+              <Picker key={side} label={`${side === "a" ? "上位" : "下位"}选手`}
+                value={match[side]?.id ?? ""} disabled={!canReplace(match)}
+                onChange={async playerId => {
+                  setSaving(true);
+                  try { await onReplace(side, playerId); }
+                  finally { setSaving(false); }
+                }}
+                options={tournament.rosters[match.group].map(player => {
+                  const source = tournament.matches.find(other => other.group === match.group && other.round === 0 && (other.a?.id === player.id || other.b?.id === player.id));
+                  return { value: player.id,
+                    label: `${player.name} · ${player.rating.toFixed(2)}${source ? ` · 第${source.index + 1}场` : " · 替补"}`,
+                    disabled: !!source && !canReplace(source) && player.id !== match[side]?.id };
+                })} />
+            ))}
+          </div>
+        </section>
+      )}
       <div className="private-note">
         <Music2 size={15} />
         <span>双方各选择两首曲目，再各禁用对手一首。</span>
@@ -448,6 +478,6 @@ export default function MatchEditor({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </fieldset>
   );
 }

@@ -16,7 +16,7 @@ export default function PlayerManager({ tournament, group, disabled, onSave }: P
     <div className="section-heading"><h2>选手资料</h2>
       <button className="secondary-button" disabled={disabled || !!draft} onClick={() => setDraft({ player: null, name: '', rating: '', revision: tournament.revision })}>新增替补选手</button>
     </div>
-    <p className="muted">修改姓名或 rating 后即时保存到云端。新增选手进入本组替补区，可在对阵页安排上场。</p>
+    <p className="muted">修改姓名或 rating 后即时保存到云端。新增选手进入本组替补区，可打开首轮比赛详情安排上场。</p>
     {draft && <form className="player-edit-form" onSubmit={async e => {
       e.preventDefault();
       const action: PlayerAction = draft.player

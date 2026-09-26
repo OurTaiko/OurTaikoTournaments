@@ -7,8 +7,15 @@ const dir = await mkdtemp(tmpdir() + '/hachicats-admins-');
 Object.assign(process.env, { DATABASE_PATH: dir + '/test.sqlite', MONGODB_URI: '', VERCEL: '', DEMO_MODE: 'false', APP_ORIGIN: 'https://cats.example', SSO_ISSUER: 'https://sso.example', SSO_CLIENT_ID: 'cats', SSO_CLIENT_SECRET: 'test-secret', ADMIN_USERNAMES: 'ordinary' });
 const originalFetch = globalThis.fetch;
 try {
-  await build({ stdin: { contents: "export * from './lib/sso-session'; export {viewer,requireAdmin,saveSession} from './lib/auth'; export {runtime} from './lib/runtime';", resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', outfile: dir+'/test.cjs' });
-  const { introspectSession, viewer, requireAdmin, saveSession, runtime } = (await import(pathToFileURL(dir+'/test.cjs'))).default;
+  await build({ stdin: { contents: "export * from './lib/sso-session'; export {viewer,requireAdmin,saveSession} from './lib/auth'; export {runtime} from './lib/runtime'; export {GET as authGet} from './app/api/auth/[action]/route';", resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', outfile: dir+'/test.cjs' });
+  const { introspectSession, viewer, requireAdmin, saveSession, runtime, authGet } = (await import(pathToFileURL(dir+'/test.cjs'))).default;
+  const failedCallback = await authGet(new Request('https://cats.example/api/auth/callback'), {params: Promise.resolve({action: 'callback'})});
+  assert.equal(failedCallback.status, 302);
+  const retryUrl = new URL(failedCallback.headers.get('Location'));
+  assert.equal(retryUrl.origin, 'https://cats.example');
+  assert.equal(retryUrl.pathname, '/login', 'Failed callbacks return to the dedicated login page');
+  assert(retryUrl.searchParams.get('authError'));
+  assert.equal(failedCallback.headers.get('Cache-Control'), 'no-store');
   let admin = false, status = 200, code = '', malformed = false, wrongUser = false, expired = false, calls = 0;
   globalThis.fetch = async (url, init) => {
     calls++;

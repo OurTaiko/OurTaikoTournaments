@@ -23,7 +23,8 @@ export async function GET(
       status: 302,
       headers: {
         Location:
-          runtime.APP_ORIGIN + "/?authError=" + encodeURIComponent(message),
+          runtime.APP_ORIGIN + "/login?authError=" + encodeURIComponent(message),
+        "Cache-Control": "no-store",
       },
     });
   }

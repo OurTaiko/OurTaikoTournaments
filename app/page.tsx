@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Cat,
@@ -24,7 +25,7 @@ import {
 import MatchEditor from "@/components/match-editor";
 import ResetTournament from "@/components/reset-tournament";
 import PlayerManager from "@/components/player-manager";
-import { canReplace, reserves, type PlayerAction } from "@/lib/player-management";
+import { reserves, type PlayerAction } from "@/lib/player-management";
 import PlayerRating from "@/components/player-rating";
 import { useSongCatalog } from "@/components/use-song-catalog";
 import { difficultyNames, type Song } from "@/lib/songs";
@@ -53,7 +54,8 @@ export default function Home() {
   const [connectionError, setConnectionError] = useState("");
   const [user, setUser] = useState<Viewer | null>(null);
   const [demo, setDemo] = useState(false);
-  const [demoAllowed, setDemoAllowed] = useState(false);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
+  const [sessionError, setSessionError] = useState("");
   const [editorRevision, setEditorRevision] = useState(0);
   const [designated, setDesignated] = useState<Song | null>(null);
   const [editorPool, setEditorPool] = useState<Song[]>([]);
@@ -94,7 +96,10 @@ export default function Home() {
       const result = await response.json() as { error?: string; tournament: Tournament };
       if (!response.ok) throw new Error(result.error || "保存失败，请稍后重试。");
       setTournament(previous => result.tournament.revision >= previous.revision ? result.tournament : previous);
-      setSelected(null);
+      if (action.type === "replace") {
+        setSelected(result.tournament.matches.find(match => match.id === action.matchId) ?? null);
+        setEditorRevision(result.tournament.revision);
+      }
       toast.success(action.type === "replace" ? "对阵已更新，受影响比赛的选曲草稿已清空。" : "选手资料已保存");
       return true;
     } catch (error) {
@@ -104,31 +109,30 @@ export default function Home() {
     } finally { playerSaveLock.current = false; setSavingPlayer(false); }
   }
   async function loadSession() {
-    const r = await fetch("/api/session", { cache: "no-store" });
-    const d = (await r.json()) as {
-      error: string;
-      tournament: Tournament;
-      demo: boolean;
-      user: Viewer | null;
-      demoAllowed: boolean;
-      match: Match;
-      revision: number;
-      designated: Song | null;
-    };
-    if (r.ok) {
+    try {
+      const r = await fetch("/api/session", { cache: "no-store" });
+      const d = await r.json() as { error?: string; user: Viewer | null };
+      if (!r.ok) throw new Error(d.error || "无法验证登录状态，请重试。");
+      setSessionError("");
       setUser(d.user);
-      setDemoAllowed(d.demoAllowed);
-      if (d.user?.admin) setManage(true);
-    } else toast.error(d.error);
+      setManage(!!d.user?.admin);
+    } catch (error) {
+      setUser(null);
+      setManage(false);
+      setSessionError(error instanceof Error ? error.message : "无法连接登录服务，请重试。");
+    } finally {
+      setSessionLoaded(true);
+    }
   }
   useEffect(() => {
+    // Hydrate the public snapshot and session after mounting; requests update state asynchronously.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
     void loadSession();
     const interval = setInterval(() => void load(), 3000);
     const params = new URLSearchParams(location.search);
     if (params.has("authError")) {
-      toast.error(params.get("authError"));
-      history.replaceState(null, "", location.pathname);
+      location.replace("/login?authError=" + encodeURIComponent(params.get("authError") || "登录未完成，请重试。"));
     }
     if (params.has("manage")) {
       setView("admin");
@@ -165,35 +169,19 @@ export default function Home() {
       }
     } else setSelected(m);
   }
-  async function enterDemo() {
-    try {
-      const r = await fetch("/api/auth/demo", { method: "POST" });
-      const d = (await r.json()) as {
-        error: string;
-        tournament: Tournament;
-        demo: boolean;
-        user: Viewer | null;
-        demoAllowed: boolean;
-        match: Match;
-        revision: number;
-        designated: Song | null;
-      };
-      if (!r.ok) throw Error(d.error);
-      await loadSession();
-      setView("bracket");
-      toast.success("已进入本地演示管理模式");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "登录失败。");
-    }
-  }
   async function signOut() {
-    const r = await fetch("/api/auth/logout", { method: "POST" });
-    if (r.ok) {
+    try {
+      const r = await fetch("/api/auth/logout", { method: "POST" });
+      if (!r.ok) throw new Error("退出失败，请重试。");
       setUser(null);
       setManage(false);
-      setView("bracket");
       setSelected(null);
-    } else toast.error("退出失败，请重试。");
+      setDesignated(null);
+      setEditorPool([]);
+      toast.success("已退出登录");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "退出失败，请重试。");
+    }
   }
   const selected =
     selectedDraft && !(user?.admin && manage)
@@ -293,22 +281,6 @@ export default function Home() {
           </span>
         ))}
       </button>
-      {user?.admin && manage && m.round === 0 && <div className="lineup-controls">
-        {(["a", "b"] as const).map(side => <label key={side}>
-          <span>{side === "a" ? "上位" : "下位"}</span>
-          <select aria-label={`第 ${m.index + 1} 场${side === "a" ? "上位" : "下位"}选手`}
-            value={m[side]?.id ?? ""} disabled={!loaded || !!connectionError || savingPlayer || !canReplace(m)}
-            onChange={e => void savePlayer({ type: "replace", matchId: m.id, side, playerId: e.target.value }, tournament.revision)}>
-            {!m[side] && <option value="" disabled>选择选手</option>}
-            {tournament.rosters[group].map(p => {
-              const source = matches.find(other => other.round === 0 && (other.a?.id === p.id || other.b?.id === p.id));
-              return <option key={p.id} value={p.id} disabled={!!source && !canReplace(source) && p.id !== m[side]?.id}>
-                {p.name} · {p.rating.toFixed(2)}{source ? ` · 第${source.index + 1}场` : " · 替补"}
-              </option>;
-            })}
-          </select>
-        </label>)}
-      </div>}
       </div>
     );
   }
@@ -317,22 +289,18 @@ export default function Home() {
       <Toaster position="top-center" richColors />
       <header className="topbar">
         <div className="topbar-inner">
-          <a className="brand" href="/">
+          <Link className="brand" href="/">
             <span className="brand-icon">
               <Cat size={25} />
             </span>
             HachiCats<span className="edition">八猫杯</span>
-          </a>
+          </Link>
           <span className="local-tag">{demo ? "本地 Demo" : "第一届"}</span>
-          <button
-            aria-label="主办方入口"
-            className="login"
-            onClick={() => setView("admin")}
-          >
+          <a className="login" href="/login" aria-label={user ? "账号" : "登录"}>
             <ShieldCheck size={16} />
-            <span>{user?.admin ? "赛事管理" : "主办方入口"}</span>
+            <span>{user ? user.name : "登录"}</span>
             <ArrowUpRight size={15} />
-          </button>
+          </a>
         </div>
       </header>
       <main className="container">
@@ -380,6 +348,10 @@ export default function Home() {
                 <CalendarDays />
                 赛事指南
               </TabsTrigger>
+              <TabsTrigger value="admin">
+                <ShieldCheck />
+                赛事管理
+              </TabsTrigger>
             </TabsList>
           </Tabs>
           <span className="sync-label">
@@ -397,7 +369,7 @@ export default function Home() {
             <button onClick={() => void load()}>重新连接</button>
           </div>
         )}
-        {user?.admin && (
+        {user?.admin && view === "bracket" && (
           <div className="management-bar">
             <span>
               <ShieldCheck size={16} />
@@ -405,7 +377,7 @@ export default function Home() {
             </span>
             <button
               className={manage ? "active" : ""}
-              onClick={() => setManage(!manage)}
+              onClick={() => { setSelected(null); setManage(!manage); }}
             >
               {manage ? "正在管理 · 切换为观众" : "观众视图 · 切换为管理"}
             </button>
@@ -417,7 +389,7 @@ export default function Home() {
             正在打开比赛…
           </div>
         )}
-        <div className="group-row">
+        {(view === "bracket" || view === "songs" || (view === "admin" && user?.admin)) && <div className="group-row">
           <Tabs value={group} onValueChange={(v) => setGroup(v as GroupId)}>
             <TabsList className="group-tabs">
               {groups.map((g) => (
@@ -432,7 +404,7 @@ export default function Home() {
             {groups.find((g) => g.id === group)?.en} ·{" "}
             {groups.find((g) => g.id === group)?.range}
           </span>
-        </div>
+        </div>}
         {view === "bracket" && (
           <>
             <section className="live-section">
@@ -534,8 +506,7 @@ export default function Home() {
                   ))}
                 </TabsList>
               </Tabs>
-              {user?.admin && manage && <p className="lineup-note">首轮下拉选择选手：正赛选手互换位置，替补上场则原选手进入替补区。仅限未开赛、未录分的比赛；换人会清空相关选曲草稿。</p>}
-              <div className={`bracket-board ${user?.admin && manage ? "managing-lineup" : ""}`}>
+              <div className="bracket-board">
                 {[0, 1, 2, 3].map((r) => (
                   <div
                     key={r}
@@ -678,33 +649,27 @@ export default function Home() {
         {view === "admin" && (
           <section className="admin-welcome">
             <ShieldCheck size={34} />
-            <h2>主办方工作台</h2>
-            <p>
-              使用 OurTaiko 账号登录。已获主办方授权的账号可管理赛事。
-            </p>
-            <a className="primary-button" href="/api/auth/login">
-              使用 OurTaiko 登录 <ArrowUpRight size={16} />
-            </a>
-            {demoAllowed && !user?.admin && (
-              <button
-                className="secondary-button"
-                onClick={() => void enterDemo()}
-              >
-                体验演示管理模式
-              </button>
+            <h2>赛事管理</h2>
+            {!sessionLoaded ? <p role="status">正在验证登录状态…</p> : sessionError ? (
+              <>
+                <p role="alert">{sessionError}</p>
+                <button className="secondary-button" onClick={() => void loadSession()}>重新验证</button>
+              </>
+            ) : user?.admin ? (
+              <>
+                <p>{user.name}，欢迎回来。选手资料与赛事维护在这里管理，换人、选曲和录分请打开对应比赛详情。</p>
+                <div className="admin-actions">
+                  <button className="primary-button" onClick={() => { setManage(true); setView("bracket"); }}>前往比赛管理 <ChevronRight size={16} /></button>
+                  <button className="secondary-button" onClick={() => void signOut()}>退出登录</button>
+                </div>
+                {demo && <p className="muted">本地演示模式中的操作只影响演示赛况。</p>}
+              </>
+            ) : (
+              <>
+                <p>{user ? "此账号暂无赛事管理权限，请联系主办方授权。" : "赛事管理仅向已获主办方授权的账号开放。"}</p>
+                <a className="primary-button" href="/login">{user ? "查看账号" : "前往登录"} <ArrowUpRight size={16} /></a>
+              </>
             )}
-            {user && (
-              <p>
-                {user.admin
-                  ? "你已拥有管理权限，请在赛事对阵中选择比赛。"
-                  : "此账号可查看赛事，暂无管理权限。"}
-              </p>
-            )}
-            <p className="muted">
-              {demo
-                ? "本地演示模式中的操作只影响演示赛况。"
-                : "管理员权限由服务端验证。"}
-            </p>
             {user?.admin && <PlayerManager key={group} tournament={tournament} group={group}
               disabled={!loaded || !!connectionError || savingPlayer} onSave={savePlayer} />}
             {user?.admin && <ResetTournament
@@ -771,6 +736,8 @@ export default function Home() {
                   designated={designated}
                   catalog={catalog}
                   pool={editorPool}
+                  disabled={!loaded || !!connectionError || savingPlayer}
+                  onReplace={(side, playerId) => savePlayer({ type: "replace", matchId: selected.id, side, playerId }, editorRevision)}
                   onSaved={(m, r) => {
                     const resultConfirmed = m.status === "complete" || m.status === "bye";
                     setSelected(resultConfirmed ? null : m);
