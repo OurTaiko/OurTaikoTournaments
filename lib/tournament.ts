@@ -5,6 +5,8 @@ export type { Song } from "./songs";
 import { designatedId } from "./songs";
 export type SongScore = { songId: string; a: number | null; b: number | null };
 export type Match = {
+  // Legacy matches start at 0; changed matches use the new tournament revision.
+  revision?: number;
   id: string;
   group: GroupId;
   round: number;
@@ -64,6 +66,17 @@ export function tournamentState(tournament: Tournament): StoredTournament {
     })),
   };
 }
+// Include downstream slots and hydrated player profiles in conflict detection.
+export function stampMatchRevisions(previous: Tournament, next: Tournament): Tournament {
+  const before = new Map(previous.matches.map(match => [match.id, match]));
+  for (const match of next.matches) {
+    if (JSON.stringify(before.get(match.id)) !== JSON.stringify(match)) {
+      match.revision = next.revision;
+    }
+  }
+  return next;
+}
+
 export const groups: {
   id: GroupId;
   name: string;

@@ -172,6 +172,7 @@ export default function MatchEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           revision,
+          matchRevision: match.revision ?? 0,
           ...(action.type === "bye" ? {} : { picks, bans, scores, station }),
           ...action,
         }),

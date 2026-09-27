@@ -1,6 +1,6 @@
 # HachiCats 维护手册
 
-最后核对：2026-09-25。本文以同一提交中的代码为依据；线上环境变量、账号权限和赛事进度在实际维护时重新核对。文档不保存凭证、真实指定曲或当前比分。
+最后核对：2026-09-27。本文以同一提交中的代码为依据；线上环境变量、账号权限和赛事进度在实际维护时重新核对。文档不保存凭证、真实指定曲或当前比分。
 
 ## 1. 生产环境与已知边界
 
@@ -73,7 +73,7 @@ flowchart LR
 | `GET /api/session` | 当前用户及管理员状态；不返回 token |
 | `GET /api/health` | 数据库 ping；200 不代表 SSO、曲库文档或上游曲名接口一定正常 |
 | `GET /api/matches/[id]` | 仅管理员；该场私有草稿、本组曲库、该场指定曲和赛事 revision |
-| `POST /api/matches/[id]` | 仅管理员；`draft/start/save/finish/bye`，校验 Origin 和 revision |
+| `POST /api/matches/[id]` | 仅管理员；`draft/start/save/finish/bye`，校验 Origin 和单场 matchRevision；整届 revision 保留 CAS 与旧客户端兼容 |
 | `POST /api/players` | 仅管理员；编辑资料 / 新增替补 / 首轮换人，校验 Origin 和赛事 revision |
 | `POST /api/tournament/reset` | 仅管理员；确认文字、revision、完整备份及条件更新 |
 | `GET /api/auth/login`、`GET /api/auth/callback` | 发起和完成 SSO 登录 |
@@ -96,7 +96,7 @@ flowchart LR
 
 `admins` 不参与当前认证，`sessions` 也不是所有 SSO 用户的注册表。会话读取始终校验过期时间；`sessions_expiry` TTL 索引按 `expiresAt` 清理，不能只依赖异步 TTL 删除来判断登录有效。
 
-比赛写入使用 `_id + previous revision` 条件更新，只有一位并发写入者成功。数据库外层 `revision` 与 `body` 内的 revision 必须同步。不要把 `song_libraries.version` 当比赛版本号：它目前是固定的数据结构版本。
+比赛写入使用 `_id + previous revision` 条件更新，单次 CAS 只有一位并发写入者成功。新客户端同时发送打开详情时的 `matchRevision`（`match.revision ?? 0`）：本场未变化时，其他场次更新不再要求重开详情；后端读取最新赛况、重新校验机台 / 选曲 / 晋级规则再保存，写入竞态最多尝试四次。同场变更仍返回 409，不覆盖其他人的成绩。旧客户端未发送 `matchRevision` 时继续按整届 revision 检查，需要刷新网页一次才能使用新逻辑。数据库外层 `revision` 与 `body` 内的 revision 必须同步。单场 `match.revision` 在本场保存、参赛选手资料 / 位置变更以及晋级带来选手变化时，更新为此次整届 revision；未变的比赛保持原值，旧文档缺省为 0，无需迁移。重置会把全部场次版本设为新整届 revision，即使空白场次也会让旧编辑窗口失效。不要把 `song_libraries.version` 当比赛版本号：它目前是固定的数据结构版本。
 
 ### 选手
 
@@ -178,6 +178,8 @@ SSO 超时、配置错误、格式异常或身份不符均返回 503 并拒绝�
 
 本版本页面将「赛事管理」与「赛事对阵」「分组曲库」「赛事指南」并列；管理 tab 放置选手资料和赛事维护工具。未登录或无权限时只显示状态及 `/login` 链接。页头「登录 / 账号」进入独立 `/login`，OurTaiko 登录按钮、本地演示入口及账号退出在该页提供。登录成功返回赛事管理 tab（`/?manage=1`）；登录失败返回 `/login?authError=...` 并显示可重试提示。原 SSO 回调、鉴权及写入规则保持不变。管理员在对阵页仍可切换观众视图。
 
+两台并行录分时，分别在比赛详情选择 A 台和 B 台。另一场的保存不会清空本场输入或要求刷新；若提示「本场比赛或参赛选手已更新」，才需要重新打开本场。同场之外的选手管理与整届重置仍使用整届 revision。
+
 比赛结果确认成功（含轮空晋级）后，比赛详情窗口自动关闭，并提示「结果已确认，对阵图已更新」。保存草稿、开始比赛和保存比分仍保留详情窗口，方便继续操作；提交失败时也保留窗口与错误提示。
 
 ### 编辑选手及换人
@@ -220,7 +222,7 @@ node --env-file=.data/private-atlas.env scripts/import-song-library.mjs .data/pr
 1. 确认用户要恢复的赛事和具体备份 ID，协调暂停录分；当前没有自动维护模式开关。
 2. 读取目标备份，核对 `tournamentId`、结构、48 场比赛、稳定选手 / 曲目引用。
 3. 读取并另行备份现在的完整赛事文档，保留回到恢复前状态的依据。
-4. 用备份的比赛内容构建候选状态，通过当前 `hydrateTournament` / `tournamentState` 规范化；版本设为**当前 revision + 1**，更新时间设为恢复时间，不沿用备份旧版本。
+4. 用备份的比赛内容构建候选状态，通过当前 `hydrateTournament` / `tournamentState` 规范化；版本设为**当前 revision + 1**，所有场次的 `match.revision` 同样设为该新版本，更新时间设为恢复时间，不沿用备份旧版本。
 5. 以 `_id + 当前 revision` 条件更新，并同时写入外层 revision 与 `body` 内 revision。发生冲突就停止，重新评估当前数据，不做无条件覆盖。
 6. 读取数据库、公开接口和管理页面核对内容，再恢复录分。不要修改曲库、绑定或会话来“配合”恢复。
 
@@ -246,7 +248,7 @@ npm run dev
 
 | 改动范围 | 相关验证 |
 | --- | --- |
-| 比赛规则 / 选手 / 曲库 / 公开数据 | `npm test`：含规则、选手、换人 / 替补 / 权限 / 并发 / 迁移、曲库和浏览器依赖边界 |
+| 比赛规则 / 选手 / 曲库 / 公开数据 | `npm test`：含规则、选手、换人 / 替补 / 权限 / 并发 / 迁移、曲库、浏览器依赖边界与独立 SQLite 单场并发 API 测试（强制 CAS 碰撞、同场冲突、机台占用、重置 / 换人 / 晋级失效） |
 | SSO 应用角色与实时撤权 | `npm run test:admins`；需要时用测试身份走完整 SSO 流程 |
 | SQLite / 存储适配 | `npm run test:storage` |
 | 重置与备份 | `npm run test:reset`，使用临时 SQLite |
@@ -286,7 +288,7 @@ node --env-file=.data/private-test-atlas.env tests/mongodb.test.mjs
 | 403「请求来源不匹配」 | Origin 与 `APP_ORIGIN` 是否完全一致；是否混用 localhost / 127.0.0.1 / Vercel 预览域名 |
 | 403「没有管理权限」 | SSO 返回本应用 isAdmin=false；前端按钮状态不作为权限依据 |
 | 503「无法验证登录权限」 | 检查 SSO 可用性、现有应用凭据及网站令牌接口权限；不得回退旧管理员名单 |
-| 409 | 别的管理员已保存或页面版本过旧；重新读取比赛，不能强制覆盖 |
+| 409 | 新录分窗口：同场 / 参赛选手改变需重开本场；若提示「其他比赛正在更新」，保留输入并稍后重试。旧页面仍按整届版本检查，刷新网页升级；不能强制覆盖 |
 | 503 / 数据库连接失败 | MongoDB Secret、数据库名、账号权限、Atlas 网络规则、服务端日志；不要输出连接串 |
 | 健康检查正常但曲库 503 | `song_libraries/edition-1` 是否存在且满足 schema；health 只做 ping |
 | 曲目显示编号或星级未知 | 上游曲目接口、songID、对应 level 字段与 30 秒缓存；不要编造难度 |

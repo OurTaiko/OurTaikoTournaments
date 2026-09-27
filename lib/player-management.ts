@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { RuleError } from './rules';
-import { hydrateTournament, tournamentState, type Match, type Tournament } from './tournament';
+import { stampMatchRevisions, hydrateTournament, tournamentState, type Match, type Tournament } from './tournament';
 
 const profile = {
   name: z.string().trim().min(1).max(60),
@@ -67,5 +67,5 @@ export function applyPlayerAction(t: Tournament, input: unknown): Tournament {
   }
   next.revision = t.revision + 1;
   next.updatedAt = new Date().toISOString();
-  return hydrateTournament(tournamentState(next));
+  return stampMatchRevisions(t, hydrateTournament(tournamentState(next)));
 }

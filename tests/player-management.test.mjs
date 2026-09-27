@@ -49,7 +49,7 @@ try {
   for (const m of edited.matches) for (const side of ['a', 'b']) if (m[side]?.id === 'siamese-p0') {
     assert.equal(m[side].name, '新版姓名'); assert.equal(m[side].rating, 9.12);
   }
-  const withoutPlayers = matches => matches.map(m => Object.fromEntries(Object.entries(m).filter(([key]) => !['a', 'b'].includes(key))));
+  const withoutPlayers = matches => matches.map(m => Object.fromEntries(Object.entries(m).filter(([key]) => !['a', 'b', 'revision'].includes(key))));
   assert.deepEqual(withoutPlayers(edited.matches), withoutPlayers(advanced.matches));
   for (const patch of [{ name: ' ' }, { name: 'x'.repeat(61) }, { rating: -1 }, { rating: 1.234 }, { rating: '9' }, { rating: Infinity }, { id: 'missing' }, { seed: 99 }])
     assert.throws(() => applyPlayerAction(initial, { type: 'edit', id: 'siamese-p0', name: 'valid', rating: 8, ...patch }));

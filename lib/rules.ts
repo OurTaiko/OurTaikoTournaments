@@ -1,6 +1,7 @@
 import { designatedId } from "./songs";
 import {
   advance,
+  stampMatchRevisions,
   totals,
   type Match,
   type Tournament,
@@ -203,5 +204,6 @@ export function applyAction(
   m.updatedAt = new Date().toISOString();
   next.updatedAt = m.updatedAt;
   next.revision = t.revision + 1;
-  return next;
+  m.revision = next.revision;
+  return stampMatchRevisions(t, next);
 }

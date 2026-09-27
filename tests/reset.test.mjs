@@ -40,6 +40,7 @@ try {
   assert.equal(result.tournament.revision, 9);
   assert.equal(result.tournament.matches.length, 48);
   for (const match of result.tournament.matches) {
+    assert.equal(match.revision, 9);
     assert.equal(match.status, 'pending'); assert.equal(match.winner, null);
     assert.deepEqual(match.scores, []); assert.equal(match.published, false);
     if (match.round > 0) { assert.equal(match.a, null); assert.equal(match.b, null); }

@@ -17,6 +17,8 @@ export async function resetTournament(database: Database, demo: boolean, input: 
   const roster = hydrateTournament(JSON.parse(current.body) as StoredTournament).rosters;
   const next = makeTournament(false, roster);
   next.revision = revision + 1;
+  // Invalidate every open editor, including untouched first-round matches.
+  for (const match of next.matches) match.revision = next.revision;
   const backupId = crypto.randomUUID();
   // Preserve the exact prior state before attempting the conditional write.
   // A racing update can leave an unused backup, but cannot be overwritten.
