@@ -309,6 +309,15 @@ svg {
   border-radius: 6px;
   margin-left: 4px;
 }
+.live-section {
+  margin-top: 28px;
+}
+.live-card-group {
+  margin: 0 22px 6px;
+  color: #505866;
+  font-size: 12px;
+  font-weight: 600;
+}
 .live-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -922,6 +931,10 @@ footer span:first-child {
   }
   .live-card-head {
     padding: 12px;
+  }
+  .live-card-group {
+    margin: 0 12px 6px;
+    font-size: 11px;
   }
   .live-card-head > span:last-child {
     font-size: 10px;

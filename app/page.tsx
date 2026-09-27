@@ -230,7 +230,9 @@ export default function Home() {
   }, []);
   const matches = tournament.matches.filter((m) => m.group === group);
   const firstAttacker = selected ? firstAttack(selected) : null;
-  const live = matches.filter((m) => m.status === "live");
+  const live = tournament.matches
+    .filter((m) => m.status === "live")
+    .sort((a, b) => a.station.localeCompare(b.station));
   const completed = matches.filter(
     (m) => m.status === "complete" || m.status === "bye",
   ).length;
@@ -389,6 +391,92 @@ export default function Home() {
             正在打开比赛…
           </div>
         )}
+        {view === "bracket" && (
+          <section className="live-section">
+            <div className="section-heading">
+              <h2>
+                <Radio size={19} />
+                正在进行<span className="count">{live.length}</span>
+              </h2>
+              <span>
+                {manage ? "点击比赛录分 / 管理" : "点击比赛查看详情"}
+              </span>
+            </div>
+            {live.length ? (
+              <div className="live-grid">
+                {live.map((m) => (
+                  <button
+                    className="live-card"
+                    onClick={() => void openMatch(m)}
+                    key={m.id}
+                  >
+                    <div className="live-card-head">
+                      <span className="live-label">
+                        <i />
+                        LIVE · {m.station} 台
+                      </span>
+                      <span>
+                        {roundNames[m.round]} · 第 {m.index + 1} 场
+                        <ChevronRight size={16} />
+                      </span>
+                    </div>
+                    <div className="live-card-group">
+                      {groups.find((g) => g.id === m.group)?.name}
+                    </div>
+                    <div className="versus">
+                      <div>
+                        <span className="avatar">
+                          {m.a?.name.slice(0, 1).toUpperCase()}
+                        </span>
+                        <b>{m.a?.name}</b>
+                        {m.a && <PlayerRating rating={m.a.rating} />}
+                        <span className="live-total">
+                          {totals(m)[0].toLocaleString()}
+                        </span>
+                      </div>
+                      <span className="versus-word">VS</span>
+                      <div>
+                        <span className="avatar">
+                          {m.b?.name.slice(0, 1).toUpperCase()}
+                        </span>
+                        <b>{m.b?.name}</b>
+                        {m.b && <PlayerRating rating={m.b.rating} />}
+                        <span className="live-total">
+                          {totals(m)[1].toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="live-card-foot">
+                      <Music2 size={15} />
+                      <span>
+                        {displaySongName(
+                          m.group,
+                          m.scores.find((s) => s.a === null || s.b === null)
+                            ?.songId ??
+                            m.scores.at(-1)?.songId ??
+                            "",
+                        )}
+                      </span>
+                      <span>
+                        {
+                          m.scores.filter((s) => s.a !== null && s.b !== null)
+                            .length
+                        }{" "}
+                        / {m.scores.length} 首已录分
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-live">
+                <Radio size={23} />
+                <span>暂无进行中的比赛</span>
+                <small>开赛后，赛况将在这里同步。</small>
+              </div>
+            )}
+          </section>
+        )}
         {(view === "bracket" || view === "songs" || (view === "admin" && user?.admin)) && <div className="group-row">
           <Tabs value={group} onValueChange={(v) => setGroup(v as GroupId)}>
             <TabsList className="group-tabs">
@@ -407,87 +495,6 @@ export default function Home() {
         </div>}
         {view === "bracket" && (
           <>
-            <section className="live-section">
-              <div className="section-heading">
-                <h2>
-                  <Radio size={19} />
-                  正在进行<span className="count">{live.length}</span>
-                </h2>
-                <span>
-                  {manage ? "点击比赛录分 / 管理" : "点击比赛查看详情"}
-                </span>
-              </div>
-              {live.length ? (
-                <div className="live-grid">
-                  {live.map((m) => (
-                    <button
-                      className="live-card"
-                      onClick={() => void openMatch(m)}
-                      key={m.id}
-                    >
-                      <div className="live-card-head">
-                        <span className="live-label">
-                          <i />
-                          LIVE · {m.station} 台
-                        </span>
-                        <span>
-                          {roundNames[m.round]} · 第 {m.index + 1} 场
-                          <ChevronRight size={16} />
-                        </span>
-                      </div>
-                      <div className="versus">
-                        <div>
-                          <span className="avatar">
-                            {m.a?.name.slice(0, 1).toUpperCase()}
-                          </span>
-                          <b>{m.a?.name}</b>
-                          {m.a && <PlayerRating rating={m.a.rating} />}
-                          <span className="live-total">
-                            {totals(m)[0].toLocaleString()}
-                          </span>
-                        </div>
-                        <span className="versus-word">VS</span>
-                        <div>
-                          <span className="avatar">
-                            {m.b?.name.slice(0, 1).toUpperCase()}
-                          </span>
-                          <b>{m.b?.name}</b>
-                          {m.b && <PlayerRating rating={m.b.rating} />}
-                          <span className="live-total">
-                            {totals(m)[1].toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="live-card-foot">
-                        <Music2 size={15} />
-                        <span>
-                          {displaySongName(
-                            group,
-                            m.scores.find((s) => s.a === null || s.b === null)
-                              ?.songId ??
-                              m.scores.at(-1)?.songId ??
-                              "",
-                          )}
-                        </span>
-                        <span>
-                          {
-                            m.scores.filter((s) => s.a !== null && s.b !== null)
-                              .length
-                          }{" "}
-                          / {m.scores.length} 首已录分
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="empty-live">
-                  <Radio size={23} />
-                  <span>本组暂无进行中的比赛</span>
-                  <small>开赛后，赛况将在这里同步。</small>
-                </div>
-              )}
-            </section>
             <section className="bracket-section">
               <div className="section-heading">
                 <h2>晋级之路</h2>
