@@ -1598,3 +1598,76 @@ fieldset.editor:disabled button { opacity: .5; cursor: not-allowed; }
   .login-card { padding: 30px 24px; }
   .login-page { padding: 32px 20px; align-items: start; }
 }
+
+/* Read-only tournament recap, derived from published results. */
+.recap-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 12px; }
+.recap-eyebrow { color: #77777f; font-size: 10px; letter-spacing: .18em; }
+.recap-heading h2 { font-size: 25px; font-weight: 650; margin-top: 6px; }
+.recap-count { white-space: nowrap; color: #6e6e73; font-size: 12px; }
+.recap-count b { font-size: 25px; color: #0071e3; margin-right: 3px; }
+.recap-note { color: #74747d; font-size: 12px; line-height: 1.8; margin: 8px 0 16px; }
+.recap-section { margin-top: 32px; min-width: 0; }
+.recap-section .section-heading { margin-bottom: 8px; }
+.recap-sort { margin-bottom: 16px; }
+.recap-songs { border: 1px solid #e4e4e9; border-radius: 16px; overflow: hidden; background: #fff; }
+.recap-song + .recap-song { border-top: 1px solid #eeeef2; }
+.recap-song > summary { display: flex; align-items: center; gap: 16px; list-style: none; padding: 18px 22px; cursor: pointer; }
+.recap-song > summary::-webkit-details-marker { display: none; }
+.recap-song > summary:hover { background: #f7f9fc; }
+.recap-song > summary:focus-visible { outline: 2px solid #0071e3; outline-offset: -3px; }
+.recap-rank { color: #7a8190; font-size: 13px; width: 24px; flex-shrink: 0; text-align: center; font-variant-numeric: tabular-nums; }
+.recap-song-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 550; overflow-wrap: anywhere; }
+.recap-song-name small { display: block; margin-top: 5px; font-size: 11px; color: #77777f; font-weight: 400; }
+.recap-picks { display: flex; gap: 24px; font-size: 12px; color: #77777f; white-space: nowrap; }
+.recap-picks b { font-size: 17px; font-weight: 600; }
+.recap-picks .active { color: #0071e3; }
+.recap-chevron { color: #8a8a93; flex-shrink: 0; transition: transform .15s; }
+.recap-song[open] > summary .recap-chevron { transform: rotate(180deg); }
+.recap-leaders { border-top: 1px solid #eef0f5; padding: 20px 24px; background: #f8faff; }
+.recap-leaders h3 { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+.recap-leaders li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid #e9edf4; }
+.recap-player-name { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
+.recap-leaders li button { display: flex; align-items: center; gap: 6px; color: #0071e3; font-size: 14px; font-variant-numeric: tabular-nums; padding: 6px 0; }
+.recap-empty { padding: 20px; color: #77777f; font-size: 13px; background: #fff; border: 1px dashed #dce0e8; border-radius: 12px; line-height: 1.8; }
+.recap-highlights { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.recap-match { display: block; width: 100%; border: 1px solid #e4e4e9; border-radius: 16px; background: #fff; text-align: left; padding: 18px; margin-top: 14px; }
+.recap-match:hover { border-color: #9fc1ec; }
+.recap-match-meta { display: flex; align-items: center; justify-content: space-between; color: #77777f; font-size: 12px; }
+.recap-contestants { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+.recap-contestants > span { min-width: 0; }
+.recap-contestants b { display: block; font-size: 15px; overflow-wrap: anywhere; margin-bottom: 6px; }
+.recap-contestants b small { color: #0071e3; background: #edf5ff; font-size: 10px; border-radius: 4px; padding: 2px 5px; margin-left: 6px; }
+.recap-contestants strong { display: block; font-size: 18px; font-weight: 550; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.recap-match-footer { display: block; border-top: 1px solid #eef0f5; padding-top: 12px; font-size: 12px; color: #0071e3; }
+@media (max-width: 760px) {
+  .main-tabs { gap: 6px !important; }
+  .main-tabs button { font-size: 12px; flex-shrink: 0; }
+  .recap-heading h2 { font-size: 21px; }
+  .recap-highlights { grid-template-columns: 1fr; gap: 0; }
+  .recap-song > summary { padding: 16px 12px; gap: 9px; }
+  .recap-song-name { font-size: 13px; }
+  .recap-rank { width: 18px; }
+  .recap-picks { flex-direction: column; gap: 3px; font-size: 10px; }
+  .recap-picks b { font-size: 14px; }
+  .recap-leaders { padding: 16px 12px; }
+  .recap-section .section-heading h2 { font-size: 16px; }
+}
+
+.recap-champions { margin-top: 28px; }
+.champions-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.champion-card { display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; padding: 24px 16px; border: 1px solid #e5d9bb; border-radius: 18px; background: linear-gradient(150deg, #fffdf7, #fff); }
+button.champion-card:hover { border-color: #b89242; box-shadow: 0 4px 20px #866d1b0b; }
+.champion-group { font-size: 12px; color: #836a32; letter-spacing: .08em; }
+.champion-crown { color: #b88b2e; margin: 18px 0 12px; }
+.champion-name { font-size: 22px; font-weight: 650; overflow-wrap: anywhere; margin-bottom: 7px; }
+.champion-caption { display: flex; align-items: center; justify-content: center; gap: 3px; font-size: 11px; color: #947535; margin-top: 16px; }
+.champion-card.awaiting { background: #fafafa; border-color: #e4e4e9; }
+.champion-card.awaiting .champion-name, .champion-card.awaiting .champion-caption, .champion-card.awaiting .champion-crown { color: #96969e; }
+@media (max-width: 760px) {
+  .champions-row { gap: 8px; }
+  .champion-card { padding: 16px 8px; border-radius: 13px; }
+  .champion-name { font-size: 15px; }
+  .champion-group { font-size: 11px; }
+  .champion-crown { width: 24px; margin: 12px 0 10px; }
+  .champion-caption { font-size: 9px; margin-top: 12px; }
+}

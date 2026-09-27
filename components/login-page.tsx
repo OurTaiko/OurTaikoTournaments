@@ -101,7 +101,7 @@ export default function LoginPage() {
             </div>
           )}
           <p className="login-footnote">观看赛况无需登录。<br />赛事管理仅向已获主办方授权的账号开放。</p>
-          <Link className="login-back" href="/"><ArrowLeft size={14} />返回赛事对阵</Link>
+          <Link className="login-back" href="/?view=bracket"><ArrowLeft size={14} />返回赛事对阵</Link>
         </section>
       </main>
     </>

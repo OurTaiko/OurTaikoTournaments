@@ -13,6 +13,7 @@ import {
   GitBranch,
   ShieldCheck,
   Flag,
+  ChartNoAxesColumn,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/sheet";
 import MatchEditor from "@/components/match-editor";
 import MatchSummary from "@/components/match-summary";
+import TournamentSummary, { TournamentChampions } from "@/components/tournament-summary";
 import ResetTournament from "@/components/reset-tournament";
 import PlayerManager from "@/components/player-manager";
 import { reserves, type PlayerAction } from "@/lib/player-management";
@@ -47,7 +49,7 @@ export default function Home() {
   const { catalog, pools, notice: songNotice, refresh: refreshSongs } = useSongCatalog();
   const displaySongName = (group: GroupId, id: string) => songName(group, id, catalog);
   const [group, setGroup] = useState<GroupId>("siamese");
-  const [view, setView] = useState("bracket");
+  const [view, setView] = useState("summary");
   const [round, setRound] = useState(0);
   const [selectedDraft, setSelected] = useState<Match | null>(null);
   const [tournament, setTournament] = useState<Tournament>(initial);
@@ -132,6 +134,8 @@ export default function Home() {
     void loadSession();
     const interval = setInterval(() => void load(), 3000);
     const params = new URLSearchParams(location.search);
+    if (params.get("view") === "summary") setView("summary");
+    if (params.get("view") === "bracket") setView("bracket");
     if (params.has("authError")) {
       location.replace("/login?authError=" + encodeURIComponent(params.get("authError") || "登录未完成，请重试。"));
     }
@@ -339,6 +343,10 @@ export default function Home() {
         <div className="workspace-nav">
           <Tabs value={view} onValueChange={setView}>
             <TabsList className="main-tabs" variant="line">
+              <TabsTrigger value="summary">
+                <ChartNoAxesColumn />
+                赛事总结
+              </TabsTrigger>
               <TabsTrigger value="bracket">
                 <GitBranch />
                 赛事对阵
@@ -478,7 +486,8 @@ export default function Home() {
             )}
           </section>
         )}
-        {(view === "bracket" || view === "songs" || (view === "admin" && user?.admin)) && <div className="group-row">
+        {view === "summary" && <TournamentChampions tournament={tournament} loaded={loaded} onOpen={m => void openMatch(m)} />}
+        {(view === "bracket" || view === "songs" || view === "summary" || (view === "admin" && user?.admin)) && <div className="group-row">
           <Tabs value={group} onValueChange={(v) => setGroup(v as GroupId)}>
             <TabsList className="group-tabs">
               {groups.map((g) => (
@@ -494,6 +503,7 @@ export default function Home() {
             {groups.find((g) => g.id === group)?.range}
           </span>
         </div>}
+        {view === "summary" && <TournamentSummary key={group} tournament={tournament} group={group} catalog={catalog} pool={pools[group]} loaded={loaded} onOpen={m => void openMatch(m)} />}
         {view === "bracket" && (
           <>
             <section className="bracket-section">
