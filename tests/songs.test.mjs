@@ -10,10 +10,10 @@ const originalFetch = globalThis.fetch;
 const originalNow = Date.now;
 try {
   await build({
-    stdin: { contents: `export * from './lib/songs'; export * from './lib/song-catalog.server'; export * from './lib/song-library.server'; export * from './lib/song-library'; export * from './lib/demo-song-library'; export * from './lib/tournament'; export * from './lib/tournament-seed'; export * from './lib/rules'; export {runtime} from './lib/runtime'; export {GET as songGET} from './app/api/songs/route'; export {GET as matchGET, POST as matchPOST} from './app/api/matches/[id]/route';`, resolveDir: process.cwd() },
+    stdin: { contents: `export * from './lib/songs'; export * from './lib/song-catalog.server'; export * from './lib/song-library.server'; export * from './lib/song-library'; export * from './lib/demo-song-library'; export * from './lib/tournament'; export * from './lib/tournament-seed'; export * from './lib/rules'; export {runtime} from './lib/runtime'; export {GET as songGET} from './app/api/songs/route'; export {GET as tournamentGET} from './app/api/tournament/route'; export {GET as matchGET, POST as matchPOST} from './app/api/matches/[id]/route';`, resolveDir: process.cwd() },
     bundle: true, platform: 'node', format: 'cjs', conditions: ['react-server'], outfile: dir + '/test.cjs',
   });
-  const { parseSongMetadata, resolveSong, songName, designatedId, publicSongCatalog, songMetadata, makeTournament, hydrateTournament, tournamentState, applyAction, runtime, readSongLibrary, parseSongLibrary, demoSongLibrary, songGET, matchGET, matchPOST } = (await import(dir + '/test.cjs')).default;
+  const { parseSongMetadata, resolveSong, songName, designatedId, publicSongCatalog, songMetadata, makeTournament, hydrateTournament, tournamentState, applyAction, runtime, readSongLibrary, parseSongLibrary, demoSongLibrary, songGET, tournamentGET, matchGET, matchPOST } = (await import(dir + '/test.cjs')).default;
   const db = runtime.DB;
   await assert.rejects(readSongLibrary(), /not been configured/);
   assert.equal(await db.getSongLibrary('edition-1'), null, 'Missing production library must not generate sample selections');
@@ -108,6 +108,61 @@ try {
   const post=await matchPOST(new Request(anon.url,{method:'POST',headers,body:JSON.stringify({type:'draft',revision:0,scores:[{songId:designatedId('siamese',3),a:null,b:null}]})}),params);
   assert.equal(post.status,200,'Offline metadata does not prevent saving the configured chart');
   const stillPrivate=await (await songGET()).text(); assert(!stillPrivate.includes('PRIVATE SENTINEL'));
+  // Exercise the public HTTP handlers for every publication combination across
+  // all six final/bronze matches. This uses only the temporary SQLite above.
+  const matrix = makeTournament();
+  for (const m of matrix.matches) {
+    m.picks = [[`${m.group}-1`, `${m.group}-2`], [`${m.group}-3`, `${m.group}-4`]];
+    m.bans = [`${m.group}-3`, `${m.group}-1`];
+    m.scores = [{ songId: `${m.group}-2`, a: 731234, b: 612345 }];
+    if (m.round >= 3) m.scores.push({ songId: designatedId(m.group, m.round), a: 823456, b: 723456 });
+  }
+  const finals = matrix.matches.filter(m => m.round >= 3);
+  for (let mask = 0; mask < 64; mask++) {
+    finals.forEach((m, index) => { m.published = !!(mask & (1 << index)); });
+    sql.prepare('UPDATE tournaments SET body=? WHERE id=?').run(JSON.stringify(tournamentState(matrix)), 'demo');
+    const eventResponse = await tournamentGET();
+    assert.equal(eventResponse.status, 200);
+    assert.equal(eventResponse.headers.get('Cache-Control'), 'no-store');
+    const publicEvent = (await eventResponse.json()).tournament;
+    for (const m of publicEvent.matches) {
+      const original = matrix.matches.find(candidate => candidate.id === m.id);
+      assert.deepEqual(m.picks, original.published ? original.picks : [[], []]);
+      assert.deepEqual(m.bans, original.published ? original.bans : ['', '']);
+      assert.deepEqual(m.scores, original.published ? original.scores : []);
+    }
+    const libraryResponse = await songGET();
+    assert.equal(libraryResponse.status, 200);
+    assert.equal(libraryResponse.headers.get('Cache-Control'), 'no-store');
+    const publicLibrary = await libraryResponse.json();
+    const payload = JSON.stringify(publicLibrary);
+    finals.forEach((m, index) => {
+      const ref = library.designated[m.group][m.round === 3 ? 'final' : 'third'];
+      assert.equal(!!publicLibrary.catalog[designatedId(m.group, m.round)], m.published, `mask ${mask}, ${m.id}`);
+      assert.equal(payload.includes(`PRIVATE SENTINEL ${index}`), m.published);
+      assert.equal(payload.includes(String(ref.songID)), m.published);
+    });
+  }
+  for (const m of finals) {
+    for (const cookie of ['', 'hachicats_session=invalid-session']) {
+      const denied = await matchGET(new Request(process.env.APP_ORIGIN + '/api/matches/' + m.id, { headers: { Cookie: cookie } }), { params: Promise.resolve({ id: m.id }) });
+      assert.equal(denied.status, 401);
+      assert(!JSON.stringify(await denied.json()).includes('PRIVATE SENTINEL'));
+    }
+  }
+  // Verify an authenticated ordinary account is rejected by the actual match
+  // handler too. SSO is a local fetch stub, never a live service request.
+  Object.assign(process.env, { SSO_ISSUER: 'https://sso.example', SSO_CLIENT_ID: 'test', SSO_CLIENT_SECRET: 'test-only' });
+  await db.saveSession({ id: 'test-viewer', body: JSON.stringify({ kind: 'user', sub: 'viewer', token: 'test-only' }), expires: Date.now() + 120000 });
+  globalThis.fetch = async url => {
+    assert.equal(String(url), 'https://sso.example/internal/v1/web/introspect');
+    return Response.json({ user: { id: 'viewer', username: 'viewer', nickname: 'Viewer', isAdmin: false }, expiresAt: new Date(Date.now() + 60000).toISOString() });
+  };
+  const nonAdmin = await matchGET(new Request(anon.url, { headers: { Cookie: 'hachicats_session=test-viewer' } }), params);
+  assert.equal(nonAdmin.status, 403);
+  assert(!JSON.stringify(await nonAdmin.json()).includes('PRIVATE SENTINEL'));
+  globalThis.fetch = async () => { throw Error('offline'); };
+  console.log('PASS all 64 publication combinations: public tournament strips hidden picks/bans/scores; public catalog exposes only published designated mappings; anonymous/invalid sessions get 401 and ordinary account gets 403.');
   sql.prepare('UPDATE song_libraries SET body=? WHERE id=?').run('{}','demo');
   const failed=await songGET(); assert.equal(failed.status,503); assert(! (await failed.text()).includes('PRIVATE SENTINEL'));
   sql.close();

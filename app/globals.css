@@ -479,6 +479,10 @@ i {
 .match-id {
   display: none;
 }
+.match-id.final-label {
+  display: inline;
+  color: #626975;
+}
 .player {
   display: flex;
   align-items: center;
@@ -817,6 +821,31 @@ footer span:first-child {
   font-size: 13px;
   margin: 0 10px;
 }
+.match-summary h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.match-selection-summary, .match-score-summary {
+  margin-top: 24px;
+}
+.selection-record {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #e4e4e9;
+  border-radius: 12px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.selection-record h4 { font-weight: 600; margin-bottom: 8px; }
+.selection-record li { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 6px 0; }
+.selection-record small { color: #a23a3a; white-space: nowrap; }
+.selection-record p { color: #6e6e73; margin-top: 8px; }
+.match-score-summary table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px; }
+.match-score-summary th, .match-score-summary td { padding: 12px 4px; border-bottom: 1px solid #e4e4e9; text-align: right; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.match-score-summary th:first-child { text-align: left; width: 42%; }
+.match-score-summary th small { display: block; color: #6e6e73; font-weight: 400; margin-bottom: 5px; }
+.match-score-summary tfoot { font-weight: 600; color: #0071e3; }
 .score-detail {
   padding: 18px 0;
   border-bottom: 1px solid #eee;

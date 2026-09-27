@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { canReplace } from "@/lib/player-management";
 import PlayerRating from "@/components/player-rating";
+import MatchSummary from "@/components/match-summary";
 import { difficultyNames, type Song, type SongCatalog } from "@/lib/songs";
 import {
   Check,
@@ -9,7 +10,6 @@ import {
   Shuffle,
   Music2,
   Radio,
-  Trophy,
   Save,
 } from "lucide-react";
 import {
@@ -185,19 +185,7 @@ export default function MatchEditor({
       setConfirm(null);
     }
   }
-  if (done)
-    return (
-      <div className="result-box">
-        <Trophy size={26} />
-        <h3>
-          {match.winner === match.a?.id ? match.a?.name : match.b?.name}{" "}
-          {match.round >= 3 ? "获胜" : "晋级"}
-        </h3>
-        <p>
-          {match.status === "bye" ? "轮空直接晋级" : "结果已确认并更新对阵图。"}
-        </p>
-      </div>
-    );
+  if (done) return <MatchSummary match={match} catalog={catalog} />;
   return (
     <fieldset className="editor" disabled={saving || disabled}>
       {match.round === 0 && (

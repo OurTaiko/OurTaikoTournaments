@@ -87,7 +87,7 @@ export const groups: {
     { id: "tabby", name: "狸花组", en: "TABBY", range: "★ 9–10" },
     { id: "ragdoll", name: "布偶组", en: "RAGDOLL", range: "★ 9–10" },
   ];
-export const roundNames = ["16 进 8", "8 进 4", "半决赛", "决赛", "季军赛"];
+export const roundNames = ["16 进 8", "8 进 4", "半决赛", "冠军赛", "季军赛"];
 export function firstAttack(m: Match): string | null {
   if (m.round > 1 || m.status === "bye" || !m.a || !m.b) return null;
   if (!Number.isFinite(m.a.rating) || !Number.isFinite(m.b.rating)) return null;

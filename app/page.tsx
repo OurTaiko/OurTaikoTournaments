@@ -23,6 +23,7 @@ import {
   SheetHeader,
 } from "@/components/ui/sheet";
 import MatchEditor from "@/components/match-editor";
+import MatchSummary from "@/components/match-summary";
 import ResetTournament from "@/components/reset-tournament";
 import PlayerManager from "@/components/player-manager";
 import { reserves, type PlayerAction } from "@/lib/player-management";
@@ -248,7 +249,7 @@ export default function Home() {
         <span className="match-meta">
           <span>
             {String(m.index + 1).padStart(2, "0")}{" "}
-            <span className="match-id">
+            <span className={`match-id ${m.round === 3 ? "final-label" : ""}`}>
               / {m.round === 4 ? "季军赛" : roundNames[m.round]}
             </span>
           </span>
@@ -526,7 +527,13 @@ export default function Home() {
                       </small>
                     </div>
                     <div className="round-matches">
-                      {matches.filter((m) => m.round === r).map(matchCard)}
+                      {r === 3 ? <div className="championship">
+                        <div className="round-title">
+                          <span>冠军赛</span>
+                          <Trophy size={15} />
+                        </div>
+                        {matches.filter((m) => m.round === r).map(matchCard)}
+                      </div> : matches.filter((m) => m.round === r).map(matchCard)}
                     </div>
                     {r === 3 && (
                       <div className="bronze">
@@ -758,22 +765,8 @@ export default function Home() {
                     );
                   }}
                 />
-              ) : selected.scores.length ? (
-                selected.scores.map((s, i) => (
-                  <div className="score-detail" key={i}>
-                    <span>{displaySongName(selected.group, s.songId)}</span>
-                    <b>
-                      {s.a?.toLocaleString() ?? "待录入"} <small>:</small>{" "}
-                      {s.b?.toLocaleString() ?? "待录入"}
-                    </b>
-                  </div>
-                ))
               ) : (
-                <div className="empty-live">
-                  {selected.status === "bye"
-                    ? `${selected.winner === selected.a?.id ? selected.a?.name : selected.b?.name} 轮空晋级`
-                    : "比赛尚未开始，选曲确认后将在这里公布。"}
-                </div>
+                <MatchSummary match={selected} catalog={catalog} />
               )}
             </div>
           )}
