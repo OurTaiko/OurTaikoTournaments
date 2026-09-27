@@ -17,7 +17,7 @@ try {
     format: "esm",
     outfile: dir + "/rules.mjs",
   });
-  const { makeTournament, applyAction: applyWithPool, publicTournament } = await import(
+  const { makeTournament, applyAction: applyWithPool, publicTournament, retainedSongs } = await import(
     pathToFileURL(dir + "/rules.mjs").href
   );
   const applyAction = (t, id, action) => applyWithPool(t, id, action, samplePools[t.matches.find(m => m.id === id)?.group] ?? []);
@@ -129,7 +129,7 @@ try {
     );
   });
   check(
-    "ban must target opponent choice and banned songs cannot be played",
+    "ban must target opponent choice and unretained banned songs cannot be played",
     () => {
       assert.throws(() =>
         applyAction(makeTournament(), "siamese-r0-0", {
@@ -147,6 +147,43 @@ try {
       );
     },
   );
+  check("opponent-only bans preserve overlapping choices through draft, start, save and finish", () => {
+    const picks = [['siamese-1', 'siamese-2'], ['siamese-2', 'siamese-3']];
+    const bans = ['siamese-2', 'siamese-1'];
+    const retained = retainedSongs(picks, bans);
+    assert.deepEqual(retained, ['siamese-2', 'siamese-3']);
+    assert.equal(retained.length, 2, 'Two distinct retained songs need no random supplement');
+    const scores = retained.map(songId => ({ songId, a: 100, b: 90 }));
+    let t = applyAction(makeTournament(), 'siamese-r0-0', { ...action, type: 'draft', picks, bans, scores });
+    t = applyAction(t, 'siamese-r0-0', { type: 'start' });
+    t = applyAction(t, 'siamese-r0-0', { type: 'save', picks, bans, scores });
+    t = applyAction(t, 'siamese-r0-0', { type: 'finish', picks, bans, scores });
+    assert.equal(t.matches[0].status, 'complete');
+    assert.deepEqual(t.matches[0].scores.map(score => score.songId), retained);
+    assert.throws(() => applyAction(makeTournament(), 'siamese-r0-0', {
+      ...action, picks, bans, scores: ['siamese-3', 'siamese-4'].map(songId => ({ songId, a: 100, b: 90 })),
+    }), /保留的曲目/, 'The old incorrect random replacement must not pass validation');
+  });
+  check("overlap combinations keep each side's survivor; only identical survivors need a supplement", () => {
+    const pairs = [];
+    for (let a = 1; a <= 4; a++) for (let b = a + 1; b <= 4; b++) pairs.push([`siamese-${a}`, `siamese-${b}`]);
+    for (const a of pairs) for (const b of pairs) for (const banA of [0, 1]) for (const banB of [0, 1]) {
+      const picks = [a, b], bans = [b[banA], a[banB]];
+      const expected = [...new Set([a[1 - banB], b[1 - banA]])];
+      assert.deepEqual(retainedSongs(picks, bans), expected);
+      const songs = [...expected];
+      if (songs.length === 1) songs.push(samplePools.siamese.find(song => !bans.includes(song.id) && !songs.includes(song.id)).id);
+      const t = applyAction(makeTournament(), 'siamese-r0-0', {
+        ...action, picks, bans, scores: songs.map(songId => ({ songId, a: 100, b: 90 })),
+      });
+      assert.deepEqual(t.matches[0].scores.map(score => score.songId), songs);
+      for (const banned of bans.filter(id => !expected.includes(id))) {
+        assert.throws(() => applyAction(makeTournament(), 'siamese-r0-0', {
+          ...action, picks, bans, scores: [...new Set([...songs, banned])].map(songId => ({ songId, a: 100, b: 90 })),
+        }), /禁用/);
+      }
+    }
+  });
   check("semifinal loser goes to bronze match", () => {
     const t = makeTournament();
     const m = t.matches.find((x) => x.id === "siamese-r2-0");

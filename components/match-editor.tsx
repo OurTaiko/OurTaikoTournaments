@@ -32,7 +32,7 @@ import {
   type Match,
   type Tournament,
 } from "@/lib/tournament";
-import { usedSongs, type Action } from "@/lib/rules";
+import { retainedSongs, usedSongs, type Action } from "@/lib/rules";
 export function Picker({
   label,
   value,
@@ -127,13 +127,7 @@ export default function MatchEditor({
       setError("请先完成双方选曲和 Ban 曲。");
       return;
     }
-    const retained = [
-      ...new Set(
-        picks
-          .map((p, i) => p.find((s) => s !== bans[1 - i])!)
-          .filter((s) => !bans.includes(s)),
-      ),
-    ];
+    const retained = retainedSongs(picks, bans);
     const available = pool.filter(
       (s) => !bans.includes(s.id) && !retained.includes(s.id),
     );

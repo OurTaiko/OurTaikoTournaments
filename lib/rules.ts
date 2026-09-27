@@ -25,6 +25,10 @@ export type Action = {
 const insist = (ok: unknown, message: string) => {
   if (!ok) throw new RuleError(message);
 };
+// Each ban removes only the opponent's selection, not both players' copies.
+export function retainedSongs(picks: Match["picks"], bans: Match["bans"]): string[] {
+  return [...new Set(picks.flatMap((side, i) => side.filter(id => id !== bans[1 - i])))];
+}
 export function usedSongs(t: Tournament, m: Match, playerId: string) {
   return new Set(
     t.matches
@@ -140,7 +144,10 @@ export function applyAction(
             v === null || (Number.isSafeInteger(v) && v >= 0 && v <= 2000000),
             "成绩需为 0～2,000,000 的整数。",
           );
-        insist(!m.bans.includes(s.songId), "禁用曲目不能作为比赛曲目。");
+        insist(
+          !m.bans.includes(s.songId) || retainedSongs(m.picks, m.bans).includes(s.songId),
+          "被禁用且未被另一方保留的曲目不能作为比赛曲目。",
+        );
       }
       insist(
         new Set(action.scores.map((s) => s.songId)).size ===
@@ -158,9 +165,7 @@ export function applyAction(
         m.picks.every((p) => p.length === 2) && m.bans.every(Boolean),
         "请先完成双方各两首选曲和 Ban 曲。",
       );
-      const remaining = m.picks.map((p, i) =>
-        p.find((s) => s !== m.bans[1 - i])!,
-      );
+      const remaining = retainedSongs(m.picks, m.bans);
       insist(
         remaining.every((s) => m.scores.some((x) => x.songId === s)),
         "成绩表必须包含双方保留的曲目。",
