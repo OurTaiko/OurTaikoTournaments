@@ -1,12 +1,6 @@
-import { readTournament, errorResponse } from "@/lib/store";
-import { publicSongCatalog } from "@/lib/song-catalog.server";
+import * as handlers from "@/lib/tournament-api/songs";
+import { hachicatsScope } from "@/lib/tournament-scope";
+import { isDemo } from "@/lib/store";
 
-export async function GET() {
-  try {
-    return Response.json(await publicSongCatalog(await readTournament()), {
-      headers: { "Cache-Control": "no-store" },
-    });
-  } catch (error) {
-    return errorResponse(error);
-  }
-}
+// Compatibility alias: this endpoint always belongs to HachiCats.
+export function GET() { return handlers.GET(hachicatsScope(isDemo())); }

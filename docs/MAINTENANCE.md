@@ -1,6 +1,6 @@
 # HachiCats 维护手册
 
-最后核对：2026-09-27。本文以同一提交中的代码为依据；线上环境变量、账号权限和赛事进度在实际维护时重新核对。文档不保存凭证、真实指定曲或当前比分。
+最后核对：2026-09-28。本文以同一提交中的代码为依据；线上环境变量、账号权限和赛事进度在实际维护时重新核对。文档不保存凭证、真实指定曲或当前比分。
 
 ## 1. 生产环境与已知边界
 
@@ -43,7 +43,7 @@ flowchart LR
 
 | 文件 | 职责 |
 | --- | --- |
-| `app/page.tsx` | 赛事总结、赛事对阵、分组曲库、赛事指南、赛事管理五个并列 tab及比赛详情 |
+| `app/hachicats/20260927/page.tsx` | 赛事总结、赛事对阵、分组曲库、赛事指南、赛事管理五个并列 tab及比赛详情 |
 | `app/login/page.tsx` / `components/login-page.tsx` | 独立登录页、账号状态、退出及本地演示入口 |
 | `components/player-manager.tsx` | 管理员编辑姓名 / rating、新增同组替补 |
 | `lib/player-management.ts` | 首轮互换、替补、锁定规则与选手输入校验 |
@@ -68,19 +68,23 @@ flowchart LR
 
 | 方法 / 路径 | 访问与用途 |
 | --- | --- |
-| `GET /api/tournament` | 公开赛况；未公布比赛的 picks、bans、scores 被过滤 |
-| `GET /api/songs` | 36 首普通曲及符合公布条件的指定曲；返回 `catalog`、`pools`、刷新状态 |
+| `GET /api/tournaments/hachicats/20260927` | 公开赛况；未公布比赛的 picks、bans、scores 被过滤 |
+| `GET /api/tournaments/hachicats/20260927/songs` | 36 首普通曲及符合公布条件的指定曲；返回 `catalog`、`pools`、刷新状态 |
+| `GET /api/tournaments` | 公开赛事目录，不包含数据键、权限策略或私有曲库 |
+| `GET /api/tournaments/hachicats/20260927/access` | 当前账号对本赛事的 `canManage`，未登录为 false；SSO 故障返回 503 |
 | `GET /api/session` | 当前用户及管理员状态；不返回 token |
 | `GET /api/health` | 数据库 ping；200 不代表 SSO、曲库文档或上游曲名接口一定正常 |
-| `GET /api/matches/[id]` | 仅管理员；该场私有草稿、本组曲库、该场指定曲和赛事 revision |
-| `POST /api/matches/[id]` | 仅管理员；`draft/start/save/finish/bye`，校验 Origin 和单场 matchRevision；整届 revision 保留 CAS 与旧客户端兼容 |
-| `POST /api/players` | 仅管理员；编辑资料 / 新增替补 / 首轮换人，校验 Origin 和赛事 revision |
-| `POST /api/tournament/reset` | 仅管理员；确认文字、revision、完整备份及条件更新 |
+| `GET /api/tournaments/hachicats/20260927/matches/[id]` | 仅管理员；该场私有草稿、本组曲库、该场指定曲和赛事 revision |
+| `POST /api/tournaments/hachicats/20260927/matches/[id]` | 仅管理员；`draft/start/save/finish/bye`，校验 Origin 和单场 matchRevision；整届 revision 保留 CAS 与旧客户端兼容 |
+| `POST /api/tournaments/hachicats/20260927/players` | 仅管理员；编辑资料 / 新增替补 / 首轮换人，校验 Origin 和赛事 revision |
+| `POST /api/tournaments/hachicats/20260927/reset` | 仅管理员；确认文字、revision、完整备份及条件更新 |
 | `GET /api/auth/login`、`GET /api/auth/callback` | 发起和完成 SSO 登录 |
 | `POST /api/auth/logout` | 清理本站会话，并尝试撤销 SSO token |
 | `POST /api/auth/demo` | 仅演示模式及 loopback 地址允许的本地管理入口 |
 
-公开赛况与曲库响应、私有比赛详情成功响应使用 `Cache-Control: no-store`。新增接口不要把管理员响应放进公开缓存。
+旧 `/api/tournament`、`/api/songs`、`/api/matches/[id]`、`/api/players`、`/api/tournament/reset` 继续作为八猫杯固定别名；请求体或 query 不能改变其归属。新页面只调用赛事作用域路由。
+
+公开赛况与曲库响应、私有比赛详情成功响应及错误响应使用 `Cache-Control: no-store`。新增接口不要把管理员响应放进公开缓存。
 
 ## 3. 数据归属与稳定编号
 
@@ -178,7 +182,7 @@ SSO 超时、配置错误、格式异常或身份不符均返回 503 并拒绝�
 
 「赛事对阵」的「正在进行」位于分组切换上方，汇总所有组的进行中比赛，按 A / B 台排序并标明组别。切换分组只影响下方对阵图和替补名单，进行中比赛保持全局展示；点击任意组的比赛可直接查看详情或管理，曲目按该场比赛所属组显示。
 
-本版本页面将「赛事管理」与「赛事对阵」「分组曲库」「赛事指南」并列；管理 tab 放置选手资料和赛事维护工具。未登录或无权限时只显示状态及 `/login` 链接。页头「登录 / 账号」进入独立 `/login`，OurTaiko 登录按钮、本地演示入口及账号退出在该页提供。登录成功返回赛事管理 tab（`/?manage=1`）；登录失败返回 `/login?authError=...` 并显示可重试提示。原 SSO 回调、鉴权及写入规则保持不变。管理员在对阵页仍可切换观众视图。
+本版本页面将「赛事管理」与「赛事对阵」「分组曲库」「赛事指南」并列；管理 tab 放置选手资料和赛事维护工具。未登录或无权限时只显示状态及 `/login` 链接。页头「登录 / 账号」进入独立 `/login`，OurTaiko 登录按钮、本地演示入口及账号退出在该页提供。登录成功返回赛事管理 tab（`/hachicats/20260927?manage=1`）；登录失败返回 `/login?authError=...` 并显示可重试提示。原 SSO 回调、鉴权及写入规则保持不变。管理员在对阵页仍可切换观众视图。
 
 两台并行录分时，分别在比赛详情选择 A 台和 B 台。另一场的保存不会清空本场输入或要求刷新；若提示「本场比赛或参赛选手已更新」，才需要重新打开本场。同场之外的选手管理与整届重置仍使用整届 revision。
 
@@ -188,7 +192,7 @@ SSO 超时、配置错误、格式异常或身份不符均返回 503 并拒绝�
 
 ### 赛事总结
 
-「赛事总结」是第一个页签，也是默认首页，可通过 `/?view=summary` 直接打开；`/?view=bracket` 可直接进入对阵页。顶部的冠军区不受分组切换影响，按「布偶组、狸花组、暹罗组」一行三列排列（含手机端），从各组已公布并已结束的冠军赛读取胜者；未决出时显示占位。冠军卡可点击查看赛果，下面的统计仍可按组切换。仅使用公开赛况和公开曲库，不增加数据库写入或私有数据接口。统计范围为已公布、已确认赛果、双方选手齐全且所有比分完整的比赛，排除草稿、进行中和轮空；赛事未结束时展示截至当前的结算结果。
+「赛事总结」是第一个页签，也是默认首页，可通过 `/hachicats/20260927?view=summary` 直接打开；`/hachicats/20260927?view=bracket` 可直接进入对阵页。顶部的冠军区不受分组切换影响，按「布偶组、狸花组、暹罗组」一行三列排列（含手机端），从各组已公布并已结束的冠军赛读取胜者；未决出时显示占位。冠军卡可点击查看赛果，下面的统计仍可按组切换。仅使用公开赛况和公开曲库，不增加数据库写入或私有数据接口。统计范围为已公布、已确认赛果、双方选手齐全且所有比分完整的比赛，排除草稿、进行中和轮空；赛事未结束时展示截至当前的结算结果。
 
 - 曲目排名支持「选用次数」和「Ban 次数」切换。原始选曲包含被 Ban 的选择，双方选择同一首计两次；双方 Ban 同一首也计两次。随机补曲、指定曲、加赛不额外算作主动选曲。未被选择的普通曲库曲目保留零次数；未公布的指定曲不进入统计。
 - 每条曲目同时展示选用数、Ban 数和实际游玩场次。默认折叠，点击展开最高分排行，再次点击收起。每位选手仅保留该曲最高分，同分并列；点击分数可打开来源比赛。同一 `songID` 和 `difficultyIndex` 的曲目别名合并，不同难度分别统计。
@@ -333,3 +337,31 @@ node --env-file=.data/private-test-atlas.env tests/mongodb.test.mjs
 - [Next.js on Vercel](https://vercel.com/docs/frameworks/full-stack/nextjs)
 - [Vercel 环境变量](https://vercel.com/docs/environment-variables)
 - [Vercel Git 集成](https://vercel.com/docs/git)
+
+## 10. 赛事平台与共享登录（本地实现，尚未发布）
+
+`/` 是 OurTaiko 赛事目录，条目定义于 `lib/tournaments.ts`。原八猫杯完整页面迁至 `/hachicats/20260927`，保留五个页签、比赛管理和总结。此改动不迁移数据库、不修改正式赛事键，不改变现有 API 的八猫杯归属。新增赛事必须提供独立的数据读取与服务端权限检查；目录条目本身不会创建赛事或授权。
+
+根布局 `app/layout.tsx` 挂载 `components/auth/sso-context.tsx` 的 `SsoProvider`。所有赛事客户端可调用 `useSSO()` 共享身份、加载 / 错误状态、刷新、SSO 跳转、本地演示登录及退出；页面不再各自查询 session。窗口获得焦点时重新验证身份；验证失败清除客户端身份并显示重试入口。服务端仍逐请求向 SSO 验证权限。`user.admin` 仍为现有 HachiCats Application 角色，不可用于授权其他赛事。
+
+`/login?returnTo=...` 是通用账号页。安全站内路径随 OIDC attempt 存储，成功返回原路径，失败保留返回目标并显示错误；不接受外部地址或认证 / API 循环目标。原 `hachicats_session` Cookie 保留 `Path=/`，兼容已有会话，token 不进入 React Context。SSO callback 保持 `/api/auth/callback`，无需变更现有注册回调。
+
+验证：`npm test`（含迁移后页面依赖图）、`npm run test:admins`（含返回路径及失败回调）、`npm run typecheck`、`npm run lint`、`npm run build:server`。本地浏览器检查目录 → 八猫杯 → 登录 → 演示登录返回管理页 → 目录共享账号 → 退出，以及手机布局。真实 SSO 成功回调需要配置现有服务后验证；本地演示不替代生产 SSO 验收。
+
+## 11. 八猫杯后端作用域迁移（本地实现，尚未发布）
+
+这是代码层面的原位适配，无须运行生产数据迁移脚本。不要复制 `edition-1` 为新的公共 ID，不要删除、初始化或重新保存现有正式文档来完成迁移。
+
+- `lib/tournaments.ts` 是公开目录；`lib/tournament-scope.ts` 是服务端允许列表，明确绑定 `hachicats-20260927` → 正式 `edition-1` / 演示 `demo`。赛事与曲库沿用相同的旧键，重置备份的 `tournamentId` 也保留旧存储键，以兼容恢复流程。
+- `lib/tournament-api/` 保存共用处理器。新动态路由先解析已注册赛事，再将同一 scope 传入赛况读写、曲库读取、权限和重置。未知 ID 返回 404，发生在身份验证、数据库读取及初始化之前。旧 API 固定解析为八猫杯，复用这些处理器，因此旧页面仍可工作且与新页面共用 CAS。
+- 正式数据、名册 ID、比赛 ID、曲目内部 ID、songID / difficultyIndex、revision 和比赛进度均不因部署而改变。原有 hydration / legacy special 引用展示兼容保持不变；读取不写回数据库。
+- 每次管理请求仍实时调用原 SSO introspect；`requireTournamentAdmin` 仅为八猫杯显式接受旧客户端 isAdmin。应用显示名可更改，客户端 ID、Secret、回调和 Cookie 保持兼容。`Viewer.id` 为稳定 SSO 用户 ID；浏览器使用 `/access` 的 `canManage`，不将全局 `user.admin` 当所有赛事的授权。同一账号重新验证权限不会卸载编辑器；失效身份或权限错误会停止显示管理 UI。
+- 已公布条件、私有比赛鉴权、Origin、matchRevision / revision、CAS 重试、重置前完整备份和版本递增逻辑保持原样。匹配错误 ID 的曲库拒绝服务，不能读取其他赛事配置作为兜底。所有权限和数据错误响应禁止缓存。
+
+验证覆盖：`tests/tournament-scope.test.mjs` 使用临时 SQLite 和伪 SSO / 曲名服务，检查新旧接口响应一致、读前读后赛事和曲库原始字节一致、未知 ID 不发生 I/O、匿名 / 普通用户 / 实时撤权 / SSO 故障 / Origin 拒绝、旧新客户端相互版本冲突，以及相同 match ID 的其他记录不受影响。`tests/songs.test.mjs` 的全部 64 种指定曲公布组合、并发录分、选手管理和重置测试已改为经过实际 scoped route，浏览器依赖测试排除 scope / access / 存储与私有曲库模块。
+
+发布时使用既有 Git → Vercel 流程。发布前保存私有只读快照，发布后比对新旧公开 API 并核对数据库 revision / 原始记录；验收不向正式比赛录分或重置。无需变更 Atlas 数据库名、SSO Client ID 或部署项目。尚未发布时，本地测试不代表生产已完成切换。
+
+### 分层 API 地址
+
+标准前缀为 `/api/tournaments/[series]/[edition]`，八猫杯为 `/api/tournaments/hachicats/20260927`，与页面路径保持一致。服务端按目录中的 `seriesSlug` 和 `edition` 精确匹配，解析到内部 ID `hachicats-20260927`，再读取原 `edition-1` / `demo` 数据；不拼接 URL 参数生成数据库键。未知系列或届次均返回 404。此前未发布的扁平 `/api/tournaments/hachicats-20260927` 路由已移除，最早的单赛事兼容 API 保持原样。

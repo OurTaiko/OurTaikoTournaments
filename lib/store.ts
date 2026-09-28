@@ -1,3 +1,4 @@
+import { hachicatsScope, tournamentStorageId, type TournamentScope } from "./tournament-scope";
 import { makeTournament, rosters } from "./tournament-seed";
 import { runtime } from "@/lib/runtime";
 export { runtime } from "@/lib/runtime";
@@ -14,27 +15,27 @@ export function db() {
 export function isDemo() {
   return runtime.DEMO_MODE === "true";
 }
-export async function readTournament() {
-  const id = isDemo() ? "demo" : "edition-1";
+export async function readTournament(scope: TournamentScope = hachicatsScope(isDemo())) {
+  const id = tournamentStorageId(scope);
   let row = await db().getTournament(id);
   if (!row) {
-    if (runtime.MONGODB_URI && !isDemo())
+    if (runtime.MONGODB_URI && !scope.demo)
       throw new Error("Production tournament must be imported before serving requests");
-    const initial = makeTournament(isDemo());
+    const initial = makeTournament(scope.demo);
     await db().createTournament({ id, revision: 0, body: JSON.stringify(tournamentState(initial)) });
     row = await db().getTournament(id);
   }
   const stored = JSON.parse(row!.body) as StoredTournament;
   if (!stored.rosters) {
-    if (runtime.MONGODB_URI && !isDemo())
+    if (runtime.MONGODB_URI && !scope.demo)
       throw new Error("Production players must be migrated before serving requests");
     stored.rosters = structuredClone(rosters);
   }
   return hydrateTournament(stored);
 }
-export async function writeTournament(next: Tournament, previous: number) {
+export async function writeTournament(next: Tournament, previous: number, scope: TournamentScope = hachicatsScope(isDemo())) {
   const updated = await db().updateTournament({
-    id: isDemo() ? "demo" : "edition-1",
+    id: tournamentStorageId(scope),
     body: JSON.stringify(tournamentState(next)),
     revision: next.revision,
   }, previous);
@@ -43,14 +44,14 @@ export async function writeTournament(next: Tournament, previous: number) {
 }
 export function errorResponse(e: unknown) {
   if (e instanceof RuleError)
-    return Response.json({ error: e.message }, { status: e.status });
+    return Response.json({ error: e.message }, { status: e.status, headers: { "Cache-Control": "no-store" } });
   console.error(
     "HachiCats request failed",
     e instanceof Error ? e.name : "Unknown",
   );
   return Response.json(
     { error: "暂时无法连接赛事服务，请稍后重试。" },
-    { status: 503 },
+    { status: 503, headers: { "Cache-Control": "no-store" } },
   );
 }
 export function originCheck(request: Request) {

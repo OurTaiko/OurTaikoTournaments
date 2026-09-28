@@ -1,5 +1,6 @@
 import {
   login,
+  loginReturnTo,
   callback,
   logout,
   demoAllowed,
@@ -7,14 +8,17 @@ import {
   cookie,
 } from "@/lib/auth";
 import { errorResponse, originCheck, runtime } from "@/lib/store";
+import { safeReturnTo } from "@/lib/auth-navigation";
 import { RuleError } from "@/lib/rules";
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ action: string }> },
 ) {
   const { action } = await params;
+  let returnTo = safeReturnTo(new URL(req.url).searchParams.get("returnTo"));
   try {
-    if (action === "login") return await login();
+    if (action === "callback") returnTo = await loginReturnTo(req);
+    if (action === "login") return await login(new URL(req.url).searchParams.get("returnTo") ?? "/");
     if (action === "callback") return await callback(req);
     throw new RuleError("找不到此入口。", 404);
   } catch (e) {
@@ -23,7 +27,7 @@ export async function GET(
       status: 302,
       headers: {
         Location:
-          runtime.APP_ORIGIN + "/login?authError=" + encodeURIComponent(message),
+          runtime.APP_ORIGIN + "/login?returnTo=" + encodeURIComponent(returnTo) + "&authError=" + encodeURIComponent(message),
         "Cache-Control": "no-store",
       },
     });

@@ -6,7 +6,7 @@ import { DatabaseSync } from 'node:sqlite';
 const dir = await mkdtemp(tmpdir() + '/hachicats-reset-');
 Object.assign(process.env, { DATABASE_PATH: dir + '/test.sqlite', MONGODB_URI: '', VERCEL: '', DEMO_MODE: 'true', APP_ORIGIN: 'http://127.0.0.1:5192' });
 try {
-  await build({ stdin: { contents: "export {demoSongLibrary} from './lib/demo-song-library'; export { POST } from './app/api/tournament/reset/route'; export { runtime } from './lib/runtime'; export { resetTournament } from './lib/reset-tournament'; export { tournamentState } from './lib/tournament'; export { makeTournament } from './lib/tournament-seed';", resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', outfile: dir + '/test.cjs' });
+  await build({ stdin: { contents: "export {demoSongLibrary} from './lib/demo-song-library'; export {resetPOST as POST} from './tests/fixtures/scoped-handlers'; export { runtime } from './lib/runtime'; export { resetTournament } from './lib/reset-tournament'; export { tournamentState } from './lib/tournament'; export { makeTournament } from './lib/tournament-seed';", resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', conditions: ['react-server'], outfile: dir + '/test.cjs' });
   const { demoSongLibrary, POST, runtime, resetTournament, makeTournament, tournamentState } = (await import(dir + '/test.cjs')).default;
   const db = runtime.DB;
   const library = demoSongLibrary();

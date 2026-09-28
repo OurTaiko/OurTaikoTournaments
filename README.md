@@ -1,6 +1,6 @@
-# HachiCats · 第一届八猫杯
+# OurTaiko Tournaments
 
-手机优先的太鼓赛事网站，支持管理员编辑选手资料、首轮换人及替补管理，以及三组单败淘汰、两台并行比赛、选曲与 Ban、手动录分、自动晋级、轮空及管理员重置。
+太鼓赛事平台：`/` 为赛事目录，第一届八猫杯位于 `/hachicats/20260927`，`/login` 为共享账号入口。八猫杯支持管理员编辑选手资料、首轮换人及替补管理，以及三组单败淘汰、两台并行比赛、选曲与 Ban、手动录分、自动晋级、轮空及管理员重置。
 
 - 正式网站：[hachicats.ourtaiko.org](https://hachicats.ourtaiko.org)
 - 生产：Next.js / Vercel + MongoDB Atlas，登录使用既有 OurTaiko SSO。
@@ -10,8 +10,9 @@
 
 | 内容 | 位置 |
 | --- | --- |
-| 页面、对阵图、管理表单 | `app/page.tsx`、`components/` |
-| 后端 HTTP 接口 | `app/api/**/route.ts` |
+| 页面、对阵图、管理表单 | `app/page.tsx`（目录）、`app/hachicats/20260927/page.tsx`（八猫杯）、`components/` |
+| 后端 HTTP 接口 | `app/api/tournaments/[series]/[edition]/**/route.ts`、`lib/tournament-api/` |
+| 赛事 ID 与旧数据键映射 | `lib/tournament-scope.ts`（八猫杯 → `edition-1` / `demo`） |
 | 比赛规则、晋级与持久化 | `lib/rules.ts`、`lib/tournament.ts`、`lib/store.ts` |
 | 选手姓名、初始出场序号、rating | MongoDB `tournaments/edition-1` 的 `body.rosters` |
 | 正式曲库与指定曲 | MongoDB `song_libraries`，文档 `edition-1` |
@@ -32,7 +33,7 @@ MONGODB_URI='' MONGODB_DB='' VERCEL='' DEMO_MODE=true \
   node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 5192
 ```
 
-访问 `http://127.0.0.1:5192`，点击「登录 → 体验演示管理模式」。本地库首次自动初始化，曲库为独立样例。`127.0.0.1` 与 `localhost` 不要混用。
+访问 `http://127.0.0.1:5192`，从赛事目录进入八猫杯，再点击「登录 → 体验演示管理模式」。本地库首次自动初始化，曲库为独立样例。`127.0.0.1` 与 `localhost` 不要混用。
 
 原有 `npm run dev` 使用 Vinext 路线，默认端口 5188，配置与 D1 初始化见维护手册；它与上面的 Next.js / SQLite 环境不是同一个数据库。
 
@@ -60,3 +61,13 @@ TEST_ORIGIN=http://127.0.0.1:5192 npm run test:api
 GitHub `KirisameVanilla/HachiCats` 的 `main` 分支连接 Vercel 项目 `vanillaaaa/hachicats`。推送后自动构建 `npm run build:server`，前端与后端一起部署。需确认部署 Ready、正式域名对应新版本，再验证公开页面与相关接口。
 
 管理员设置、曲库维护、重置 / 恢复、备份、故障定位和历史迁移工具，都以 [维护手册](docs/MAINTENANCE.md) 为准。
+
+## 新赛事接入
+
+在 `lib/tournaments.ts` 添加公开目录条目，并为赛事建立独立页面。根布局已经挂载 `SsoProvider`；客户端通过 `useSSO()`（`components/auth/sso-context.tsx`）读取 `user/loading/error/busy/demoAllowed`，调用 `login(returnTo)`、`logout()`、`loginDemo()` 和 `refresh()`。账号入口使用 `loginHref(returnTo)`，SSO 成功或失败会保留安全的站内返回路径。
+
+共享登录身份不等于共享赛事管理权限。前端通过 `useTournamentAccess(tournamentId)` 获取赛事权限；服务端每次管理请求调用 `requireTournamentAdmin`。八猫杯显式沿用旧 SSO 客户端角色；可以将客户端显示名改为 OurTaikoTournament，ID、Secret 和 callback 无需改变。其他赛事不得自动继承该角色。
+
+八猫杯公共 ID 为 `hachicats-20260927`，新 API 前缀为 `/api/tournaments/hachicats/20260927`，后缀有 `/matches/[id]`、`/players`、`/songs`、`/reset`、`/access`。`lib/tournament-scope.ts` 将该 ID 映射到原 `edition-1` 数据和曲库（演示为 `demo`），不会复制、重置或重写赛事。旧 `/api/tournament`、`/api/matches`、`/api/players` 和 `/api/songs` 保留为八猫杯兼容入口，共用同一组处理器和 revision 校验。
+
+添加下一场赛事需要在服务端注册独立数据键、规则格式和明确权限策略，并显式准备其名册和曲库；仅添加目录卡片不会启用后端。未注册 ID（包括直接使用 `edition-1` / `demo`）一律返回 404，不会初始化数据。当前迁移只接入八猫杯规则，尚无通用建赛后台、成员角色数据库或其他赛制。

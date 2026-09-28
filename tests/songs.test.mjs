@@ -10,7 +10,7 @@ const originalFetch = globalThis.fetch;
 const originalNow = Date.now;
 try {
   await build({
-    stdin: { contents: `export * from './lib/songs'; export * from './lib/song-catalog.server'; export * from './lib/song-library.server'; export * from './lib/song-library'; export * from './lib/demo-song-library'; export * from './lib/tournament'; export * from './lib/tournament-seed'; export * from './lib/rules'; export {runtime} from './lib/runtime'; export {GET as songGET} from './app/api/songs/route'; export {GET as tournamentGET} from './app/api/tournament/route'; export {GET as matchGET, POST as matchPOST} from './app/api/matches/[id]/route';`, resolveDir: process.cwd() },
+    stdin: { contents: `export * from './lib/songs'; export * from './lib/song-catalog.server'; export * from './lib/song-library.server'; export * from './lib/song-library'; export * from './lib/demo-song-library'; export * from './lib/tournament'; export * from './lib/tournament-seed'; export * from './lib/rules'; export {runtime} from './lib/runtime'; export {songGET, tournamentGET, matchGET, matchPOST} from './tests/fixtures/scoped-handlers';`, resolveDir: process.cwd() },
     bundle: true, platform: 'node', format: 'cjs', conditions: ['react-server'], outfile: dir + '/test.cjs',
   });
   const { parseSongMetadata, resolveSong, songName, designatedId, publicSongCatalog, songMetadata, makeTournament, hydrateTournament, tournamentState, applyAction, runtime, readSongLibrary, parseSongLibrary, demoSongLibrary, songGET, tournamentGET, matchGET, matchPOST } = (await import(dir + '/test.cjs')).default;

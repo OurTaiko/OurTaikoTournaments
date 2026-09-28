@@ -1,4 +1,5 @@
 import 'server-only';
+import type { TournamentScope } from './tournament-scope';
 import { designatedId, parseSongMetadata, resolveSong, type SongCatalog, type SongPools } from "./songs";
 import { readSongLibrary } from './song-library.server';
 import type { SongLibrary } from './song-library';
@@ -31,8 +32,8 @@ export function designatedSong(match: Match, metadata: Awaited<ReturnType<typeof
   return id ? resolveSong(id, library.designated[match.group][match.round === 3 ? "final" : "third"], metadata) : null;
 }
 
-export async function publicSongCatalog(tournament: Tournament) {
-  const [library, state] = await Promise.all([readSongLibrary(), songMetadata()]);
+export async function publicSongCatalog(tournament: Tournament, scope?: TournamentScope) {
+  const [library, state] = await Promise.all([readSongLibrary(scope), songMetadata()]);
   const pools = Object.fromEntries(Object.entries(library.pools).map(([group, rows]) => [group, rows.map(row => row.id)])) as SongPools;
   const catalog: SongCatalog = Object.fromEntries(Object.values(library.pools).flat()
     .map((ref) => [ref.id, resolveSong(ref.id, ref, state.metadata)]));

@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 const dir = await mkdtemp(tmpdir() + '/hachicats-roster-test-');
 Object.assign(process.env, { DATABASE_PATH: dir + '/test.sqlite', MONGODB_URI: '', VERCEL: '', DEMO_MODE: 'true', APP_ORIGIN: 'http://127.0.0.1:5193' });
 try {
-  await build({ stdin: { contents: `export * from './lib/player-management'; export * from './lib/tournament-seed'; export * from './lib/store'; export * from './lib/migrate-players'; export * from './lib/reset-tournament'; export {POST} from './app/api/players/route';`, resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', outfile: dir + '/test.cjs' });
+  await build({ stdin: { contents: `export * from './lib/player-management'; export * from './lib/tournament-seed'; export * from './lib/store'; export * from './lib/migrate-players'; export * from './lib/reset-tournament'; export {playerPOST as POST} from './tests/fixtures/scoped-handlers';`, resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', conditions: ['react-server'], outfile: dir + '/test.cjs' });
   const { makeTournament, applyPlayerAction, reserves, readTournament, db, POST, migratePlayers, resetTournament } = (await import(pathToFileURL(dir + '/test.cjs').href)).default;
   const initial = makeTournament();
   const replace = (t, playerId, side = 'a', matchId = 'siamese-r0-0') => applyPlayerAction(t, { type: 'replace', matchId, side, playerId });

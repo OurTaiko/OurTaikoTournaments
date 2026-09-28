@@ -1,16 +1,18 @@
+import { hachicatsScope, tournamentStorageId, type TournamentScope } from './tournament-scope';
 import { makeTournament } from "./tournament-seed";
 import type { Database } from './database';
 import { RuleError } from './rules';
 import { hydrateTournament, tournamentState, type StoredTournament } from './tournament';
 import { resetConfirmation } from './reset-confirmation';
 
-export async function resetTournament(database: Database, demo: boolean, input: unknown, actor: string) {
+export async function resetTournament(database: Database, demo: boolean, input: unknown, actor: string, scope: TournamentScope = hachicatsScope(demo)) {
   if (!input || typeof input !== 'object') throw new RuleError('重置请求无效。');
   const { confirmation, revision } = input as { confirmation?: unknown; revision?: unknown };
   if (confirmation !== resetConfirmation(demo)) throw new RuleError('请输入完整的重置确认文字。');
   if (typeof revision !== 'number' || !Number.isSafeInteger(revision) || revision < 0 || revision >= Number.MAX_SAFE_INTEGER)
     throw new RuleError('赛事版本无效，请刷新后重试。');
-  const id = demo ? 'demo' : 'edition-1';
+  if (scope.demo !== demo) throw new RuleError('赛事环境不匹配。');
+  const id = tournamentStorageId(scope);
   const current = await database.getTournament(id);
   if (!current) throw new RuleError('未找到赛事，无法重置。', 404);
   if (current.revision !== revision) throw new RuleError('赛况已更新，请重新查看赛事后再次确认重置。', 409);

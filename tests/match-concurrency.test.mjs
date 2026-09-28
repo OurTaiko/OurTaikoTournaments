@@ -13,7 +13,7 @@ const originalFetch = globalThis.fetch;
 globalThis.fetch = async () => { throw new Error('Network disabled in concurrency tests'); };
 try {
   await build({
-    stdin: { contents: `export {GET, POST} from './app/api/matches/[id]/route'; export * from './lib/store'; export * from './lib/tournament-seed'; export * from './lib/tournament'; export * from './lib/player-management'; export * from './lib/reset-tournament';`, resolveDir: process.cwd() },
+    stdin: { contents: `export {matchGET as GET, matchPOST as POST} from './tests/fixtures/scoped-handlers'; export * from './lib/store'; export * from './lib/tournament-seed'; export * from './lib/tournament'; export * from './lib/player-management'; export * from './lib/reset-tournament';`, resolveDir: process.cwd() },
     bundle: true, platform: 'node', format: 'cjs', conditions: ['react-server'], outfile: dir + '/test.cjs',
   });
   const { GET, POST, db, readTournament, writeTournament, makeTournament, tournamentState, applyPlayerAction, resetTournament } = (await import(dir + '/test.cjs')).default;

@@ -1,3 +1,4 @@
+import { safeReturnTo } from "./auth-navigation";
 import * as oidc from "openid-client";
 import { db, runtime, isDemo } from "./store";
 import { RuleError } from "./rules";
@@ -14,8 +15,10 @@ type Attempt = {
   state: string;
   nonce: string;
   verifier: string;
+  returnTo?: string;
 };
 export type Viewer = {
+  id: string;
   name: string;
   username: string;
   admin: boolean;
@@ -46,6 +49,10 @@ export async function removeSession(id: string) {
 async function readSession(req: Request) {
   const row = await db().getSession(sessionId(req), Date.now());
   return row ? (JSON.parse(row.body) as AuthSession | Attempt) : null;
+}
+export async function loginReturnTo(req: Request) {
+  const session = await readSession(req);
+  return safeReturnTo(session?.kind === "attempt" ? session.returnTo : "/");
 }
 export async function config() {
   if (!runtime.SSO_CLIENT_SECRET)
@@ -81,7 +88,7 @@ export async function viewer(req: Request): Promise<Viewer | null> {
   if (!s || s.kind === "attempt") return null;
   if (s.kind === "demo") {
     return demoAllowed(req)
-      ? { name: "本地演示管理员", username: "demo", admin: true, demo: true }
+      ? { id: "local-demo", name: "本地演示管理员", username: "demo", admin: true, demo: true }
       : null;
   }
   const identity = await introspectSession({ SSO_ISSUER: runtime.SSO_ISSUER, SSO_CLIENT_ID: runtime.SSO_CLIENT_ID, SSO_CLIENT_SECRET: runtime.SSO_CLIENT_SECRET }, { subject: s.sub, token: s.token });
@@ -90,6 +97,7 @@ export async function viewer(req: Request): Promise<Viewer | null> {
     return null;
   }
   return {
+    id: identity.id,
     name: identity.nickname || identity.username,
     username: identity.username,
     admin: identity.isAdmin,
@@ -109,13 +117,13 @@ export async function requireAdmin(req: Request) {
   if (!u.admin) throw new RuleError("当前账号没有 HachiCats 管理权限。", 403);
   return u;
 }
-export async function login() {
+export async function login(returnTo?: string) {
   const c = await config();
   const state = oidc.randomState(),
     nonce = oidc.randomNonce(),
     verifier = oidc.randomPKCECodeVerifier();
   const id = await saveSession(
-    { kind: "attempt", state, nonce, verifier },
+    { kind: "attempt", state, nonce, verifier, returnTo: safeReturnTo(returnTo) },
     600,
   );
   const url = oidc.buildAuthorizationUrl(c, {
@@ -169,7 +177,7 @@ export async function callback(req: Request) {
   return new Response(null, {
     status: 302,
     headers: {
-      Location: runtime.APP_ORIGIN + "/?manage=1",
+      Location: runtime.APP_ORIGIN + safeReturnTo(attempt.returnTo),
       "Set-Cookie": cookie(id, lifetime),
       "Cache-Control": "no-store",
     },

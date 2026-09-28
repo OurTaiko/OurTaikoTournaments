@@ -1,23 +1,6 @@
-import { requireAdmin } from '@/lib/auth';
-import { applyPlayerAction } from '@/lib/player-management';
-import { RuleError } from '@/lib/rules';
-import { readTournament, writeTournament, originCheck, errorResponse } from '@/lib/store';
-import { publicTournament } from '@/lib/tournament';
+import * as handlers from "@/lib/tournament-api/players";
+import { hachicatsScope } from "@/lib/tournament-scope";
+import { isDemo } from "@/lib/store";
 
-export async function POST(req: Request) {
-  try {
-    originCheck(req);
-    await requireAdmin(req);
-    const text = await req.text();
-    if (text.length > 4096) throw new RuleError('请求过大。', 413);
-    let input;
-    try { input = JSON.parse(text); } catch { throw new RuleError('请求格式无效。'); }
-    if (!input || !Number.isSafeInteger(input.revision) || input.revision < 0 || input.revision >= Number.MAX_SAFE_INTEGER)
-      throw new RuleError('赛事版本无效，请刷新后重试。');
-    const t = await readTournament();
-    if (t.revision !== input.revision) throw new RuleError('赛事或选手资料已更新，请刷新后重试。', 409);
-    const next = applyPlayerAction(t, input.action);
-    await writeTournament(next, t.revision);
-    return Response.json({ tournament: publicTournament(next) }, { headers: { 'Cache-Control': 'no-store' } });
-  } catch (e) { return errorResponse(e); }
-}
+// Compatibility alias: this endpoint always belongs to HachiCats.
+export function POST(req: Request) { return handlers.POST(req, hachicatsScope(isDemo())); }

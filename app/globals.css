@@ -1655,12 +1655,12 @@ fieldset.editor:disabled button { opacity: .5; cursor: not-allowed; }
 
 .recap-champions { margin-top: 28px; }
 .champions-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
-.champion-card { display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; padding: 24px 16px; border: 1px solid #e5d9bb; border-radius: 18px; background: linear-gradient(150deg, #fffdf7, #fff); }
-button.champion-card:hover { border-color: #b89242; box-shadow: 0 4px 20px #866d1b0b; }
-.champion-group { font-size: 12px; color: #836a32; letter-spacing: .08em; }
-.champion-crown { color: #b88b2e; margin: 18px 0 12px; }
+.champion-card { display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; padding: 24px 16px; border: 1px solid #e5e5e9; border-radius: 18px; background: #fff; }
+button.champion-card:hover { border-color: #0071e3; box-shadow: 0 4px 20px #866d1b0b; }
+.champion-group { font-size: 12px; color: #6e6e73; letter-spacing: .08em; }
+.champion-crown { color: #0071e3; margin: 18px 0 12px; }
 .champion-name { font-size: 22px; font-weight: 650; overflow-wrap: anywhere; margin-bottom: 7px; }
-.champion-caption { display: flex; align-items: center; justify-content: center; gap: 3px; font-size: 11px; color: #947535; margin-top: 16px; }
+.champion-caption { display: flex; align-items: center; justify-content: center; gap: 3px; font-size: 11px; color: #0071e3; margin-top: 16px; }
 .champion-card.awaiting { background: #fafafa; border-color: #e4e4e9; }
 .champion-card.awaiting .champion-name, .champion-card.awaiting .champion-caption, .champion-card.awaiting .champion-crown { color: #96969e; }
 @media (max-width: 760px) {
@@ -1670,4 +1670,37 @@ button.champion-card:hover { border-color: #b89242; box-shadow: 0 4px 20px #866d
   .champion-group { font-size: 11px; }
   .champion-crown { width: 24px; margin: 12px 0 10px; }
   .champion-caption { font-size: 9px; margin-top: 12px; }
+}
+
+/* Tournament directory: shared Apple-style platform shell. */
+.tournament-directory { max-width: 980px; margin: auto; padding: 0 32px; }
+.directory-hero { padding: 112px 0 96px; text-align: center; }
+.directory-hero h1 { font-size: clamp(40px, 6vw, 68px); line-height: 1.15; color: #000; }
+.directory-hero p { max-width: 65ch; margin: 28px auto 32px; color: #6e6e73; font-size: 18px; line-height: 1.8; }
+.directory-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.directory-heading h2 { font-size: 28px; }
+.directory-heading > span { color: #6e6e73; font-size: 14px; }
+.directory-event { display: flex; align-items: center; gap: 32px; padding: 40px; border-radius: 16px; background: #fff; box-shadow: 0 4px 12px rgb(0 0 0 / 8%); }
+.directory-event-icon { color: #0071e3; }
+.directory-event-icon svg { transition: transform 500ms cubic-bezier(.25,.1,.25,1); }
+.directory-event:hover .directory-event-icon svg { transform: scale(1.05); }
+.directory-event-body { flex: 1; min-width: 0; }
+.directory-series { color: #6e6e73; font-size: 14px; margin-bottom: 8px; }
+.directory-event h3 { color: #000; font-size: 28px; }
+.directory-description { max-width: 65ch; color: #6e6e73; font-size: 15px; line-height: 1.8; margin: 16px 0 24px; }
+.directory-event time { display: flex; align-items: center; gap: 8px; color: #6e6e73; font-size: 13px; }
+.directory-event-link { display: flex; align-items: center; gap: 6px; color: #0071e3; font-size: 14px; white-space: nowrap; }
+.directory-event:hover .directory-event-link { text-decoration: underline; }
+.directory-footer { display: flex; justify-content: space-between; gap: 20px; color: #6e6e73; padding: 64px 0 32px; font-size: 12px; }
+.login-card { border: 0; border-radius: 16px; box-shadow: 0 4px 12px rgb(0 0 0 / 8%); }
+.primary-button { padding: 12px 24px; border-radius: 999px; }
+@media (max-width: 640px) {
+  .tournament-directory { padding: 0 24px; }
+  .directory-hero { padding: 80px 0; }
+  .directory-hero p { font-size: 16px; }
+  .directory-event { flex-wrap: wrap; padding: 28px; gap: 24px; }
+  .directory-event-body { flex-basis: calc(100% - 80px); }
+  .directory-event h3 { font-size: 23px; }
+  .directory-event-link { width: 100%; justify-content: flex-end; }
+  .directory-footer { flex-direction: column; }
 }

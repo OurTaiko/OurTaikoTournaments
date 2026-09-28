@@ -1,4 +1,5 @@
 "use client";
+import { tournamentApiPath } from "@/lib/tournaments";
 import { useState } from "react";
 import { canReplace } from "@/lib/player-management";
 import PlayerRating from "@/components/player-rating";
@@ -78,6 +79,7 @@ export function Picker({
   );
 }
 export default function MatchEditor({
+  tournamentId,
   match,
   revision,
   tournament,
@@ -88,6 +90,7 @@ export default function MatchEditor({
   onReplace,
   disabled = false,
 }: {
+  tournamentId: string;
   match: Match;
   revision: number;
   tournament: Tournament;
@@ -161,7 +164,7 @@ export default function MatchEditor({
     setSaving(true);
     setError("");
     try {
-      const r = await fetch("/api/matches/" + match.id, {
+      const r = await fetch(tournamentApiPath(tournamentId) + "/matches/" + encodeURIComponent(match.id), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -173,7 +176,8 @@ export default function MatchEditor({
       });
       const body = (await r.json()) as {
         error: string;
-        match: Match;
+        tournamentId: string;
+  match: Match;
         revision: number;
       };
       if (!r.ok) throw Error(body.error);

@@ -1,12 +1,14 @@
 "use client";
 
+import { tournamentApiPath } from '@/lib/tournaments';
 import { useRef, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { resetConfirmation } from '@/lib/reset-confirmation';
 import type { Tournament } from '@/lib/tournament';
 
-export default function ResetTournament({ revision, demo, disabled, onReset }: {
+export default function ResetTournament({ tournamentId, revision, demo, disabled, onReset }: {
+  tournamentId: string;
   revision: number;
   demo: boolean;
   disabled: boolean;
@@ -26,7 +28,7 @@ export default function ResetTournament({ revision, demo, disabled, onReset }: {
     locked.current = true;
     setPending(true);
     try {
-      const response = await fetch('/api/tournament/reset', {
+      const response = await fetch(tournamentApiPath(tournamentId) + '/reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ confirmation, revision: expectedRevision }),

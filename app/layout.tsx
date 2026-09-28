@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SsoProvider } from "@/components/auth/sso-context";
 export const metadata: Metadata = {
-  title: "第一届八猫杯 · HachiCats",
-  description: "第一届八猫杯赛事现场：实时对阵、比赛成绩与分组曲库。",
+  title: "OurTaiko Tournaments · 太鼓赛事",
+  description: "发现太鼓赛事，查看对阵、成绩与赛事回顾。",
   icons: { icon: "/favicon.svg" },
 };
 export default function RootLayout({
@@ -12,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body><SsoProvider>{children}</SsoProvider></body>
     </html>
   );
 }
