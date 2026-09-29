@@ -48,6 +48,7 @@ export function errorResponse(e: unknown) {
   console.error(
     "HachiCats request failed",
     e instanceof Error ? e.name : "Unknown",
+    e && typeof e === "object" && "code" in e && typeof e.code === "number" ? e.code : "",
   );
   return Response.json(
     { error: "暂时无法连接赛事服务，请稍后重试。" },

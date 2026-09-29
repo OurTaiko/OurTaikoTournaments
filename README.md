@@ -58,7 +58,7 @@ TEST_ORIGIN=http://127.0.0.1:5192 npm run test:api
 
 ## 生产更新
 
-GitHub `KirisameVanilla/HachiCats` 的 `main` 分支连接 Vercel 项目 `vanillaaaa/hachicats`。推送后自动构建 `npm run build:server`，前端与后端一起部署。需确认部署 Ready、正式域名对应新版本，再验证公开页面与相关接口。
+GitHub `OurTaiko/OurTaikoTournaments` 的 `main` 分支连接 Vercel 项目 `vanillaaaa/tournaments`。推送后自动构建 `npm run build:server`，前端与后端一起部署。需确认部署 Ready、正式域名对应新版本，再验证公开页面与相关接口。
 
 管理员设置、曲库维护、重置 / 恢复、备份、故障定位和历史迁移工具，都以 [维护手册](docs/MAINTENANCE.md) 为准。
 
