@@ -5,7 +5,7 @@
 ## 必须保留的约定
 
 - 生产托管是 Vercel + MongoDB Atlas。OurTaiko SSO 保持原服务。除非用户明确要求变更托管方案，不要重新安装或恢复 HachiCats 的 Docker / 1Panel 服务，不要清理其他服务的容器或数据。
-- 正式赛事键为 `hachicats-20260927`，演示为 `demo`。本地验证使用独立 SQLite 或隔离的测试库。`DEMO_MODE=true` 本身不代表数据库隔离：非空 `MONGODB_URI` 仍会连接 Atlas。
+- 正式赛事键为 `hachicats-20260927`（演示 `demo`）和 `centurylink-20261227`（演示 `demo-centurylink`，赛制见维护手册第 14 节）。本地验证使用独立 SQLite 或隔离的测试库。`DEMO_MODE=true` 本身不代表数据库隔离：非空 `MONGODB_URI` 仍会连接 Atlas。
 - 用户要求修改功能或部署，不等于要求重置正式赛事。发布前后保留并核对现有比分、选曲、胜者、晋级和 revision。
 - Atlas 赛事为 schemaVersion 3：元信息在 `tournaments`，选手及 rating 在 `tournament_participants`，比赛及比分在 `matches`，`data/players.json` 仅用于首次迁移 / 本地初始化；正式曲库在数据库 `song_libraries`。不要把未公布的指定曲写进源码、文档、测试、种子、日志、提交说明或前端构建产物。已结束赛事的静态存档（`data/archive/`）只能由 `scripts/archive-tournament.mjs` 从公开接口生成，仅含已公布数据，`tests/archive.test.mjs` 负责校验。
 - 未公布的指定曲只通过鉴权后的比赛详情接口返回；公开曲库须按该场比赛的公布状态过滤。保留 `server-only` 边界和前端依赖图测试。旧 Git 历史曾含真实配置，不要据此迁移就把仓库改为公开。

@@ -4,6 +4,8 @@
 
 比赛期间使用的实时管理系统（三组单败淘汰、两台并行比赛、选曲与 Ban、手动录分、自动晋级、轮空、选手管理及重置）的后端接口、Atlas 存储和管理组件仍保留在仓库中，但目前没有页面挂载管理界面。
 
+第二届世纪汇单店赛（CenturyLink）位于 `/centurylink/20261227`，为 8 人双败正赛：管理员录入选手昵称和排位赛分数，确认顺位后按三个阶段 Ban / 选曲 / 抽曲、录分并自动晋级，详见维护手册第 14 节。
+
 - 正式网站：[tournaments.ourtaiko.org](https://tournaments.ourtaiko.org)
 - 生产：Next.js / Vercel + MongoDB Atlas，登录使用既有 OurTaiko SSO。
 - 维护入口：[维护手册](docs/MAINTENANCE.md)；Codex / 其他代码助手先读 [AGENTS.md](AGENTS.md)。
@@ -12,10 +14,11 @@
 
 | 内容 | 位置 |
 | --- | --- |
-| 页面、对阵图 | `app/page.tsx`（目录）、`app/hachicats/20260927/page.tsx`（八猫杯存档）、`components/` |
+| 页面、对阵图、管理表单 | `app/page.tsx`（目录）、`app/hachicats/20260927/page.tsx`（八猫杯存档）、`app/centurylink/20261227/page.tsx`（世纪汇）、`components/` |
 | 八猫杯赛果存档 | `data/archive/hachicats-20260927.json`，由 `scripts/archive-tournament.mjs` 从公开接口生成 |
-| 后端 HTTP 接口 | `app/api/tournaments/[series]/[edition]/**/route.ts`、`lib/tournament-api/` |
-| 赛事 ID 与后端作用域 | `lib/tournament-scope.ts`（八猫杯 → `hachicats-20260927` / `demo`） |
+| 后端 HTTP 接口 | `app/api/tournaments/[series]/[edition]/**/route.ts`、`lib/tournament-api/`（世纪汇在 `centurylink.ts`） |
+| 赛事 ID 与后端作用域 | `lib/tournament-scope.ts`（八猫杯 → `hachicats-20260927` / `demo`；世纪汇 → `centurylink-20261227` / `demo-centurylink`） |
+| 世纪汇赛制与规则 | `lib/centurylink.ts`（对阵表、公开过滤）、`lib/centurylink-rules.ts`（服务端校验）、`lib/centurylink.server.ts`（读写与曲库） |
 | 比赛规则、晋级与持久化 | `lib/rules.ts`、`lib/tournament.ts`、`lib/store.ts` |
 | 选手姓名、初始出场序号、rating | MongoDB `tournament_participants`，按 `tournamentId` 关联 |
 | 正式曲库与指定曲 | MongoDB `song_libraries`，文档 `hachicats-20260927` |
@@ -67,11 +70,11 @@ GitHub `OurTaiko/OurTaikoTournaments` 的 `main` 分支连接 Vercel 项目 `van
 
 在 `lib/tournaments.ts` 添加公开目录条目，并为赛事建立独立页面。根布局已经挂载 `SsoProvider`；客户端通过 `useSSO()`（`components/auth/sso-context.tsx`）读取 `user/loading/error/busy/demoAllowed`，调用 `login(returnTo)`、`logout()`、`loginDemo()` 和 `refresh()`。账号入口使用 `loginHref(returnTo)`，SSO 成功或失败会保留安全的站内返回路径。
 
-共享登录身份不等于共享赛事管理权限。前端通过 `useTournamentAccess(tournamentId)` 获取赛事权限；服务端每次管理请求调用 `requireTournamentAdmin`。八猫杯显式沿用旧 SSO 客户端角色；可以将客户端显示名改为 OurTaikoTournament，ID、Secret 和 callback 无需改变。其他赛事不得自动继承该角色。
+共享登录身份不等于共享赛事管理权限。前端通过 `useTournamentAccess(tournamentId)` 获取赛事权限；服务端每次管理请求调用 `requireTournamentAdmin`。八猫杯显式沿用旧 SSO 客户端角色；可以将客户端显示名改为 OurTaikoTournament，ID、Secret 和 callback 无需改变。其他赛事不得自动继承该角色；世纪汇店赛在 `lib/tournament-scope.ts` 中以 `ourtaiko-tournaments-sso-role` 显式登记为使用同一 Client role（Is admin）。
 
 八猫杯公共 ID 为 `hachicats-20260927`，新 API 前缀为 `/api/tournaments/hachicats/20260927`，后缀有 `/matches/[id]`、`/players`、`/songs`、`/reset`、`/access`。`lib/tournament-scope.ts` 使用 `hachicats-20260927` 数据和曲库（演示为 `demo`），不会复制、重置或重写赛事。旧 `/api/tournament`、`/api/matches`、`/api/players` 和 `/api/songs` 保留为八猫杯兼容入口，共用同一组处理器和 revision 校验。
 
-添加下一场赛事需要在服务端注册独立数据键、规则格式和明确权限策略，并显式准备其名册和曲库；仅添加目录卡片不会启用后端。未注册 ID（包括旧存储键 `edition-1` / `demo`）一律返回 404，不会初始化数据。当前迁移只接入八猫杯规则，尚无通用建赛后台、成员角色数据库或其他赛制。
+添加下一场赛事需要在服务端注册独立数据键、规则格式和明确权限策略，并显式准备其名册和曲库；仅添加目录卡片不会启用后端。未注册 ID（包括旧存储键 `edition-1` / `demo`）一律返回 404，不会初始化数据。目前接入两种赛制：八猫杯单败（`hachicats-single-elimination`）和世纪汇双败（`centurylink-double-elimination`）；各 API 处理器按 `isCenturyLinkScope` 分派。尚无通用建赛后台或成员角色数据库。
 
 ## MongoDB 数据库配置
 

@@ -7,12 +7,23 @@ import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFoo
 import { resetConfirmation } from '@/lib/reset-confirmation';
 import type { Tournament } from '@/lib/tournament';
 
-export default function ResetTournament({ tournamentId, revision, demo, disabled, onReset }: {
+export default function ResetTournament<T extends { revision: number } = Tournament>({ tournamentId, revision, demo, disabled, onReset,
+  title = demo ? '演示赛事维护' : '第一届赛事维护',
+  summary = '将三个组的全部 48 场比赛恢复为待开始。请勿在正式比赛进行中使用。',
+  buttonLabel = demo ? '重置演示赛事' : '重置第一届赛事',
+  dialogTitle = demo ? '重置演示赛事？' : '重置第一届八猫杯？',
+  dialogDescription = '这会清空暹罗、狸花、布偶三个组的选曲、Ban 曲、比分、轮空及晋级结果，恢复最初对阵。选手、rating、曲库和管理员设置保持不变。',
+}: {
   tournamentId: string;
   revision: number;
   demo: boolean;
   disabled: boolean;
-  onReset: (tournament: Tournament) => void;
+  onReset: (tournament: T) => void;
+  title?: string;
+  summary?: string;
+  buttonLabel?: string;
+  dialogTitle?: string;
+  dialogDescription?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [expectedRevision, setExpectedRevision] = useState(revision);
@@ -20,7 +31,7 @@ export default function ResetTournament({ tournamentId, revision, demo, disabled
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const locked = useRef(false);
-  const phrase = resetConfirmation(demo);
+  const phrase = resetConfirmation(demo, tournamentId);
   const changed = revision !== expectedRevision;
 
   async function submit() {
@@ -33,7 +44,7 @@ export default function ResetTournament({ tournamentId, revision, demo, disabled
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ confirmation, revision: expectedRevision }),
       });
-      const data = await response.json() as { error?: string; tournament: Tournament };
+      const data = await response.json() as { error?: string; tournament: T };
       if (!response.ok) throw new Error(data.error || '重置失败，请关闭窗口后重新检查赛况。');
       onReset(data.tournament);
       setOpen(false);
@@ -47,22 +58,19 @@ export default function ResetTournament({ tournamentId, revision, demo, disabled
 
   return (
     <div className="tournament-reset">
-      <h3>{demo ? '演示赛事维护' : '第一届赛事维护'}</h3>
-      <p>将三个组的全部 48 场比赛恢复为待开始。请勿在正式比赛进行中使用。</p>
+      <h3>{title}</h3>
+      <p>{summary}</p>
       <button className="reset-button" disabled={disabled} onClick={() => {
         setExpectedRevision(revision);
         setConfirmation('');
         setError('');
         setOpen(true);
-      }}><RotateCcw size={16} />{demo ? '重置演示赛事' : '重置第一届赛事'}</button>
+      }}><RotateCcw size={16} />{buttonLabel}</button>
       <AlertDialog open={open} onOpenChange={(value) => { if (!locked.current) setOpen(value); }}>
         <AlertDialogContent className="reset-dialog">
           <AlertDialogHeader>
-            <AlertDialogTitle>{demo ? '重置演示赛事？' : '重置第一届八猫杯？'}</AlertDialogTitle>
-            <AlertDialogDescription>
-              这会清空暹罗、狸花、布偶三个组的选曲、Ban 曲、比分、轮空及晋级结果，恢复最初对阵。
-              选手、rating、曲库和管理员设置保持不变。
-            </AlertDialogDescription>
+            <AlertDialogTitle>{dialogTitle}</AlertDialogTitle>
+            <AlertDialogDescription>{dialogDescription}</AlertDialogDescription>
           </AlertDialogHeader>
           <p className="reset-backup-note">系统会先保存完整赛况备份。恢复备份需要维护人员操作，页面没有撤销按钮。</p>
           <label htmlFor="reset-confirmation">请输入「{phrase}」确认</label>

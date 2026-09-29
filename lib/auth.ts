@@ -114,7 +114,7 @@ export function demoAllowed(req: Request) {
 export async function requireAdmin(req: Request) {
   const u = await viewer(req);
   if (!u) throw new RuleError("请先登录。", 401);
-  if (!u.admin) throw new RuleError("当前账号没有 HachiCats 管理权限。", 403);
+  if (!u.admin) throw new RuleError("当前账号没有赛事管理权限。", 403);
   return u;
 }
 export async function login(returnTo?: string) {

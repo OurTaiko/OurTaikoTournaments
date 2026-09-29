@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, CalendarDays, Cat, Trophy } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Cat, Drum, Trophy } from "lucide-react";
 import AccountLink from "@/components/account-link";
 import { tournaments } from "@/lib/tournaments";
 
@@ -18,7 +18,7 @@ export default function TournamentDirectory() {
       <section id="tournaments" className="directory-events" aria-labelledby="events-title">
         <div className="directory-heading"><h2 id="events-title">赛事一览</h2><span>{tournaments.length} 场赛事</span></div>
         {tournaments.map(event => <Link className="directory-event group" href={event.href} key={event.id}>
-          <div className="directory-event-icon"><Cat size={48} /></div>
+          <div className="directory-event-icon">{event.seriesSlug === "centurylink" ? <Drum size={46} /> : <Cat size={48} />}</div>
           <div className="directory-event-body"><p className="directory-series">{event.series}</p><h3>{event.name}</h3>
             <p className="directory-description">{event.description}</p>
             <time dateTime={event.date}><CalendarDays size={16} />{event.displayDate}</time>

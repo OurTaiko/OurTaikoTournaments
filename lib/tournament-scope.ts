@@ -1,5 +1,5 @@
 import { RuleError } from './rules';
-import { HACHICATS_TOURNAMENT_ID, tournaments, tournamentId } from './tournaments';
+import { CENTURYLINK_TOURNAMENT_ID, HACHICATS_TOURNAMENT_ID, tournaments, tournamentId } from './tournaments';
 
 /** Server registry. Public IDs never become database keys directly. */
 const definitions = {
@@ -7,6 +7,12 @@ const definitions = {
     demoStorageId: 'demo',
     format: 'hachicats-single-elimination',
     authorization: 'existing-hachicats-sso-role',
+  },
+  // Explicitly granted: the same SSO client (OurTaikoTournament) admin role manages this event.
+  [CENTURYLINK_TOURNAMENT_ID]: {
+    demoStorageId: 'demo-centurylink',
+    format: 'centurylink-double-elimination',
+    authorization: 'ourtaiko-tournaments-sso-role',
   },
 } as const;
 
@@ -31,6 +37,10 @@ export function tournamentStorageId(scope: TournamentScope) {
   if (!event || event.id !== tournamentId(event.seriesSlug, event.edition))
     throw new Error('Tournament ID must match its registered path');
   return scope.demo ? definition.demoStorageId : event.id;
+}
+
+export function isCenturyLinkScope(scope: TournamentScope) {
+  return tournamentDefinition(scope.tournamentId).format === 'centurylink-double-elimination';
 }
 
 /** Compatibility only: old APIs and maintenance tools address this event. */

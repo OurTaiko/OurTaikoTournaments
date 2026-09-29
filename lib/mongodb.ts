@@ -1,8 +1,9 @@
 import { MongoClient, MongoServerError, type Db } from 'mongodb';
 import { mongoTournamentRepository } from './mongo-tournaments';
-import type { Database, SessionRow } from './database';
-import type { SongLibrary } from './song-library';
+import type { Database, SessionRow, StoredSongLibrary } from './database';
 
+type LibraryDocument = DistributiveOmit<StoredSongLibrary, 'id'> & { _id: string };
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 type SessionDocument = Omit<SessionRow, 'id'> & { _id: string; expiresAt: Date };
 
 // Reuse one bounded connection pool per warm serverless instance.
@@ -30,12 +31,13 @@ export function mongoDatabase(getDb: () => Promise<Db>): Database {
   return {
     ...mongoTournamentRepository(getDb),
     async getSongLibrary(id) {
-      const row = await (await getDb()).collection<Omit<SongLibrary, 'id'> & { _id: string }>('song_libraries').findOne({ _id: id });
+      const row = await (await getDb()).collection<LibraryDocument>('song_libraries').findOne({ _id: id });
       if (!row) return null;
+      if ('format' in row) return { id: row._id, version: row.version, format: row.format, songs: row.songs, designated: row.designated };
       return { id: row._id, version: row.version, pools: row.pools, designated: row.designated };
     },
     async createSongLibrary({ id, ...library }) {
-      try { await (await getDb()).collection<Omit<SongLibrary, 'id'> & { _id: string }>('song_libraries').insertOne({ _id: id, ...library }); }
+      try { await (await getDb()).collection<LibraryDocument>('song_libraries').insertOne({ _id: id, ...library }); }
       catch (error) { if (!(error instanceof MongoServerError && error.code === 11000)) throw error; }
     },
     async ping() { await (await getDb()).command({ ping: 1 }); },

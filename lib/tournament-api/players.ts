@@ -1,4 +1,6 @@
 import type { TournamentScope } from "@/lib/tournament-scope";
+import { isCenturyLinkScope } from "@/lib/tournament-scope";
+import * as centuryLink from "./centurylink";
 import { requireTournamentAdmin } from '@/lib/tournament-access';
 import { applyPlayerAction } from '@/lib/player-management';
 import { RuleError } from '@/lib/rules';
@@ -6,6 +8,7 @@ import { readTournament, writeTournament, originCheck, errorResponse } from '@/l
 import { publicTournament } from '@/lib/tournament';
 
 export async function POST(req: Request, scope: TournamentScope) {
+  if (isCenturyLinkScope(scope)) return centuryLink.players(req, scope);
   try {
     originCheck(req);
     await requireTournamentAdmin(req, scope);

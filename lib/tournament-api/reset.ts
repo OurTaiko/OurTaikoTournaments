@@ -4,6 +4,7 @@ import { db, errorResponse, originCheck } from '@/lib/store';
 import { resetTournament } from '@/lib/reset-tournament';
 import { RuleError } from '@/lib/rules';
 import { publicTournament } from '@/lib/tournament';
+import { publicCenturyLink } from '@/lib/centurylink';
 
 export async function POST(req: Request, scope: TournamentScope) {
   try {
@@ -28,6 +29,6 @@ export async function POST(req: Request, scope: TournamentScope) {
     try { body = JSON.parse(new TextDecoder().decode(bytes)); }
     catch { throw new RuleError('重置请求格式错误。'); }
     const result = await resetTournament(db(), scope.demo, body, user.username, scope);
-    return Response.json({ tournament: publicTournament(result.tournament), backupId: result.backupId }, { headers: { 'Cache-Control': 'no-store' } });
+    return Response.json({ tournament: 'format' in result.tournament ? publicCenturyLink(result.tournament) : publicTournament(result.tournament), backupId: result.backupId }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) { return errorResponse(error); }
 }

@@ -46,7 +46,7 @@ export function errorResponse(e: unknown) {
   if (e instanceof RuleError)
     return Response.json({ error: e.message }, { status: e.status, headers: { "Cache-Control": "no-store" } });
   console.error(
-    "HachiCats request failed",
+    "Tournament request failed",
     e instanceof Error ? e.name : "Unknown",
     e && typeof e === "object" && "code" in e && typeof e.code === "number" ? e.code : "",
   );

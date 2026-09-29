@@ -443,3 +443,46 @@ node --env-file=.env.local scripts/migrate-tournament-schema.mjs --verify hachic
 通过：npm test、test:reset、test:storage、test:admins、typecheck、lint、build:server，以及自动独立 Atlas 测试库中的真实事务集成测试。最后用本地构建的实际后端处理器只读访问正式 Atlas，公开赛况 200、匿名私有详情 401、完整状态与备份一致；这不是 Vercel 线上新版本验收。
 
 Vercel 查询到当前 production 仍为 `b50e1fd`，本次未提交、推送或部署。网站仍需发布当前后端并设置 `MONGODB_DB=tournaments` 后使用新结构；发布前应再次确认旧库没有新增成绩。旧版本不支持新结构，不能仅更改线上数据库名。
+
+## 14. 第二届世纪汇单店赛（CenturyLink，已上线）
+
+页面 `/centurylink/20261227`，赛事 ID `centurylink-20261227`（演示键 `demo-centurylink`），API 前缀 `/api/tournaments/centurylink/20261227`，复用 `/matches/[id]`、`/players`、`/songs`、`/reset`、`/access` 路由，由 `lib/tournament-api/*.ts` 按 `isCenturyLinkScope` 分派到 `lib/tournament-api/centurylink.ts`。赛制依据主办方文档中的正赛部分（海选、刷分赛、Last Chance 不在网站内）。
+
+### 赛制与数据
+
+- 8 位正赛选手，只保存昵称；排位赛每人一首指定曲，分数从高到低确定 1–8 号顺位。首轮 G1 = 1v8、G2 = 2v7、G3 = 3v6、G4 = 4v5。
+- 对阵表 `clBracket`（`lib/centurylink.ts`）按赛制表固定 14 场：第一阶段 G1–G6（G5/G6 为 0-1 组，败者第 7–8 名）；第二阶段 G7–G11（G9/G10 败者第 5–6 名，G11 为殿军赛，败者第 4 名）；决赛阶段 G12 胜者组决赛、G13 败者组决赛（败者季军）、G14 总决赛（单场，无重置）。
+- 曲库内部 ID `cl-1`…`cl-32` 对应主办方编号 1–32，第一阶段用曲 1–10，第二阶段曲 5–18，决赛阶段曲 19–32（依主办方文档；登记表中的分组标题与此不同，以文档为准）。
+- 规则：G1–G4 双方各 Ban 1 首、各选 1 首，两首总分；G5/G6 由主办方抽 2 首总分；G7–G11 各 Ban 1、各选 1，再加指定曲（G11 为殿军赛指定曲），三首总分；G12–G14 各 Ban 1（G14 胜者组冠军 Ban 2），抽 4 首逐曲得分，先得 3 分胜，2:2 时演奏该场决胜曲。总分同分从本阶段曲库抽加赛曲。第一、第二阶段内一名选手不能重复游玩同一首（指定曲除外），决赛阶段不限制。「弃权 / 判负」直接指定胜者。
+- 存储：Atlas 仍用 schemaVersion 3 分集合。`tournaments` 元信息带 `format: 'centurylink'` 和 `ranking`（状态、确认的顺位）；`tournament_participants` 每人 `name`、`rankingScore`，`groupId: 'main'`；`matches` 使用 `group: 'main'`、`round` = 阶段、`index` = 场次号，满足既有唯一索引。SQLite 仍存整份 JSON。
+- 曲库文档 `song_libraries/centurylink-20261227`：`{ version: 1, format: 'centurylink', songs: [32 × {id, songID, difficultyIndex}], designated: {ranking, stage2, fourth, winnersFinal, losersFinal, grandFinal} }`，结构由 `lib/centurylink-song-library.ts` 校验。真实配置只在忽略目录 `.data/centurylink/` 和数据库中，不写入源码。
+
+### 公开与权限
+
+- 未开始（未公布）的比赛不公开 Ban / 选曲 / 比分；排位分数在第一次保存后公开。指定曲与决胜曲只有在已公布比赛的曲目表里出现后才进入公开曲库（排位赛指定曲在排位开始后公开）；管理员打开比赛时可提前看到本场指定曲。
+- 管理权限：在 `lib/tournament-scope.ts` 以 `ourtaiko-tournaments-sso-role` 显式登记，与八猫杯使用同一 SSO Client role（Is admin）。如需分开授权，需要新的角色来源，不能靠前端判断。
+- 所有写入沿用 Origin、管理员、整届 revision CAS；比赛写入另校验 `matchRevision`，其他场次并发时重放。
+
+### 日常操作
+
+1. 「赛事管理 → 正赛选手」添加 / 改名 / 排序 / 移除选手（最多 8 人）。排位确认后名单锁定，只能改昵称（用于陪跑递补）。
+2. 「排位赛」录入分数并保存（即时公开）；同分时用「与下一位交换」按加赛结果排序，再「确认排位并生成首轮对阵」。首轮尚未选曲或开始前可「撤回排位」。
+3. 「赛程对阵」管理视图中打开比赛：选机台 → Ban / 选曲 → 生成或抽取曲目 → 开始比赛 → 录分 → 确认赛果；同分时使用加赛或决胜曲按钮。
+4. 「重置第二届赛事」输入 `重置第二届世纪汇单店赛`：先备份，保留选手昵称，清空排位分数、顺位及全部比赛。
+
+### 首次上线步骤
+
+2026-09-28 已在 Atlas `tournaments` 库执行一次：创建空赛事（revision 0、0 位选手、14 场比赛）及曲库文档，`--verify` 通过；执行前后 `hachicats-20260927` 的 revision（168）、选手 / 比赛数量和内容哈希不变。私有曲库文件仅在当前维护机 `.data/centurylink/`。
+
+生产环境不会从请求自动创建赛事。如需在其他库重建，用私有环境变量显式初始化：
+
+```sh
+node --env-file=<私有环境文件> scripts/init-centurylink.mjs .data/centurylink/centurylink-20261227-song-library.json --apply
+node --env-file=<私有环境文件> scripts/init-centurylink.mjs .data/centurylink/centurylink-20261227-song-library.json --verify
+```
+
+脚本只处理 `centurylink-20261227`：曲库已存在且内容不同时拒绝覆盖；赛事已存在时不改动（事务内 create-if-absent），不影响 `hachicats-20260927`。未初始化时公开页面会显示服务不可用。
+
+### 验证
+
+`node tests/centurylink.test.mjs`（已加入 `npm test`）：排位 / 同分排序、四种比赛类型规则、阶段内不重复、加赛 / 决胜曲、晋级与最终排名、原生文档往返、公开过滤、API 权限与 revision、指定曲公布时机、重置备份。浏览器依赖测试覆盖新页面。UI 在本地 demo 中检查了排位录入与确认、G1 Ban / 选曲 / 录分、G12 2:2 决胜曲，以及 390px 手机布局。Atlas 集成测试（`tests/mongodb.test.mjs`）尚未针对 CenturyLink 格式运行。

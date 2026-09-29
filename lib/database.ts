@@ -9,8 +9,8 @@ export type TournamentRow = { id: string; revision: number; body: string };
 export type TournamentBackup = TournamentRow & { tournamentId: string; createdAt: string; actor: string };
 export type SessionRow = { id: string; body: string; expires: number };
 export interface Database {
-  getSongLibrary(id: string): Promise<SongLibrary | null>;
-  createSongLibrary(library: SongLibrary): Promise<void>;
+  getSongLibrary(id: string): Promise<StoredSongLibrary | null>;
+  createSongLibrary(library: StoredSongLibrary): Promise<void>;
   ping(): Promise<void>;
   getTournament(id: string): Promise<TournamentRow | null>;
   createTournament(row: TournamentRow): Promise<void>;
@@ -22,3 +22,5 @@ export interface Database {
   deleteSession(id: string): Promise<boolean>;
 }
 import type { SongLibrary } from './song-library';
+import type { CenturyLinkSongLibrary } from './centurylink-song-library';
+export type StoredSongLibrary = SongLibrary | CenturyLinkSongLibrary;

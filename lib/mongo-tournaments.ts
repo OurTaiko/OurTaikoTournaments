@@ -44,6 +44,7 @@ export function mongoTournamentRepository(getDb: () => Promise<Db>): Pick<Databa
       const collection = db.collection<TournamentDocument | LegacyDocument>('tournaments');
       const meta = await collection.findOne({ _id: row.id }, { session });
       if (!meta || meta.revision !== previous) return false;
+      if ((('format' in meta && meta.format) || undefined) !== candidate.tournament.format) throw new Error('Tournament format mismatch');
       if (meta.maintenance) throw new Error('Tournament maintenance in progress');
       const current = await readTournamentDocuments(db, row.id, session);
       if (!current) return false;
@@ -61,7 +62,9 @@ export function mongoTournamentRepository(getDb: () => Promise<Db>): Pick<Databa
       const before = splitTournament(current);
       const result = await collection.updateOne({ _id: row.id, schemaVersion: 3, revision: previous, maintenance: { $ne: true } },
         { $set: { revision: row.revision, updatedAt: candidate.tournament.updatedAt,
-          groups: candidate.tournament.groups, participantCount: candidate.participants.length, matchCount: candidate.matches.length } }, { session });
+          groups: candidate.tournament.groups, participantCount: candidate.participants.length, matchCount: candidate.matches.length,
+          // Format-specific event state; a format can never change on update.
+          ...(candidate.tournament.format ? { format: candidate.tournament.format, ranking: candidate.tournament.ranking } : {}) } }, { session });
       if (result.matchedCount !== 1) throw new Error('Tournament commit conflict');
       // bulkWrite is one ordered driver operation, never Promise.all inside a session.
       for (const [name, oldRows, newRows] of [

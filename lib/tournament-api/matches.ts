@@ -1,4 +1,6 @@
 import type { TournamentScope } from "@/lib/tournament-scope";
+import { isCenturyLinkScope } from "@/lib/tournament-scope";
+import * as centuryLink from "./centurylink";
 import { designatedSong, songMetadata } from "@/lib/song-catalog.server";
 import { requireTournamentAdmin } from "@/lib/tournament-access";
 import { readSongLibrary } from '@/lib/song-library.server';
@@ -15,6 +17,7 @@ export async function GET(
   scope: TournamentScope,
   id: string,
 ) {
+  if (isCenturyLinkScope(scope)) return centuryLink.match(req, scope, id);
   try {
     await requireTournamentAdmin(req, scope);
     const t = await readTournament(scope);
@@ -42,6 +45,7 @@ export async function POST(
   scope: TournamentScope,
   id: string,
 ) {
+  if (isCenturyLinkScope(scope)) return centuryLink.saveMatch(req, scope, id);
   try {
     originCheck(req);
     await requireTournamentAdmin(req, scope);

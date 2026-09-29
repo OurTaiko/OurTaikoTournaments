@@ -83,7 +83,7 @@ try {
   assert.equal(api.tournamentStorageId(api.resolveTournamentScope(publicId, true)), 'demo');
   assert.equal(api.tournamentApiPath(publicId), '/api/tournaments/hachicats/20260927');
   const listing = await api.directory().json();
-  assert.deepEqual(listing.tournaments.map(t => t.id), [publicId]);
+  assert.deepEqual(listing.tournaments.map(t => t.id), [publicId, 'centurylink-20261227']);
   assert(!JSON.stringify(listing).includes('storageId'));
 
   const publicState = await api.state(request(), context());

@@ -3,15 +3,15 @@ import { tournamentApiPath } from "@/lib/tournaments";
 import { useCallback, useEffect, useState } from "react";
 import { emptySongPools, type SongCatalog, type SongPools } from "@/lib/songs";
 
-export function useSongCatalog(tournamentId: string) {
-  const [songs, setSongs] = useState<{ catalog: SongCatalog; pools: SongPools }>({ catalog: {}, pools: emptySongPools });
+export function useSongCatalog<P = SongPools>(tournamentId: string, emptyPools: P = emptySongPools as P) {
+  const [songs, setSongs] = useState<{ catalog: SongCatalog; pools: P }>({ catalog: {}, pools: emptyPools });
   const [notice, setNotice] = useState("正在加载曲目信息…");
   const refresh = useCallback((signal?: AbortSignal) =>
     fetch(tournamentApiPath(tournamentId) + "/songs", { cache: "no-store", signal }).then(async (response) => {
       if (!response.ok) throw new Error("Song catalog unavailable");
       const data = await response.json() as {
         catalog: SongCatalog;
-        pools: SongPools;
+        pools: P;
         stale: boolean;
         incomplete: boolean;
         updatedAt: string | null;
