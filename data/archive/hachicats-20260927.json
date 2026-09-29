@@ -1,0 +1,2962 @@
+{
+  "id": "hachicats-20260927",
+  "archivedAt": "2026-09-29T00:36:48.874Z",
+  "source": "https://tournaments.ourtaiko.org/api/tournaments/hachicats/20260927",
+  "tournament": {
+    "rosters": {
+      "siamese": [
+        {
+          "id": "siamese-p0",
+          "name": "Andywyl",
+          "seed": 1,
+          "rating": 7.5
+        },
+        {
+          "id": "siamese-p1",
+          "name": "遗沙",
+          "seed": 2,
+          "rating": 6.68
+        },
+        {
+          "id": "siamese-p2",
+          "name": "Aimyon",
+          "seed": 3,
+          "rating": 6.14
+        },
+        {
+          "id": "siamese-p3",
+          "name": "菜坤yyd",
+          "seed": 4,
+          "rating": 5.73
+        },
+        {
+          "id": "siamese-p4",
+          "name": "hty",
+          "seed": 5,
+          "rating": 6.73
+        },
+        {
+          "id": "siamese-p5",
+          "name": "盐汽水",
+          "seed": 6,
+          "rating": 4.5
+        },
+        {
+          "id": "siamese-p6",
+          "name": "AKIRO",
+          "seed": 7,
+          "rating": 5.38
+        },
+        {
+          "id": "siamese-p7",
+          "name": "眩晕群星",
+          "seed": 8,
+          "rating": 0.22
+        },
+        {
+          "id": "siamese-p8",
+          "name": "卡卡",
+          "seed": 9,
+          "rating": 7.14
+        },
+        {
+          "id": "siamese-p9",
+          "name": "句号",
+          "seed": 10,
+          "rating": 3
+        },
+        {
+          "id": "siamese-p10",
+          "name": "FORRRRRCE",
+          "seed": 11,
+          "rating": 5.78
+        },
+        {
+          "id": "siamese-p11",
+          "name": "蛋挞汽水",
+          "seed": 12,
+          "rating": 5.81
+        },
+        {
+          "id": "siamese-p12",
+          "name": "榕",
+          "seed": 13,
+          "rating": 7.09
+        },
+        {
+          "id": "siamese-p13",
+          "name": "栗子",
+          "seed": 14,
+          "rating": 1.76
+        },
+        {
+          "id": "siamese-p14",
+          "name": "丰川祥子",
+          "seed": 15,
+          "rating": 6.67
+        },
+        {
+          "id": "siamese-p15",
+          "name": "安东",
+          "seed": 16,
+          "rating": 4.8
+        },
+        {
+          "id": "siamese-3466d4db-cc52-41ec-a828-695234e12c3b",
+          "name": "小雨",
+          "rating": 3.3,
+          "seed": 17
+        }
+      ],
+      "tabby": [
+        {
+          "id": "tabby-p0",
+          "name": "6Lwater",
+          "seed": 1,
+          "rating": 10.63
+        },
+        {
+          "id": "tabby-p1",
+          "name": "薄利零梦",
+          "seed": 2,
+          "rating": 9.85
+        },
+        {
+          "id": "tabby-p2",
+          "name": "bebenk",
+          "seed": 3,
+          "rating": 10.42
+        },
+        {
+          "id": "tabby-p3",
+          "name": "传奇牢机长",
+          "seed": 4,
+          "rating": 7.76
+        },
+        {
+          "id": "tabby-p4",
+          "name": "泥歌咚",
+          "seed": 5,
+          "rating": 10.52
+        },
+        {
+          "id": "tabby-p5",
+          "name": "子和",
+          "seed": 6,
+          "rating": 9
+        },
+        {
+          "id": "tabby-p6",
+          "name": "Husky",
+          "seed": 7,
+          "rating": 9.4
+        },
+        {
+          "id": "tabby-p7",
+          "name": "煎饼狗子",
+          "seed": 8,
+          "rating": 9.18
+        },
+        {
+          "id": "tabby-p8",
+          "name": "小新",
+          "seed": 9,
+          "rating": 10.68
+        },
+        {
+          "id": "tabby-p9",
+          "name": "磁光",
+          "seed": 10,
+          "rating": 8.94
+        },
+        {
+          "id": "tabby-p10",
+          "name": "97",
+          "seed": 11,
+          "rating": 9.53
+        },
+        {
+          "id": "tabby-p11",
+          "name": "君子橙",
+          "seed": 12,
+          "rating": 8.56
+        },
+        {
+          "id": "tabby-p12",
+          "name": "杏",
+          "seed": 13,
+          "rating": 10.54
+        },
+        {
+          "id": "tabby-p13",
+          "name": "Tnxn",
+          "seed": 14,
+          "rating": 8.2
+        },
+        {
+          "id": "tabby-p14",
+          "name": "洛天依",
+          "seed": 15,
+          "rating": 10.4
+        },
+        {
+          "id": "tabby-p15",
+          "name": "五条闲",
+          "seed": 16,
+          "rating": 9.49
+        },
+        {
+          "id": "tabby-ceff9c26-cfaf-4654-b128-cf1ff967d9c8",
+          "name": "夜夜",
+          "rating": 8.66,
+          "seed": 17
+        }
+      ],
+      "ragdoll": [
+        {
+          "id": "ragdoll-p0",
+          "name": "oLaf",
+          "seed": 1,
+          "rating": 11.73
+        },
+        {
+          "id": "ragdoll-p1",
+          "name": "五元",
+          "seed": 2,
+          "rating": 11.22
+        },
+        {
+          "id": "ragdoll-p2",
+          "name": "Buttercake",
+          "seed": 3,
+          "rating": 10.87
+        },
+        {
+          "id": "ragdoll-p3",
+          "name": "好丽友",
+          "seed": 4,
+          "rating": 11.4
+        },
+        {
+          "id": "ragdoll-p4",
+          "name": "dbruce",
+          "seed": 5,
+          "rating": 11.77
+        },
+        {
+          "id": "ragdoll-p5",
+          "name": "社畜桑",
+          "seed": 6,
+          "rating": 11.06
+        },
+        {
+          "id": "ragdoll-p6",
+          "name": "pkdkar",
+          "seed": 7,
+          "rating": 11.64
+        },
+        {
+          "id": "ragdoll-p7",
+          "name": "孫咲钏",
+          "seed": 8,
+          "rating": 11.22
+        },
+        {
+          "id": "ragdoll-p8",
+          "name": "露露",
+          "seed": 9,
+          "rating": 11.84
+        },
+        {
+          "id": "ragdoll-p9",
+          "name": "红豆麻薯派",
+          "seed": 10,
+          "rating": 11.03
+        },
+        {
+          "id": "ragdoll-p10",
+          "name": "WY_Keith",
+          "seed": 11,
+          "rating": 10.68
+        },
+        {
+          "id": "ragdoll-p11",
+          "name": "阿紫",
+          "seed": 12,
+          "rating": 11.11
+        },
+        {
+          "id": "ragdoll-p12",
+          "name": "xs",
+          "seed": 13,
+          "rating": 12.05
+        },
+        {
+          "id": "ragdoll-p13",
+          "name": "路人咚",
+          "seed": 14,
+          "rating": 11.01
+        },
+        {
+          "id": "ragdoll-p14",
+          "name": "yzj",
+          "seed": 15,
+          "rating": 11.71
+        },
+        {
+          "id": "ragdoll-p15",
+          "name": "阿双",
+          "seed": 16,
+          "rating": 11.08
+        }
+      ]
+    },
+    "revision": 168,
+    "updatedAt": "2026-09-27T10:15:51.172Z",
+    "matches": [
+      {
+        "id": "siamese-r0-0",
+        "group": "siamese",
+        "round": 0,
+        "index": 0,
+        "a": {
+          "id": "siamese-p0",
+          "name": "Andywyl",
+          "seed": 1,
+          "rating": 7.5
+        },
+        "b": {
+          "id": "siamese-p1",
+          "name": "遗沙",
+          "seed": 2,
+          "rating": 6.68
+        },
+        "status": "complete",
+        "winner": "siamese-p0",
+        "station": "A",
+        "picks": [
+          [
+            "siamese-12",
+            "siamese-9"
+          ],
+          [
+            "siamese-8",
+            "siamese-6"
+          ]
+        ],
+        "bans": [
+          "siamese-8",
+          "siamese-9"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "siamese-12",
+            "a": 954640,
+            "b": 887860
+          },
+          {
+            "songId": "siamese-6",
+            "a": 920320,
+            "b": 899350
+          }
+        ],
+        "updatedAt": "2026-09-27T04:38:33.171Z"
+      },
+      {
+        "id": "siamese-r0-1",
+        "group": "siamese",
+        "round": 0,
+        "index": 1,
+        "a": {
+          "id": "siamese-p2",
+          "name": "Aimyon",
+          "seed": 3,
+          "rating": 6.14
+        },
+        "b": {
+          "id": "siamese-p3",
+          "name": "菜坤yyd",
+          "seed": 4,
+          "rating": 5.73
+        },
+        "status": "complete",
+        "winner": "siamese-p2",
+        "station": "A",
+        "picks": [
+          [
+            "siamese-8",
+            "siamese-10"
+          ],
+          [
+            "siamese-7",
+            "siamese-4"
+          ]
+        ],
+        "bans": [
+          "siamese-4",
+          "siamese-8"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "siamese-10",
+            "a": 977390,
+            "b": 918370
+          },
+          {
+            "songId": "siamese-7",
+            "a": 958110,
+            "b": 943200
+          }
+        ],
+        "updatedAt": "2026-09-27T04:19:23.703Z"
+      },
+      {
+        "id": "siamese-r0-2",
+        "group": "siamese",
+        "round": 0,
+        "index": 2,
+        "a": {
+          "id": "siamese-p4",
+          "name": "hty",
+          "seed": 5,
+          "rating": 6.73
+        },
+        "b": {
+          "id": "siamese-p5",
+          "name": "盐汽水",
+          "seed": 6,
+          "rating": 4.5
+        },
+        "status": "bye",
+        "winner": "siamese-p5",
+        "station": "A",
+        "picks": [
+          [],
+          []
+        ],
+        "bans": [
+          "",
+          ""
+        ],
+        "published": true,
+        "scores": [],
+        "updatedAt": "2026-09-27T04:30:47.668Z"
+      },
+      {
+        "id": "siamese-r0-3",
+        "group": "siamese",
+        "round": 0,
+        "index": 3,
+        "a": {
+          "id": "siamese-p6",
+          "name": "AKIRO",
+          "seed": 7,
+          "rating": 5.38
+        },
+        "b": {
+          "id": "siamese-p7",
+          "name": "眩晕群星",
+          "seed": 8,
+          "rating": 0.22
+        },
+        "status": "bye",
+        "winner": "siamese-p6",
+        "station": "A",
+        "picks": [
+          [],
+          []
+        ],
+        "bans": [
+          "",
+          ""
+        ],
+        "published": true,
+        "scores": [],
+        "updatedAt": "2026-09-27T04:30:56.737Z"
+      },
+      {
+        "id": "siamese-r0-4",
+        "group": "siamese",
+        "round": 0,
+        "index": 4,
+        "a": {
+          "id": "siamese-p8",
+          "name": "卡卡",
+          "seed": 9,
+          "rating": 7.14
+        },
+        "b": {
+          "id": "siamese-3466d4db-cc52-41ec-a828-695234e12c3b",
+          "name": "小雨",
+          "rating": 3.3,
+          "seed": 10
+        },
+        "status": "complete",
+        "winner": "siamese-3466d4db-cc52-41ec-a828-695234e12c3b",
+        "station": "A",
+        "picks": [
+          [
+            "siamese-2",
+            "siamese-1"
+          ],
+          [
+            "siamese-10",
+            "siamese-5"
+          ]
+        ],
+        "bans": [
+          "siamese-5",
+          "siamese-1"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "siamese-2",
+            "a": 911800,
+            "b": 919300
+          },
+          {
+            "songId": "siamese-10",
+            "a": 879590,
+            "b": 918430
+          }
+        ],
+        "updatedAt": "2026-09-27T04:42:12.245Z"
+      },
+      {
+        "id": "siamese-r0-5",
+        "group": "siamese",
+        "round": 0,
+        "index": 5,
+        "a": {
+          "id": "siamese-p10",
+          "name": "FORRRRRCE",
+          "seed": 11,
+          "rating": 5.78
+        },
+        "b": {
+          "id": "siamese-p11",
+          "name": "蛋挞汽水",
+          "seed": 12,
+          "rating": 5.81
+        },
+        "status": "complete",
+        "winner": "siamese-p11",
+        "station": "A",
+        "picks": [
+          [
+            "siamese-9",
+            "siamese-12"
+          ],
+          [
+            "siamese-10",
+            "siamese-11"
+          ]
+        ],
+        "bans": [
+          "siamese-10",
+          "siamese-9"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "siamese-12",
+            "a": 860140,
+            "b": 865810
+          },
+          {
+            "songId": "siamese-11",
+            "a": 765590,
+            "b": 852580
+          }
+        ],
+        "updatedAt": "2026-09-27T04:27:31.556Z"
+      },
+      {
+        "id": "siamese-r0-6",
+        "group": "siamese",
+        "round": 0,
+        "index": 6,
+        "a": {
+          "id": "siamese-p12",
+          "name": "榕",
+          "seed": 13,
+          "rating": 7.09
+        },
+        "b": {
+          "id": "siamese-p13",
+          "name": "栗子",
+          "seed": 14,
+          "rating": 1.76
+        },
+        "status": "complete",
+        "winner": "siamese-p12",
+        "station": "A",
+        "picks": [
+          [
+            "siamese-1",
+            "siamese-2"
+          ],
+          [
+            "siamese-8",
+            "siamese-3"
+          ]
+        ],
+        "bans": [
+          "siamese-8",
+          "siamese-1"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "siamese-2",
+            "a": 943300,
+            "b": 772700
+          },
+          {
+            "songId": "siamese-3",
+            "a": 955780,
+            "b": 764080
+          }
+        ],
+        "updatedAt": "2026-09-27T04:37:01.802Z"
+      },
+      {
+        "id": "siamese-r0-7",
+        "group": "siamese",
+        "round": 0,
+        "index": 7,
+        "a": {
+          "id": "siamese-p14",
+          "name": "丰川祥子",
+          "seed": 15,
+          "rating": 6.67
+        },
+        "b": {
+          "id": "siamese-p15",
+          "name": "安东",
+          "seed": 16,
+          "rating": 4.8
+        },
+        "status": "complete",
+        "winner": "siamese-p15",
+        "station": "A",
+        "picks": [
+          [
+            "siamese-1",
+            "siamese-8"
+          ],
+          [
+            "siamese-1",
+            "siamese-4"
+          ]
+        ],
+        "bans": [
+          "siamese-1",
+          "siamese-1"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "siamese-8",
+            "a": 847930,
+            "b": 903380
+          },
+          {
+            "songId": "siamese-4",
+            "a": 957300,
+            "b": 912700
+          }
+        ],
+        "updatedAt": "2026-09-27T04:44:06.227Z"
+      },
+      {
+        "id": "siamese-r1-0",
+        "group": "siamese",
+        "round": 1,
+        "index": 0,
+        "a": {
+          "id": "siamese-p0",
+          "name": "Andywyl",
+          "seed": 1,
+          "rating": 7.5
+        },
+        "b": {
+          "id": "siamese-p2",
+          "name": "Aimyon",
+          "seed": 3,
+          "rating": 6.14
+        },
+        "status": "complete",
+        "winner": "siamese-p2",
+        "station": "A",
+        "picks": [
+          [
+            "siamese-9",
+            "siamese-11"
+          ],
+          [
+            "siamese-5",
+            "siamese-7"
+          ]
+        ],
+        "bans": [
+          "siamese-5",
+          "siamese-11"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "siamese-9",
+            "a": 942880,
+            "b": 951160
+          },
+          {
+            "songId": "siamese-7",
+            "a": 921900,
+            "b": 939650
+          }
+        ],
+        "updatedAt": "2026-09-27T04:53:37.255Z",
+        "revision": 45
+      },
+      {
+        "id": "siamese-r1-1",
+        "group": "siamese",
+        "round": 1,
+        "index": 1,
+        "a": {
+          "id": "siamese-p5",
+          "name": "盐汽水",
+          "seed": 6,
+          "rating": 4.5
+        },
+        "b": {
+          "id": "siamese-p6",
+          "name": "AKIRO",
+          "seed": 7,
+          "rating": 5.38
+        },
+        "status": "complete",
+        "winner": "siamese-p5",
+        "station": "A",
+        "picks": [
+          [
+            "siamese-9",
+            "siamese-11"
+          ],
+          [
+            "siamese-7",
+            "siamese-12"
+          ]
+        ],
+        "bans": [
+          "siamese-7",
+          "siamese-11"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "siamese-9",
+            "a": 922180,
+            "b": 882850
+          },
+          {
+            "songId": "siamese-12",
+            "a": 904870,
+            "b": 842500
+          }
+        ],
+        "updatedAt": "2026-09-27T05:00:30.412Z",
+        "revision": 48
+      },
+      {
+        "id": "siamese-r1-2",
+        "group": "siamese",
+        "round": 1,
+        "index": 2,
+        "a": {
+          "id": "siamese-3466d4db-cc52-41ec-a828-695234e12c3b",
+          "name": "小雨",
+          "rating": 3.3,
+          "seed": 10
+        },
+        "b": {
+          "id": "siamese-p11",
+          "name": "蛋挞汽水",
+          "seed": 12,
+          "rating": 5.81
+        },
+        "status": "complete",
+        "winner": "siamese-3466d4db-cc52-41ec-a828-695234e12c3b",
+        "station": "A",
+        "picks": [
+          [
+            "siamese-5",
+            "siamese-9"
+          ],
+          [
+            "siamese-3",
+            "siamese-9"
+          ]
+        ],
+        "bans": [
+          "siamese-3",
+          "siamese-5"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "siamese-9",
+            "a": 924940,
+            "b": 885610
+          },
+          {
+            "songId": "siamese-2",
+            "a": 915800,
+            "b": 912400
+          }
+        ],
+        "updatedAt": "2026-09-27T05:07:41.861Z",
+        "revision": 51
+      },
+      {
+        "id": "siamese-r1-3",
+        "group": "siamese",
+        "round": 1,
+        "index": 3,
+        "a": {
+          "id": "siamese-p12",
+          "name": "榕",
+          "seed": 13,
+          "rating": 7.09
+        },
+        "b": {
+          "id": "siamese-p15",
+          "name": "安东",
+          "seed": 16,
+          "rating": 4.8
+        },
+        "status": "complete",
+        "winner": "siamese-p12",
+        "station": "A",
+        "picks": [
+          [
+            "siamese-10",
+            "siamese-9"
+          ],
+          [
+            "siamese-6",
+            "siamese-12"
+          ]
+        ],
+        "bans": [
+          "siamese-12",
+          "siamese-10"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "siamese-9",
+            "a": 954610,
+            "b": 915970
+          },
+          {
+            "songId": "siamese-6",
+            "a": 950020,
+            "b": 883450
+          }
+        ],
+        "updatedAt": "2026-09-27T05:14:30.402Z",
+        "revision": 54
+      },
+      {
+        "id": "siamese-r2-0",
+        "group": "siamese",
+        "round": 2,
+        "index": 0,
+        "a": {
+          "id": "siamese-p2",
+          "name": "Aimyon",
+          "seed": 3,
+          "rating": 6.14
+        },
+        "b": {
+          "id": "siamese-p5",
+          "name": "盐汽水",
+          "seed": 6,
+          "rating": 4.5
+        },
+        "status": "complete",
+        "winner": "siamese-p5",
+        "station": "A",
+        "picks": [
+          [
+            "siamese-12",
+            "siamese-9"
+          ],
+          [
+            "siamese-3",
+            "siamese-11"
+          ]
+        ],
+        "bans": [
+          "siamese-3",
+          "siamese-9"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "siamese-12",
+            "a": 860770,
+            "b": 929440
+          },
+          {
+            "songId": "siamese-11",
+            "a": 846700,
+            "b": 876510
+          }
+        ],
+        "updatedAt": "2026-09-27T05:22:18.719Z",
+        "revision": 57
+      },
+      {
+        "id": "siamese-r2-1",
+        "group": "siamese",
+        "round": 2,
+        "index": 1,
+        "a": {
+          "id": "siamese-3466d4db-cc52-41ec-a828-695234e12c3b",
+          "name": "小雨",
+          "rating": 3.3,
+          "seed": 10
+        },
+        "b": {
+          "id": "siamese-p12",
+          "name": "榕",
+          "seed": 13,
+          "rating": 7.09
+        },
+        "status": "complete",
+        "winner": "siamese-p12",
+        "station": "A",
+        "picks": [
+          [
+            "siamese-5",
+            "siamese-12"
+          ],
+          [
+            "siamese-10",
+            "siamese-11"
+          ]
+        ],
+        "bans": [
+          "siamese-11",
+          "siamese-12"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "siamese-5",
+            "a": 938950,
+            "b": 953630
+          },
+          {
+            "songId": "siamese-10",
+            "a": 946050,
+            "b": 970370
+          }
+        ],
+        "updatedAt": "2026-09-27T05:28:46.359Z",
+        "revision": 60
+      },
+      {
+        "id": "siamese-r3-0",
+        "group": "siamese",
+        "round": 3,
+        "index": 0,
+        "a": {
+          "id": "siamese-p5",
+          "name": "盐汽水",
+          "seed": 6,
+          "rating": 4.5
+        },
+        "b": {
+          "id": "siamese-p12",
+          "name": "榕",
+          "seed": 13,
+          "rating": 7.09
+        },
+        "status": "complete",
+        "winner": "siamese-p12",
+        "station": "A",
+        "picks": [
+          [
+            "siamese-1",
+            "siamese-3"
+          ],
+          [
+            "siamese-11",
+            "siamese-4"
+          ]
+        ],
+        "bans": [
+          "siamese-4",
+          "siamese-1"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "siamese-3",
+            "a": 961340,
+            "b": 967560
+          },
+          {
+            "songId": "siamese-11",
+            "a": 899190,
+            "b": 942920
+          },
+          {
+            "songId": "special:siamese:final",
+            "a": 900150,
+            "b": 935350
+          }
+        ],
+        "updatedAt": "2026-09-27T05:53:50.686Z",
+        "revision": 72
+      },
+      {
+        "id": "siamese-r4-0",
+        "group": "siamese",
+        "round": 4,
+        "index": 0,
+        "a": {
+          "id": "siamese-p2",
+          "name": "Aimyon",
+          "seed": 3,
+          "rating": 6.14
+        },
+        "b": {
+          "id": "siamese-3466d4db-cc52-41ec-a828-695234e12c3b",
+          "name": "小雨",
+          "rating": 3.3,
+          "seed": 10
+        },
+        "status": "complete",
+        "winner": "siamese-3466d4db-cc52-41ec-a828-695234e12c3b",
+        "station": "A",
+        "picks": [
+          [
+            "siamese-5",
+            "siamese-8"
+          ],
+          [
+            "siamese-12",
+            "siamese-2"
+          ]
+        ],
+        "bans": [
+          "siamese-12",
+          "siamese-8"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "siamese-5",
+            "a": 934160,
+            "b": 943130
+          },
+          {
+            "songId": "siamese-2",
+            "a": 956600,
+            "b": 953700
+          },
+          {
+            "songId": "special:siamese:third",
+            "a": 899240,
+            "b": 939900
+          }
+        ],
+        "updatedAt": "2026-09-27T05:41:31.565Z",
+        "revision": 68
+      },
+      {
+        "id": "tabby-r0-0",
+        "group": "tabby",
+        "round": 0,
+        "index": 0,
+        "a": {
+          "id": "tabby-p0",
+          "name": "6Lwater",
+          "seed": 1,
+          "rating": 10.63
+        },
+        "b": {
+          "id": "tabby-p1",
+          "name": "薄利零梦",
+          "seed": 2,
+          "rating": 9.85
+        },
+        "status": "complete",
+        "winner": "tabby-p1",
+        "station": "A",
+        "picks": [
+          [
+            "tabby-4",
+            "tabby-1"
+          ],
+          [
+            "tabby-6",
+            "tabby-5"
+          ]
+        ],
+        "bans": [
+          "tabby-6",
+          "tabby-4"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "tabby-1",
+            "a": 956660,
+            "b": 968140
+          },
+          {
+            "songId": "tabby-5",
+            "a": 930670,
+            "b": 949950
+          }
+        ],
+        "updatedAt": "2026-09-27T06:10:11.076Z",
+        "revision": 75
+      },
+      {
+        "id": "tabby-r0-1",
+        "group": "tabby",
+        "round": 0,
+        "index": 1,
+        "a": {
+          "id": "tabby-p2",
+          "name": "bebenk",
+          "seed": 3,
+          "rating": 10.42
+        },
+        "b": {
+          "id": "tabby-p3",
+          "name": "传奇牢机长",
+          "seed": 4,
+          "rating": 7.76
+        },
+        "status": "bye",
+        "winner": "tabby-p2",
+        "station": "A",
+        "picks": [
+          [],
+          []
+        ],
+        "bans": [
+          "",
+          ""
+        ],
+        "published": true,
+        "scores": [],
+        "updatedAt": "2026-09-27T05:35:31.467Z",
+        "revision": 63
+      },
+      {
+        "id": "tabby-r0-2",
+        "group": "tabby",
+        "round": 0,
+        "index": 2,
+        "a": {
+          "id": "tabby-p4",
+          "name": "泥歌咚",
+          "seed": 5,
+          "rating": 10.52
+        },
+        "b": {
+          "id": "tabby-p5",
+          "name": "子和",
+          "seed": 6,
+          "rating": 9
+        },
+        "status": "bye",
+        "winner": "tabby-p4",
+        "station": "A",
+        "picks": [
+          [],
+          []
+        ],
+        "bans": [
+          "",
+          ""
+        ],
+        "published": true,
+        "scores": [],
+        "updatedAt": "2026-09-27T05:35:44.473Z",
+        "revision": 64
+      },
+      {
+        "id": "tabby-r0-3",
+        "group": "tabby",
+        "round": 0,
+        "index": 3,
+        "a": {
+          "id": "tabby-p6",
+          "name": "Husky",
+          "seed": 7,
+          "rating": 9.4
+        },
+        "b": {
+          "id": "tabby-p7",
+          "name": "煎饼狗子",
+          "seed": 8,
+          "rating": 9.18
+        },
+        "status": "bye",
+        "winner": "tabby-p6",
+        "station": "A",
+        "picks": [
+          [],
+          []
+        ],
+        "bans": [
+          "",
+          ""
+        ],
+        "published": true,
+        "scores": [],
+        "updatedAt": "2026-09-27T06:11:22.319Z",
+        "revision": 76
+      },
+      {
+        "id": "tabby-r0-4",
+        "group": "tabby",
+        "round": 0,
+        "index": 4,
+        "a": {
+          "id": "tabby-p8",
+          "name": "小新",
+          "seed": 9,
+          "rating": 10.68
+        },
+        "b": {
+          "id": "tabby-ceff9c26-cfaf-4654-b128-cf1ff967d9c8",
+          "name": "夜夜",
+          "rating": 8.66,
+          "seed": 10
+        },
+        "status": "complete",
+        "winner": "tabby-p8",
+        "station": "A",
+        "picks": [
+          [
+            "tabby-7",
+            "tabby-6"
+          ],
+          [
+            "tabby-6",
+            "tabby-3"
+          ]
+        ],
+        "bans": [
+          "tabby-6",
+          "tabby-7"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "tabby-6",
+            "a": 921600,
+            "b": 870200
+          },
+          {
+            "songId": "tabby-3",
+            "a": 935240,
+            "b": 940410
+          }
+        ],
+        "updatedAt": "2026-09-27T06:20:34.339Z",
+        "revision": 79
+      },
+      {
+        "id": "tabby-r0-5",
+        "group": "tabby",
+        "round": 0,
+        "index": 5,
+        "a": {
+          "id": "tabby-p10",
+          "name": "97",
+          "seed": 11,
+          "rating": 9.53
+        },
+        "b": {
+          "id": "tabby-p11",
+          "name": "君子橙",
+          "seed": 12,
+          "rating": 8.56
+        },
+        "status": "complete",
+        "winner": "tabby-p10",
+        "station": "A",
+        "picks": [
+          [
+            "tabby-3",
+            "tabby-6"
+          ],
+          [
+            "tabby-4",
+            "tabby-8"
+          ]
+        ],
+        "bans": [
+          "tabby-8",
+          "tabby-6"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "tabby-3",
+            "a": 949670,
+            "b": 915770
+          },
+          {
+            "songId": "tabby-4",
+            "a": 950050,
+            "b": 902720
+          }
+        ],
+        "updatedAt": "2026-09-27T06:27:42.062Z",
+        "revision": 84
+      },
+      {
+        "id": "tabby-r0-6",
+        "group": "tabby",
+        "round": 0,
+        "index": 6,
+        "a": {
+          "id": "tabby-p12",
+          "name": "杏",
+          "seed": 13,
+          "rating": 10.54
+        },
+        "b": {
+          "id": "tabby-p13",
+          "name": "Tnxn",
+          "seed": 14,
+          "rating": 8.2
+        },
+        "status": "bye",
+        "winner": "tabby-p13",
+        "station": "A",
+        "picks": [
+          [],
+          []
+        ],
+        "bans": [
+          "",
+          ""
+        ],
+        "published": true,
+        "scores": [],
+        "updatedAt": "2026-09-27T05:36:55.700Z",
+        "revision": 66
+      },
+      {
+        "id": "tabby-r0-7",
+        "group": "tabby",
+        "round": 0,
+        "index": 7,
+        "a": {
+          "id": "tabby-p14",
+          "name": "洛天依",
+          "seed": 15,
+          "rating": 10.4
+        },
+        "b": {
+          "id": "tabby-p15",
+          "name": "五条闲",
+          "seed": 16,
+          "rating": 9.49
+        },
+        "status": "complete",
+        "winner": "tabby-p14",
+        "station": "A",
+        "picks": [
+          [
+            "tabby-5",
+            "tabby-7"
+          ],
+          [
+            "tabby-3",
+            "tabby-6"
+          ]
+        ],
+        "bans": [
+          "tabby-6",
+          "tabby-7"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "tabby-5",
+            "a": 964640,
+            "b": 912830
+          },
+          {
+            "songId": "tabby-3",
+            "a": 951690,
+            "b": 946110
+          }
+        ],
+        "updatedAt": "2026-09-27T06:35:24.280Z",
+        "revision": 87
+      },
+      {
+        "id": "tabby-r1-0",
+        "group": "tabby",
+        "round": 1,
+        "index": 0,
+        "a": {
+          "id": "tabby-p1",
+          "name": "薄利零梦",
+          "seed": 2,
+          "rating": 9.85
+        },
+        "b": {
+          "id": "tabby-p2",
+          "name": "bebenk",
+          "seed": 3,
+          "rating": 10.42
+        },
+        "status": "complete",
+        "winner": "tabby-p2",
+        "station": "A",
+        "picks": [
+          [
+            "tabby-11",
+            "tabby-6"
+          ],
+          [
+            "tabby-10",
+            "tabby-7"
+          ]
+        ],
+        "bans": [
+          "tabby-7",
+          "tabby-6"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "tabby-11",
+            "a": 948160,
+            "b": 960860
+          },
+          {
+            "songId": "tabby-10",
+            "a": 922700,
+            "b": 943100
+          }
+        ],
+        "updatedAt": "2026-09-27T06:43:55.024Z",
+        "revision": 91
+      },
+      {
+        "id": "tabby-r1-1",
+        "group": "tabby",
+        "round": 1,
+        "index": 1,
+        "a": {
+          "id": "tabby-p4",
+          "name": "泥歌咚",
+          "seed": 5,
+          "rating": 10.52
+        },
+        "b": {
+          "id": "tabby-p6",
+          "name": "Husky",
+          "seed": 7,
+          "rating": 9.4
+        },
+        "status": "complete",
+        "winner": "tabby-p4",
+        "station": "A",
+        "picks": [
+          [
+            "tabby-7",
+            "tabby-10"
+          ],
+          [
+            "tabby-9",
+            "tabby-11"
+          ]
+        ],
+        "bans": [
+          "tabby-9",
+          "tabby-7"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "tabby-10",
+            "a": 990350,
+            "b": 922900
+          },
+          {
+            "songId": "tabby-11",
+            "a": 953340,
+            "b": 938990
+          }
+        ],
+        "updatedAt": "2026-09-27T06:51:48.151Z",
+        "revision": 94
+      },
+      {
+        "id": "tabby-r1-2",
+        "group": "tabby",
+        "round": 1,
+        "index": 2,
+        "a": {
+          "id": "tabby-p8",
+          "name": "小新",
+          "seed": 9,
+          "rating": 10.68
+        },
+        "b": {
+          "id": "tabby-p10",
+          "name": "97",
+          "seed": 11,
+          "rating": 9.53
+        },
+        "status": "complete",
+        "winner": "tabby-p10",
+        "station": "A",
+        "picks": [
+          [
+            "tabby-7",
+            "tabby-1"
+          ],
+          [
+            "tabby-8",
+            "tabby-5"
+          ]
+        ],
+        "bans": [
+          "tabby-8",
+          "tabby-7"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "tabby-1",
+            "a": 830970,
+            "b": 960440
+          },
+          {
+            "songId": "tabby-5",
+            "a": 917650,
+            "b": 969970
+          }
+        ],
+        "updatedAt": "2026-09-27T06:59:26.331Z",
+        "revision": 97
+      },
+      {
+        "id": "tabby-r1-3",
+        "group": "tabby",
+        "round": 1,
+        "index": 3,
+        "a": {
+          "id": "tabby-p13",
+          "name": "Tnxn",
+          "seed": 14,
+          "rating": 8.2
+        },
+        "b": {
+          "id": "tabby-p14",
+          "name": "洛天依",
+          "seed": 15,
+          "rating": 10.4
+        },
+        "status": "bye",
+        "winner": "tabby-p14",
+        "station": "A",
+        "picks": [
+          [],
+          []
+        ],
+        "bans": [
+          "",
+          ""
+        ],
+        "published": true,
+        "scores": [],
+        "updatedAt": "2026-09-27T06:39:21.996Z",
+        "revision": 89
+      },
+      {
+        "id": "tabby-r2-0",
+        "group": "tabby",
+        "round": 2,
+        "index": 0,
+        "a": {
+          "id": "tabby-p2",
+          "name": "bebenk",
+          "seed": 3,
+          "rating": 10.42
+        },
+        "b": {
+          "id": "tabby-p4",
+          "name": "泥歌咚",
+          "seed": 5,
+          "rating": 10.52
+        },
+        "status": "complete",
+        "winner": "tabby-p2",
+        "station": "A",
+        "picks": [
+          [
+            "tabby-2",
+            "tabby-5"
+          ],
+          [
+            "tabby-7",
+            "tabby-4"
+          ]
+        ],
+        "bans": [
+          "tabby-7",
+          "tabby-5"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "tabby-2",
+            "a": 960400,
+            "b": 951100
+          },
+          {
+            "songId": "tabby-4",
+            "a": 968580,
+            "b": 973310
+          }
+        ],
+        "updatedAt": "2026-09-27T07:07:30.760Z",
+        "revision": 100
+      },
+      {
+        "id": "tabby-r2-1",
+        "group": "tabby",
+        "round": 2,
+        "index": 1,
+        "a": {
+          "id": "tabby-p10",
+          "name": "97",
+          "seed": 11,
+          "rating": 9.53
+        },
+        "b": {
+          "id": "tabby-p14",
+          "name": "洛天依",
+          "seed": 15,
+          "rating": 10.4
+        },
+        "status": "complete",
+        "winner": "tabby-p10",
+        "station": "A",
+        "picks": [
+          [
+            "tabby-6",
+            "tabby-11"
+          ],
+          [
+            "tabby-7",
+            "tabby-3"
+          ]
+        ],
+        "bans": [
+          "tabby-7",
+          "tabby-11"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "tabby-6",
+            "a": 963770,
+            "b": 940440
+          },
+          {
+            "songId": "tabby-3",
+            "a": 947150,
+            "b": 955650
+          }
+        ],
+        "updatedAt": "2026-09-27T07:15:08.096Z",
+        "revision": 103
+      },
+      {
+        "id": "tabby-r3-0",
+        "group": "tabby",
+        "round": 3,
+        "index": 0,
+        "a": {
+          "id": "tabby-p2",
+          "name": "bebenk",
+          "seed": 3,
+          "rating": 10.42
+        },
+        "b": {
+          "id": "tabby-p10",
+          "name": "97",
+          "seed": 11,
+          "rating": 9.53
+        },
+        "status": "complete",
+        "winner": "tabby-p2",
+        "station": "A",
+        "picks": [
+          [
+            "tabby-7",
+            "tabby-11"
+          ],
+          [
+            "tabby-2",
+            "tabby-11"
+          ]
+        ],
+        "bans": [
+          "tabby-11",
+          "tabby-7"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "tabby-11",
+            "a": 962960,
+            "b": 964040
+          },
+          {
+            "songId": "tabby-2",
+            "a": 946600,
+            "b": 964100
+          },
+          {
+            "songId": "special:tabby:final",
+            "a": 939540,
+            "b": 907680
+          }
+        ],
+        "updatedAt": "2026-09-27T07:37:59.525Z",
+        "revision": 110
+      },
+      {
+        "id": "tabby-r4-0",
+        "group": "tabby",
+        "round": 4,
+        "index": 0,
+        "a": {
+          "id": "tabby-p4",
+          "name": "泥歌咚",
+          "seed": 5,
+          "rating": 10.52
+        },
+        "b": {
+          "id": "tabby-p14",
+          "name": "洛天依",
+          "seed": 15,
+          "rating": 10.4
+        },
+        "status": "complete",
+        "winner": "tabby-p4",
+        "station": "A",
+        "picks": [
+          [
+            "tabby-7",
+            "tabby-2"
+          ],
+          [
+            "tabby-7",
+            "tabby-12"
+          ]
+        ],
+        "bans": [
+          "tabby-7",
+          "tabby-2"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "tabby-7",
+            "a": 983970,
+            "b": 984520
+          },
+          {
+            "songId": "tabby-12",
+            "a": 958600,
+            "b": 952570
+          },
+          {
+            "songId": "special:tabby:third",
+            "a": 954740,
+            "b": 959690
+          }
+        ],
+        "updatedAt": "2026-09-27T07:26:01.871Z",
+        "revision": 107
+      },
+      {
+        "id": "ragdoll-r0-0",
+        "group": "ragdoll",
+        "round": 0,
+        "index": 0,
+        "a": {
+          "id": "ragdoll-p0",
+          "name": "oLaf",
+          "seed": 1,
+          "rating": 11.73
+        },
+        "b": {
+          "id": "ragdoll-p1",
+          "name": "五元",
+          "seed": 2,
+          "rating": 11.22
+        },
+        "status": "complete",
+        "winner": "ragdoll-p0",
+        "station": "B",
+        "picks": [
+          [
+            "ragdoll-3",
+            "ragdoll-11"
+          ],
+          [
+            "ragdoll-2",
+            "ragdoll-12"
+          ]
+        ],
+        "bans": [
+          "ragdoll-2",
+          "ragdoll-11"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-3",
+            "a": 985800,
+            "b": 938250
+          },
+          {
+            "songId": "ragdoll-12",
+            "a": 996100,
+            "b": 968800
+          }
+        ],
+        "updatedAt": "2026-09-27T08:28:06.427Z",
+        "revision": 125
+      },
+      {
+        "id": "ragdoll-r0-1",
+        "group": "ragdoll",
+        "round": 0,
+        "index": 1,
+        "a": {
+          "id": "ragdoll-p2",
+          "name": "Buttercake",
+          "seed": 3,
+          "rating": 10.87
+        },
+        "b": {
+          "id": "ragdoll-p3",
+          "name": "好丽友",
+          "seed": 4,
+          "rating": 11.4
+        },
+        "status": "complete",
+        "winner": "ragdoll-p3",
+        "station": "A",
+        "picks": [
+          [
+            "ragdoll-1",
+            "ragdoll-9"
+          ],
+          [
+            "ragdoll-10",
+            "ragdoll-8"
+          ]
+        ],
+        "bans": [
+          "ragdoll-10",
+          "ragdoll-1"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-9",
+            "a": 1000760,
+            "b": 988360
+          },
+          {
+            "songId": "ragdoll-8",
+            "a": 948380,
+            "b": 986800
+          }
+        ],
+        "updatedAt": "2026-09-27T08:21:36.611Z",
+        "revision": 119
+      },
+      {
+        "id": "ragdoll-r0-2",
+        "group": "ragdoll",
+        "round": 0,
+        "index": 2,
+        "a": {
+          "id": "ragdoll-p4",
+          "name": "dbruce",
+          "seed": 5,
+          "rating": 11.77
+        },
+        "b": {
+          "id": "ragdoll-p5",
+          "name": "社畜桑",
+          "seed": 6,
+          "rating": 11.06
+        },
+        "status": "complete",
+        "winner": "ragdoll-p4",
+        "station": "A",
+        "picks": [
+          [
+            "ragdoll-2",
+            "ragdoll-4"
+          ],
+          [
+            "ragdoll-7",
+            "ragdoll-6"
+          ]
+        ],
+        "bans": [
+          "ragdoll-7",
+          "ragdoll-2"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-4",
+            "a": 1001060,
+            "b": 964630
+          },
+          {
+            "songId": "ragdoll-6",
+            "a": 992160,
+            "b": 969800
+          }
+        ],
+        "updatedAt": "2026-09-27T08:19:58.814Z",
+        "revision": 116
+      },
+      {
+        "id": "ragdoll-r0-3",
+        "group": "ragdoll",
+        "round": 0,
+        "index": 3,
+        "a": {
+          "id": "ragdoll-p6",
+          "name": "pkdkar",
+          "seed": 7,
+          "rating": 11.64
+        },
+        "b": {
+          "id": "ragdoll-p7",
+          "name": "孫咲钏",
+          "seed": 8,
+          "rating": 11.22
+        },
+        "status": "complete",
+        "winner": "ragdoll-p6",
+        "station": "A",
+        "picks": [
+          [
+            "ragdoll-2",
+            "ragdoll-10"
+          ],
+          [
+            "ragdoll-3",
+            "ragdoll-6"
+          ]
+        ],
+        "bans": [
+          "ragdoll-6",
+          "ragdoll-10"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-2",
+            "a": 988170,
+            "b": 975760
+          },
+          {
+            "songId": "ragdoll-3",
+            "a": 984700,
+            "b": 988900
+          }
+        ],
+        "updatedAt": "2026-09-27T08:27:25.718Z",
+        "revision": 124
+      },
+      {
+        "id": "ragdoll-r0-4",
+        "group": "ragdoll",
+        "round": 0,
+        "index": 4,
+        "a": {
+          "id": "ragdoll-p8",
+          "name": "露露",
+          "seed": 9,
+          "rating": 11.84
+        },
+        "b": {
+          "id": "ragdoll-p9",
+          "name": "红豆麻薯派",
+          "seed": 10,
+          "rating": 11.03
+        },
+        "status": "complete",
+        "winner": "ragdoll-p8",
+        "station": "A",
+        "picks": [
+          [
+            "ragdoll-2",
+            "ragdoll-10"
+          ],
+          [
+            "ragdoll-8",
+            "ragdoll-7"
+          ]
+        ],
+        "bans": [
+          "ragdoll-8",
+          "ragdoll-10"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-2",
+            "a": 990560,
+            "b": 884110
+          },
+          {
+            "songId": "ragdoll-7",
+            "a": 978430,
+            "b": 945730
+          }
+        ],
+        "updatedAt": "2026-09-27T08:35:27.643Z",
+        "revision": 130
+      },
+      {
+        "id": "ragdoll-r0-5",
+        "group": "ragdoll",
+        "round": 0,
+        "index": 5,
+        "a": {
+          "id": "ragdoll-p10",
+          "name": "WY_Keith",
+          "seed": 11,
+          "rating": 10.68
+        },
+        "b": {
+          "id": "ragdoll-p11",
+          "name": "阿紫",
+          "seed": 12,
+          "rating": 11.11
+        },
+        "status": "complete",
+        "winner": "ragdoll-p11",
+        "station": "B",
+        "picks": [
+          [
+            "ragdoll-6",
+            "ragdoll-9"
+          ],
+          [
+            "ragdoll-3",
+            "ragdoll-4"
+          ]
+        ],
+        "bans": [
+          "ragdoll-4",
+          "ragdoll-9"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-6",
+            "a": 982800,
+            "b": 990600
+          },
+          {
+            "songId": "ragdoll-3",
+            "a": 965900,
+            "b": 988800
+          }
+        ],
+        "updatedAt": "2026-09-27T08:37:54.386Z",
+        "revision": 132
+      },
+      {
+        "id": "ragdoll-r0-6",
+        "group": "ragdoll",
+        "round": 0,
+        "index": 6,
+        "a": {
+          "id": "ragdoll-p12",
+          "name": "xs",
+          "seed": 13,
+          "rating": 12.05
+        },
+        "b": {
+          "id": "ragdoll-p13",
+          "name": "路人咚",
+          "seed": 14,
+          "rating": 11.01
+        },
+        "status": "complete",
+        "winner": "ragdoll-p12",
+        "station": "B",
+        "picks": [
+          [
+            "ragdoll-9",
+            "ragdoll-12"
+          ],
+          [
+            "ragdoll-1",
+            "ragdoll-3"
+          ]
+        ],
+        "bans": [
+          "ragdoll-1",
+          "ragdoll-12"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-9",
+            "a": 1016180,
+            "b": 974910
+          },
+          {
+            "songId": "ragdoll-3",
+            "a": 988000,
+            "b": 997800
+          }
+        ],
+        "updatedAt": "2026-09-27T08:46:54.603Z",
+        "revision": 139
+      },
+      {
+        "id": "ragdoll-r0-7",
+        "group": "ragdoll",
+        "round": 0,
+        "index": 7,
+        "a": {
+          "id": "ragdoll-p14",
+          "name": "yzj",
+          "seed": 15,
+          "rating": 11.71
+        },
+        "b": {
+          "id": "ragdoll-p15",
+          "name": "阿双",
+          "seed": 16,
+          "rating": 11.08
+        },
+        "status": "complete",
+        "winner": "ragdoll-p15",
+        "station": "A",
+        "picks": [
+          [
+            "ragdoll-12",
+            "ragdoll-6"
+          ],
+          [
+            "ragdoll-4",
+            "ragdoll-2"
+          ]
+        ],
+        "bans": [
+          "ragdoll-2",
+          "ragdoll-6"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-12",
+            "a": 982580,
+            "b": 993800
+          },
+          {
+            "songId": "ragdoll-4",
+            "a": 976700,
+            "b": 1006170
+          }
+        ],
+        "updatedAt": "2026-09-27T08:48:57.134Z",
+        "revision": 140
+      },
+      {
+        "id": "ragdoll-r1-0",
+        "group": "ragdoll",
+        "round": 1,
+        "index": 0,
+        "a": {
+          "id": "ragdoll-p0",
+          "name": "oLaf",
+          "seed": 1,
+          "rating": 11.73
+        },
+        "b": {
+          "id": "ragdoll-p3",
+          "name": "好丽友",
+          "seed": 4,
+          "rating": 11.4
+        },
+        "status": "complete",
+        "winner": "ragdoll-p0",
+        "station": "A",
+        "picks": [
+          [
+            "ragdoll-2",
+            "ragdoll-4"
+          ],
+          [
+            "ragdoll-12",
+            "ragdoll-7"
+          ]
+        ],
+        "bans": [
+          "ragdoll-12",
+          "ragdoll-4"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-2",
+            "a": 990300,
+            "b": 983860
+          },
+          {
+            "songId": "ragdoll-7",
+            "a": 997840,
+            "b": 968990
+          }
+        ],
+        "updatedAt": "2026-09-27T08:56:39.394Z",
+        "revision": 143
+      },
+      {
+        "id": "ragdoll-r1-1",
+        "group": "ragdoll",
+        "round": 1,
+        "index": 1,
+        "a": {
+          "id": "ragdoll-p4",
+          "name": "dbruce",
+          "seed": 5,
+          "rating": 11.77
+        },
+        "b": {
+          "id": "ragdoll-p6",
+          "name": "pkdkar",
+          "seed": 7,
+          "rating": 11.64
+        },
+        "status": "complete",
+        "winner": "ragdoll-p6",
+        "station": "A",
+        "picks": [
+          [
+            "ragdoll-10",
+            "ragdoll-2"
+          ],
+          [
+            "ragdoll-7",
+            "ragdoll-9"
+          ]
+        ],
+        "bans": [
+          "ragdoll-9",
+          "ragdoll-2"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-10",
+            "a": 983560,
+            "b": 979420
+          },
+          {
+            "songId": "ragdoll-7",
+            "a": 988100,
+            "b": 992360
+          }
+        ],
+        "updatedAt": "2026-09-27T09:04:44.881Z",
+        "revision": 146
+      },
+      {
+        "id": "ragdoll-r1-2",
+        "group": "ragdoll",
+        "round": 1,
+        "index": 2,
+        "a": {
+          "id": "ragdoll-p8",
+          "name": "露露",
+          "seed": 9,
+          "rating": 11.84
+        },
+        "b": {
+          "id": "ragdoll-p11",
+          "name": "阿紫",
+          "seed": 12,
+          "rating": 11.11
+        },
+        "status": "complete",
+        "winner": "ragdoll-p8",
+        "station": "A",
+        "picks": [
+          [
+            "ragdoll-11",
+            "ragdoll-12"
+          ],
+          [
+            "ragdoll-4",
+            "ragdoll-5"
+          ]
+        ],
+        "bans": [
+          "ragdoll-4",
+          "ragdoll-11"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-12",
+            "a": 995500,
+            "b": 981900
+          },
+          {
+            "songId": "ragdoll-5",
+            "a": 996030,
+            "b": 972090
+          }
+        ],
+        "updatedAt": "2026-09-27T09:12:44.889Z",
+        "revision": 149
+      },
+      {
+        "id": "ragdoll-r1-3",
+        "group": "ragdoll",
+        "round": 1,
+        "index": 3,
+        "a": {
+          "id": "ragdoll-p12",
+          "name": "xs",
+          "seed": 13,
+          "rating": 12.05
+        },
+        "b": {
+          "id": "ragdoll-p15",
+          "name": "阿双",
+          "seed": 16,
+          "rating": 11.08
+        },
+        "status": "complete",
+        "winner": "ragdoll-p15",
+        "station": "A",
+        "picks": [
+          [
+            "ragdoll-6",
+            "ragdoll-12"
+          ],
+          [
+            "ragdoll-2",
+            "ragdoll-1"
+          ]
+        ],
+        "bans": [
+          "ragdoll-1",
+          "ragdoll-6"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-12",
+            "a": 1003600,
+            "b": 1003500
+          },
+          {
+            "songId": "ragdoll-2",
+            "a": 995660,
+            "b": 1000360
+          }
+        ],
+        "updatedAt": "2026-09-27T09:24:07.355Z",
+        "revision": 152
+      },
+      {
+        "id": "ragdoll-r2-0",
+        "group": "ragdoll",
+        "round": 2,
+        "index": 0,
+        "a": {
+          "id": "ragdoll-p0",
+          "name": "oLaf",
+          "seed": 1,
+          "rating": 11.73
+        },
+        "b": {
+          "id": "ragdoll-p6",
+          "name": "pkdkar",
+          "seed": 7,
+          "rating": 11.64
+        },
+        "status": "complete",
+        "winner": "ragdoll-p6",
+        "station": "A",
+        "picks": [
+          [
+            "ragdoll-1",
+            "ragdoll-5"
+          ],
+          [
+            "ragdoll-9",
+            "ragdoll-8"
+          ]
+        ],
+        "bans": [
+          "ragdoll-8",
+          "ragdoll-5"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-1",
+            "a": 996500,
+            "b": 980440
+          },
+          {
+            "songId": "ragdoll-9",
+            "a": 958290,
+            "b": 979710
+          }
+        ],
+        "updatedAt": "2026-09-27T09:32:45.027Z",
+        "revision": 155
+      },
+      {
+        "id": "ragdoll-r2-1",
+        "group": "ragdoll",
+        "round": 2,
+        "index": 1,
+        "a": {
+          "id": "ragdoll-p8",
+          "name": "露露",
+          "seed": 9,
+          "rating": 11.84
+        },
+        "b": {
+          "id": "ragdoll-p15",
+          "name": "阿双",
+          "seed": 16,
+          "rating": 11.08
+        },
+        "status": "complete",
+        "winner": "ragdoll-p8",
+        "station": "A",
+        "picks": [
+          [
+            "ragdoll-11",
+            "ragdoll-6"
+          ],
+          [
+            "ragdoll-1",
+            "ragdoll-10"
+          ]
+        ],
+        "bans": [
+          "ragdoll-10",
+          "ragdoll-6"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-11",
+            "a": 997500,
+            "b": 980000
+          },
+          {
+            "songId": "ragdoll-1",
+            "a": 1002380,
+            "b": 994580
+          }
+        ],
+        "updatedAt": "2026-09-27T09:44:39.338Z",
+        "revision": 158
+      },
+      {
+        "id": "ragdoll-r3-0",
+        "group": "ragdoll",
+        "round": 3,
+        "index": 0,
+        "a": {
+          "id": "ragdoll-p6",
+          "name": "pkdkar",
+          "seed": 7,
+          "rating": 11.64
+        },
+        "b": {
+          "id": "ragdoll-p8",
+          "name": "露露",
+          "seed": 9,
+          "rating": 11.84
+        },
+        "status": "complete",
+        "winner": "ragdoll-p8",
+        "station": "A",
+        "picks": [
+          [
+            "ragdoll-8",
+            "ragdoll-3"
+          ],
+          [
+            "ragdoll-5",
+            "ragdoll-1"
+          ]
+        ],
+        "bans": [
+          "ragdoll-1",
+          "ragdoll-8"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-3",
+            "a": 985900,
+            "b": 994000
+          },
+          {
+            "songId": "ragdoll-5",
+            "a": 948780,
+            "b": 999180
+          },
+          {
+            "songId": "special:ragdoll:final",
+            "a": 890000,
+            "b": 964290
+          }
+        ],
+        "updatedAt": "2026-09-27T10:15:51.172Z",
+        "revision": 168
+      },
+      {
+        "id": "ragdoll-r4-0",
+        "group": "ragdoll",
+        "round": 4,
+        "index": 0,
+        "a": {
+          "id": "ragdoll-p0",
+          "name": "oLaf",
+          "seed": 1,
+          "rating": 11.73
+        },
+        "b": {
+          "id": "ragdoll-p15",
+          "name": "阿双",
+          "seed": 16,
+          "rating": 11.08
+        },
+        "status": "complete",
+        "winner": "ragdoll-p15",
+        "station": "A",
+        "picks": [
+          [
+            "ragdoll-7",
+            "ragdoll-6"
+          ],
+          [
+            "ragdoll-7",
+            "ragdoll-3"
+          ]
+        ],
+        "bans": [
+          "ragdoll-3",
+          "ragdoll-6"
+        ],
+        "published": true,
+        "scores": [
+          {
+            "songId": "ragdoll-7",
+            "a": 982690,
+            "b": 984960
+          },
+          {
+            "songId": "ragdoll-4",
+            "a": 1005720,
+            "b": 1005600
+          },
+          {
+            "songId": "special:ragdoll:third",
+            "a": 990140,
+            "b": 994540
+          }
+        ],
+        "updatedAt": "2026-09-27T10:04:42.036Z",
+        "revision": 162
+      }
+    ]
+  },
+  "catalog": {
+    "siamese-1": {
+      "songID": 687,
+      "difficultyIndex": 4,
+      "id": "siamese-1",
+      "title": "KOKUSHIN CHRONICLE",
+      "stars": 7
+    },
+    "siamese-2": {
+      "songID": 725,
+      "difficultyIndex": 4,
+      "id": "siamese-2",
+      "title": "零 ‐ZERO‐",
+      "stars": 7
+    },
+    "siamese-3": {
+      "songID": 342,
+      "difficultyIndex": 4,
+      "id": "siamese-3",
+      "title": "OMOI WO TENI NEGAI WO KOMETE",
+      "stars": 7
+    },
+    "siamese-4": {
+      "songID": 433,
+      "difficultyIndex": 4,
+      "id": "siamese-4",
+      "title": "Angel Dream",
+      "stars": 8
+    },
+    "siamese-5": {
+      "songID": 66,
+      "difficultyIndex": 4,
+      "id": "siamese-5",
+      "title": "百花缭乱",
+      "stars": 8
+    },
+    "siamese-6": {
+      "songID": 394,
+      "difficultyIndex": 4,
+      "id": "siamese-6",
+      "title": "宇宙SAMURAI",
+      "stars": 8
+    },
+    "siamese-7": {
+      "songID": 1392,
+      "difficultyIndex": 4,
+      "id": "siamese-7",
+      "title": "RAGING FIRE",
+      "stars": 8
+    },
+    "siamese-8": {
+      "songID": 956,
+      "difficultyIndex": 5,
+      "id": "siamese-8",
+      "title": "月光",
+      "stars": 8
+    },
+    "siamese-9": {
+      "songID": 266,
+      "difficultyIndex": 4,
+      "id": "siamese-9",
+      "title": "咚咚咔咚～",
+      "stars": 8
+    },
+    "siamese-10": {
+      "songID": 372,
+      "difficultyIndex": 4,
+      "id": "siamese-10",
+      "title": "旋风ノ舞【地】",
+      "stars": 9
+    },
+    "siamese-11": {
+      "songID": 1388,
+      "difficultyIndex": 5,
+      "id": "siamese-11",
+      "title": "Wrong World",
+      "stars": 9
+    },
+    "siamese-12": {
+      "songID": 432,
+      "difficultyIndex": 4,
+      "id": "siamese-12",
+      "title": "被遗忘的提尔纳诺",
+      "stars": 9
+    },
+    "tabby-1": {
+      "songID": 152,
+      "difficultyIndex": 4,
+      "id": "tabby-1",
+      "title": "Ｇ意识过剩",
+      "stars": 9
+    },
+    "tabby-2": {
+      "songID": 160,
+      "difficultyIndex": 5,
+      "id": "tabby-2",
+      "title": "No Way Back",
+      "stars": 9
+    },
+    "tabby-3": {
+      "songID": 397,
+      "difficultyIndex": 4,
+      "id": "tabby-3",
+      "title": "STAGE 0.ac11",
+      "stars": 9
+    },
+    "tabby-4": {
+      "songID": 785,
+      "difficultyIndex": 4,
+      "id": "tabby-4",
+      "title": "Youthful Coaster",
+      "stars": 9
+    },
+    "tabby-5": {
+      "songID": 1045,
+      "difficultyIndex": 4,
+      "id": "tabby-5",
+      "title": "一世风靡",
+      "stars": 9
+    },
+    "tabby-6": {
+      "songID": 1322,
+      "difficultyIndex": 4,
+      "id": "tabby-6",
+      "title": "魔导幻想曲",
+      "stars": 9
+    },
+    "tabby-7": {
+      "songID": 538,
+      "difficultyIndex": 4,
+      "id": "tabby-7",
+      "title": "最终鬼畜妹Frandre・S",
+      "stars": 10
+    },
+    "tabby-8": {
+      "songID": 816,
+      "difficultyIndex": 4,
+      "id": "tabby-8",
+      "title": "Struck Stardust",
+      "stars": 10
+    },
+    "tabby-9": {
+      "songID": 1393,
+      "difficultyIndex": 5,
+      "id": "tabby-9",
+      "title": "Ka.Ma.Se",
+      "stars": 10
+    },
+    "tabby-10": {
+      "songID": 798,
+      "difficultyIndex": 4,
+      "id": "tabby-10",
+      "title": "Miracle Meeting",
+      "stars": 10
+    },
+    "tabby-11": {
+      "songID": 958,
+      "difficultyIndex": 4,
+      "id": "tabby-11",
+      "title": "The ephemeral dances in the primordial",
+      "stars": 10
+    },
+    "tabby-12": {
+      "songID": 929,
+      "difficultyIndex": 4,
+      "id": "tabby-12",
+      "title": "waitin' for u",
+      "stars": 10
+    },
+    "ragdoll-1": {
+      "songID": 1346,
+      "difficultyIndex": 4,
+      "id": "ragdoll-1",
+      "title": "Little White Witch",
+      "stars": 9
+    },
+    "ragdoll-2": {
+      "songID": 526,
+      "difficultyIndex": 4,
+      "id": "ragdoll-2",
+      "title": "Heaven's Rider",
+      "stars": 9
+    },
+    "ragdoll-3": {
+      "songID": 223,
+      "difficultyIndex": 4,
+      "id": "ragdoll-3",
+      "title": "卡恰咚2000",
+      "stars": 9
+    },
+    "ragdoll-4": {
+      "songID": 5,
+      "difficultyIndex": 4,
+      "id": "ragdoll-4",
+      "title": "IOSYS Autumn Carnivorous Festival 2014",
+      "stars": 9
+    },
+    "ragdoll-5": {
+      "songID": 388,
+      "difficultyIndex": 4,
+      "id": "ragdoll-5",
+      "title": "恭喜毕业典礼",
+      "stars": 10
+    },
+    "ragdoll-6": {
+      "songID": 1229,
+      "difficultyIndex": 4,
+      "id": "ragdoll-6",
+      "title": "Chronomia",
+      "stars": 10
+    },
+    "ragdoll-7": {
+      "songID": 927,
+      "difficultyIndex": 4,
+      "id": "ragdoll-7",
+      "title": "Dogbite",
+      "stars": 10
+    },
+    "ragdoll-8": {
+      "songID": 136,
+      "difficultyIndex": 4,
+      "id": "ragdoll-8",
+      "title": "Evidence of evil",
+      "stars": 10
+    },
+    "ragdoll-9": {
+      "songID": 1370,
+      "difficultyIndex": 4,
+      "id": "ragdoll-9",
+      "title": "Extreme End",
+      "stars": 10
+    },
+    "ragdoll-10": {
+      "songID": 427,
+      "difficultyIndex": 4,
+      "id": "ragdoll-10",
+      "title": "God Ray",
+      "stars": 10
+    },
+    "ragdoll-11": {
+      "songID": 774,
+      "difficultyIndex": 4,
+      "id": "ragdoll-11",
+      "title": "Hung-rock",
+      "stars": 10
+    },
+    "ragdoll-12": {
+      "songID": 1356,
+      "difficultyIndex": 4,
+      "id": "ragdoll-12",
+      "title": "Soulway",
+      "stars": 10
+    },
+    "special:siamese:final": {
+      "songID": 187,
+      "difficultyIndex": 4,
+      "id": "special:siamese:final",
+      "title": "六兆年零一夜物语",
+      "stars": 9
+    },
+    "special:siamese:third": {
+      "songID": 310,
+      "difficultyIndex": 4,
+      "id": "special:siamese:third",
+      "title": "脑浆炸裂GIRL",
+      "stars": 8
+    },
+    "special:tabby:final": {
+      "songID": 1033,
+      "difficultyIndex": 5,
+      "id": "special:tabby:final",
+      "title": "Aloft in the wind",
+      "stars": 10
+    },
+    "special:tabby:third": {
+      "songID": 1249,
+      "difficultyIndex": 4,
+      "id": "special:tabby:third",
+      "title": "尽头的魔法使",
+      "stars": 9
+    },
+    "special:ragdoll:final": {
+      "songID": 1379,
+      "difficultyIndex": 4,
+      "id": "special:ragdoll:final",
+      "title": "Valsqotch",
+      "stars": 10
+    },
+    "special:ragdoll:third": {
+      "songID": 1499,
+      "difficultyIndex": 5,
+      "id": "special:ragdoll:third",
+      "title": "When Enemies Collapse",
+      "stars": 10
+    }
+  },
+  "pools": {
+    "siamese": [
+      "siamese-1",
+      "siamese-2",
+      "siamese-3",
+      "siamese-4",
+      "siamese-5",
+      "siamese-6",
+      "siamese-7",
+      "siamese-8",
+      "siamese-9",
+      "siamese-10",
+      "siamese-11",
+      "siamese-12"
+    ],
+    "tabby": [
+      "tabby-1",
+      "tabby-2",
+      "tabby-3",
+      "tabby-4",
+      "tabby-5",
+      "tabby-6",
+      "tabby-7",
+      "tabby-8",
+      "tabby-9",
+      "tabby-10",
+      "tabby-11",
+      "tabby-12"
+    ],
+    "ragdoll": [
+      "ragdoll-1",
+      "ragdoll-2",
+      "ragdoll-3",
+      "ragdoll-4",
+      "ragdoll-5",
+      "ragdoll-6",
+      "ragdoll-7",
+      "ragdoll-8",
+      "ragdoll-9",
+      "ragdoll-10",
+      "ragdoll-11",
+      "ragdoll-12"
+    ]
+  }
+}
