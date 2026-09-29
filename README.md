@@ -1,6 +1,8 @@
 # OurTaiko Tournaments
 
-太鼓赛事平台：`/` 为赛事目录，第一届八猫杯位于 `/hachicats/20260927`，`/login` 为共享账号入口。八猫杯支持管理员编辑选手资料、首轮换人及替补管理，以及三组单败淘汰、两台并行比赛、选曲与 Ban、手动录分、自动晋级、轮空及管理员重置。
+太鼓赛事平台：`/` 为赛事目录，`/login` 为共享账号入口。第一届八猫杯已于 2026-09-27 结束，`/hachicats/20260927` 现为静态赛果存档，数据来自 `data/archive/hachicats-20260927.json`，不再读取数据库或接口。
+
+比赛期间使用的实时管理系统（三组单败淘汰、两台并行比赛、选曲与 Ban、手动录分、自动晋级、轮空、选手管理及重置）的后端接口、Atlas 存储和管理组件仍保留在仓库中，但目前没有页面挂载管理界面。
 
 - 正式网站：[tournaments.ourtaiko.org](https://tournaments.ourtaiko.org)
 - 生产：Next.js / Vercel + MongoDB Atlas，登录使用既有 OurTaiko SSO。
@@ -10,7 +12,8 @@
 
 | 内容 | 位置 |
 | --- | --- |
-| 页面、对阵图、管理表单 | `app/page.tsx`（目录）、`app/hachicats/20260927/page.tsx`（八猫杯）、`components/` |
+| 页面、对阵图 | `app/page.tsx`（目录）、`app/hachicats/20260927/page.tsx`（八猫杯存档）、`components/` |
+| 八猫杯赛果存档 | `data/archive/hachicats-20260927.json`，由 `scripts/archive-tournament.mjs` 从公开接口生成 |
 | 后端 HTTP 接口 | `app/api/tournaments/[series]/[edition]/**/route.ts`、`lib/tournament-api/` |
 | 赛事 ID 与后端作用域 | `lib/tournament-scope.ts`（八猫杯 → `hachicats-20260927` / `demo`） |
 | 比赛规则、晋级与持久化 | `lib/rules.ts`、`lib/tournament.ts`、`lib/store.ts` |
@@ -30,12 +33,10 @@
 npm ci
 MONGODB_URI='' MONGODB_DB='' VERCEL='' DEMO_MODE=true \
   APP_ORIGIN=http://127.0.0.1:5192 DATABASE_PATH=.data/local-demo.sqlite \
-  node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 5192
+  npm run dev -- --hostname 127.0.0.1 --port 5192
 ```
 
-访问 `http://127.0.0.1:5192`，从赛事目录进入八猫杯，再点击「登录 → 体验演示管理模式」。本地库首次自动初始化，曲库为独立样例。`127.0.0.1` 与 `localhost` 不要混用。
-
-原有 `npm run dev` 使用 Vinext 路线，默认端口 5188，配置与 D1 初始化见维护手册；它与上面的 Next.js / SQLite 环境不是同一个数据库。
+访问 `http://127.0.0.1:5192`。八猫杯页面是静态存档，不依赖数据库；接口（如 `/api/tournaments/hachicats/20260927`）仍读取本地 SQLite 演示库，首次访问自动初始化。`127.0.0.1` 与 `localhost` 不要混用。
 
 ## 常用验证
 
@@ -45,7 +46,7 @@ npm run test:admins
 npm run test:storage
 npm run test:reset
 npm run typecheck
-npm run build:server
+npm run build
 ```
 
 本地演示服务运行时，另外执行：
@@ -58,7 +59,7 @@ TEST_ORIGIN=http://127.0.0.1:5192 npm run test:api
 
 ## 生产更新
 
-GitHub `OurTaiko/OurTaikoTournaments` 的 `main` 分支连接 Vercel 项目 `vanillaaaa/tournaments`。推送后自动构建 `npm run build:server`，前端与后端一起部署。需确认部署 Ready、正式域名对应新版本，再验证公开页面与相关接口。
+GitHub `OurTaiko/OurTaikoTournaments` 的 `main` 分支连接 Vercel 项目 `vanillaaaa/tournaments`。推送后自动构建 `npm run build`，前端与后端一起部署。需确认部署 Ready、正式域名对应新版本，再验证公开页面与相关接口。
 
 管理员设置、曲库维护、重置 / 恢复、备份、故障定位和历史迁移工具，都以 [维护手册](docs/MAINTENANCE.md) 为准。
 
@@ -82,6 +83,6 @@ GitHub `OurTaiko/OurTaikoTournaments` 的 `main` 分支连接 Vercel 项目 `van
 
 ## Atlas 原生结构（schemaVersion 3）
 
-赛事元信息保存在 `tournaments`，名册在 `tournament_participants`，比赛、比分、选曲及 Ban 在 `matches`。正式赛事记录不再存放 JSON 字符串 `body`。读写由 `lib/mongo-tournaments.ts` 维护快照一致性、整届版本 CAS 和多文档事务；私有曲库仍独立保存。SQLite / D1 和现有规则使用的字符串 DTO 只保留在适配层，不再是 Atlas 的赛事存储格式。
+赛事元信息保存在 `tournaments`，名册在 `tournament_participants`，比赛、比分、选曲及 Ban 在 `matches`。正式赛事记录不再存放 JSON 字符串 `body`。读写由 `lib/mongo-tournaments.ts` 维护快照一致性、整届版本 CAS 和多文档事务；私有曲库仍独立保存。SQLite 和现有规则使用的字符串 DTO 只保留在适配层，不再是 Atlas 的赛事存储格式。
 
 迁移直接从旧 body 到最终分集合结构，无中间原生单文档阶段。操作和恢复约定见维护手册第 13 节；此前规划中的两步发布路线已由本次用户要求取代。

@@ -10,15 +10,17 @@
 | 网站 | `https://hachicats.ourtaiko.org` |
 | 仓库 / 发布分支 | `KirisameVanilla/HachiCats` / `main` |
 | 托管 | Vercel 项目 `vanillaaaa/hachicats`，Node.js 24，函数区域 `hnd1` |
-| 生产构建 | `vercel.json` → `npm run build:server` → `next build --webpack`，产物 `.next` |
+| 生产构建 | `vercel.json` → `npm run build` → `next build --webpack`，产物 `.next` |
 | 数据库 | MongoDB Atlas `OurTaiko` 集群，数据库 `tournaments`，东京区域 |
 | SSO | `https://sso.ourtaiko.org`，Application 名称 `HachiCats` |
 | 正式回调 | `https://hachicats.ourtaiko.org/api/auth/callback` |
 | 管理员权限来源 | SSO Client roles，选择 HachiCats Application；按稳定用户 ID 授权 |
 
-SSO 继续运行在原来的服务上。HachiCats 原有的 1Panel / Docker 服务已经退役，仓库已移除 Docker 构建、Compose 和忽略配置，以及专用于容器部署的 Next.js standalone 输出与启动命令。现行发布入口是 Vercel 的 `npm run build:server`；旧 SQLite / D1 适配器仍用于本地与兼容场景。
+SSO 继续运行在原来的服务上。HachiCats 原有的 1Panel / Docker 服务已经退役，仓库已移除 Docker 构建、Compose 和忽略配置，以及专用于容器部署的 Next.js standalone 输出与启动命令。现行发布入口是 Vercel 的 `npm run build`；SQLite 适配器仅用于本地演示与测试。Vinext / Cloudflare / D1 路线及其脚本、Drizzle 配置已移除。
 
 **已上线：** 选曲和 Ban、生成比赛曲目、录分、总分判胜、自动晋级、A/B 台并行比赛、轮空、整届重置及重置前备份。16 进 8、8 进 4 中 rating 低于对手至少 0.50 的选手显示先攻标记。
+
+**已存档（本分支，尚未发布）：** 赛事于 2026-09-27 结束。`/hachicats/20260927` 改为静态页面，从 `data/archive/hachicats-20260927.json` 渲染最终赛果，不再轮询接口，也不再提供管理 tab。存档由 `node scripts/archive-tournament.mjs https://tournaments.ourtaiko.org hachicats 20260927` 从公开接口生成，只含已公布数据；生成前脚本会校验全部场次已公布并结束。Atlas 中的赛事、曲库和备份保持不变，后端接口及管理组件暂时保留。
 
 **尚未实现：** 独立的赛前「公布决赛曲 / 季军曲」按钮、网页曲库编辑器、本站管理员编辑器（管理员在 SSO 后台维护）、备份恢复按钮、单场赛果撤销 / 改判、完整操作审计日志。讨论过这些功能不代表已经上线。
 
@@ -43,19 +45,20 @@ flowchart LR
 
 | 文件 | 职责 |
 | --- | --- |
-| `app/hachicats/20260927/page.tsx` | 赛事总结、赛事对阵、分组曲库、赛事指南、赛事管理五个并列 tab及比赛详情 |
+| `app/hachicats/20260927/page.tsx` | 静态赛果存档：赛事总结、赛事对阵、分组曲库（含已公布指定曲）、赛事指南四个 tab 及只读比赛详情；不请求赛事接口 |
+| `data/archive/hachicats-20260927.json` | 八猫杯最终公开赛况与曲目（revision 168）；`scripts/archive-tournament.mjs` 生成，`tests/archive.test.mjs` 校验 |
 | `app/login/page.tsx` / `components/login-page.tsx` | 独立登录页、账号状态、退出及本地演示入口 |
 | `components/player-manager.tsx` | 管理员编辑姓名 / rating、新增同组替补 |
 | `lib/player-management.ts` | 首轮互换、替补、锁定规则与选手输入校验 |
 | `components/match-editor.tsx` | 选曲、Ban、生成曲目、录分与轮空操作 |
 | `components/reset-tournament.tsx` | 重置确认文字、旧版本与重复提交保护 |
-| `components/use-song-catalog.ts` | 公开曲库读取，每 30 秒刷新 |
+| `components/use-song-catalog.ts` | 公开曲库读取，每 30 秒刷新（目前无页面使用） |
 | `lib/tournament.ts` | 比赛结构、初始化、晋级、公开赛况过滤 |
 | `lib/rules.ts` | 服务端动作校验、总分判定、不可重选曲目与机台约束 |
 | `lib/store.ts` | 赛事读写、Origin 校验、错误响应与数据库入口 |
 | `lib/database.ts` | 存储适配器接口 |
 | `lib/runtime.ts` | Next.js 运行环境：Atlas 或本地 SQLite |
-| `lib/runtime.cloudflare.ts` / `lib/sql-database.ts` | Vinext/D1 与 SQLite 适配 |
+| `lib/sql-database.ts` | SQLite 适配 |
 | `lib/mongodb.ts` | Atlas 连接池与集合读写 |
 | `lib/auth.ts` / `lib/sso-session.ts` | OIDC、会话、本应用 token 验证与实时 ClientRole |
 | `lib/song-library.ts` | 曲库结构校验 |
@@ -182,6 +185,8 @@ SSO 超时、配置错误、格式异常或身份不符均返回 503 并拒绝�
 
 ## 5. 日常操作
 
+> 本节描述比赛期间的实时管理流程。八猫杯已存档，当前页面不再挂载这些管理界面；以下内容仅供复用该系统时参考。
+
 「赛事对阵」的「正在进行」位于分组切换上方，汇总所有组的进行中比赛，按 A / B 台排序并标明组别。切换分组只影响下方对阵图和替补名单，进行中比赛保持全局展示；点击任意组的比赛可直接查看详情或管理，曲目按该场比赛所属组显示。
 
 本版本页面将「赛事管理」与「赛事对阵」「分组曲库」「赛事指南」并列；管理 tab 放置选手资料和赛事维护工具。未登录或无权限时只显示状态及 `/login` 链接。页头「登录 / 账号」进入独立 `/login`，OurTaiko 登录按钮、本地演示入口及账号退出在该页提供。登录成功返回赛事管理 tab（`/hachicats/20260927?manage=1`）；登录失败返回 `/login?authError=...` 并显示可重试提示。原 SSO 回调、鉴权及写入规则保持不变。管理员在对阵页仍可切换观众视图。
@@ -236,7 +241,7 @@ node --env-file=.data/private-atlas.env scripts/import-song-library.mjs .data/pr
 
 重置三个组全部 48 场的选曲、Ban、成绩、轮空、胜者和晋级状态，恢复数据库名册前 16 位对应的初始对阵；新增选手仍为替补。保留选手资料、曲库、管理员绑定及会话。演示模式确认文字为 `重置演示赛事`，只操作 `demo`。
 
-Atlas 后端在同一事务中保存完整赛事 snapshot，再以原 revision 条件更新为当前 revision + 1，并提交全部场次。备份失败就不重置；事务冲突不会覆盖其他人刚录入的成绩。本地 SQLite/D1 仍可能留下一条未用于重置的备份。旧录分窗口提交会返回 409。网络中断时先重新读取赛况，不要假定失败而连续提交。
+Atlas 后端在同一事务中保存完整赛事 snapshot，再以原 revision 条件更新为当前 revision + 1，并提交全部场次。备份失败就不重置；事务冲突不会覆盖其他人刚录入的成绩。本地 SQLite 仍可能留下一条未用于重置的备份。旧录分窗口提交会返回 409。网络中断时先重新读取赛况，不要假定失败而连续提交。
 
 ### 备份与恢复
 
@@ -259,15 +264,7 @@ Atlas 后端在同一事务中保存完整赛事 snapshot，再以原 revision �
 
 [README](../README.md) 提供 Node / SQLite 的独立演示命令。必须同时清空 `MONGODB_URI`，因为它优先于 SQLite，`DEMO_MODE=true` 只改变文档键及演示行为。不要在挂着生产 MongoDB 的环境执行录分或重置测试。
 
-原有 `npm run dev` / `npm run build` 通过 `scripts/run-framework.mjs` 选择 Vinext 路线；macOS 默认使用 Vite/Cloudflare 配置，本地 D1 位于 `.wrangler/state/v3/d1/`。需要这条路线时，配置 `.dev.vars`，并仅对**全新的库**初始化一次：
-
-```sh
-npm run build
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_panoramic_old_lace.sql
-npm run dev
-```
-
-这条路线默认端口 5188，与 Next.js / SQLite 的演示数据独立。本地 SSO 可使用相邻 OurTaikoSSO 项目的开发服务，既有配置是 `http://127.0.0.1:8090`；演示管理不依赖它，正式账号不保证存在于本地 SSO。
+本地 SSO 可使用相邻 OurTaikoSSO 项目的开发服务，既有配置是 `http://127.0.0.1:8090`；演示管理不依赖它，正式账号不保证存在于本地 SSO。
 
 ### 验证矩阵
 
@@ -278,8 +275,8 @@ npm run dev
 | SQLite / 存储适配 | `npm run test:storage` |
 | 重置与备份 | `npm run test:reset`，使用临时 SQLite |
 | 接口整体流程 | 本地 demo 启动后，`TEST_ORIGIN=http://127.0.0.1:5192 npm run test:api` |
-| TypeScript / 生产产物 | `npm run typecheck`、`npm run build:server` |
-| Vinext / D1 兼容 | `npm run build`；必要时验证本地 D1 运行流程 |
+| TypeScript / 生产产物 | `npm run typecheck`、`npm run build` |
+| 赛果存档 | `node tests/archive.test.mjs`（已含于 `npm test`）；确认存档页面在构建输出中为静态（○） |
 | UI | 手机 390px 视口、五个 tab、独立 `/login`、登录错误 / 退出、比赛详情换人及草稿清空；管理员 / 观众已结束比赛的逐曲记录运行 `node tests/match-summary.test.mjs`；检查控制台，不以构建通过代替浏览器检查 |
 | 纯文档 | 核对代码事实、文件链接、命令脚本和差异；不启动服务或操作生产库 |
 
@@ -348,7 +345,7 @@ node --env-file=.data/private-test-atlas.env tests/mongodb.test.mjs
 
 `/login?returnTo=...` 是通用账号页。安全站内路径随 OIDC attempt 存储，成功返回原路径，失败保留返回目标并显示错误；不接受外部地址或认证 / API 循环目标。原 `hachicats_session` Cookie 保留 `Path=/`，兼容已有会话，token 不进入 React Context。SSO callback 保持 `/api/auth/callback`，无需变更现有注册回调。
 
-验证：`npm test`（含迁移后页面依赖图）、`npm run test:admins`（含返回路径及失败回调）、`npm run typecheck`、`npm run lint`、`npm run build:server`。本地浏览器检查目录 → 八猫杯 → 登录 → 演示登录返回管理页 → 目录共享账号 → 退出，以及手机布局。真实 SSO 成功回调需要配置现有服务后验证；本地演示不替代生产 SSO 验收。
+验证：`npm test`（含迁移后页面依赖图）、`npm run test:admins`（含返回路径及失败回调）、`npm run typecheck`、`npm run lint`、`npm run build`。本地浏览器检查目录 → 八猫杯 → 登录 → 演示登录返回管理页 → 目录共享账号 → 退出，以及手机布局。真实 SSO 成功回调需要配置现有服务后验证；本地演示不替代生产 SSO 验收。
 
 ## 11. 八猫杯后端作用域迁移（本地实现，尚未发布）
 
@@ -408,10 +405,10 @@ Vercel 应用发布和 Production 环境变量尚未在本次操作中变更。�
 - `matches`：每场比赛一条，包含 tournamentId、matchId、matchOrder 和原有场次字段。比分、选曲、Ban 仍嵌入该场。场次 seed 与选手初始 seed 分开保留。
 - 两个子集合物理 `_id` 是 `[tournamentId, 业务ID]` 的 JSON 数组字符串，消除拼接碰撞；对外的 playerId / matchId 不变。所有子集合操作必须包含 tournamentId。
 - 私有 `song_libraries` 不改写。新的 `tournament_backups` 使用 schemaVersion 3 + 原生 snapshot，不再写 body；历史备份按原格式保留。迁移归档 `tournament_schema_migrations.source` 为回退保留原始 body，不能公开。
-- 全量读取使用 snapshot 事务，缺少子记录、未知版本或跨赛事引用均拒绝服务。API 与 SQLite/D1 的 `TournamentRow.body` 仍是内部兼容 DTO，Atlas 存储没有该字符串。
+- 全量读取使用 snapshot 事务，缺少子记录、未知版本或跨赛事引用均拒绝服务。API 与 SQLite 的 `TournamentRow.body` 仍是内部兼容 DTO，Atlas 存储没有该字符串。
 - 规则计算仍在应用层，先读一致快照、计算，再以该整届 revision 在写事务内重新检查并提交。中途其他写入会使 CAS 失败，因此旧规则计算不能覆盖新状态；新客户端按现有机制重读再计算。
 - 提交只替换变化的选手 / 比赛文档，且和全局版本一起提交；晋级多场同步生效。比赛唯一索引覆盖 `(tournamentId, group, round, index)`，目前按八猫杯规则使用。
-- Atlas 重置在同一事务写完整 snapshot 并更新所有场次；备份或任何场次写入失败都回滚。本地 SQLite/D1 保留原先的先备份再整届 CAS。
+- Atlas 重置在同一事务写完整 snapshot 并更新所有场次；备份或任何场次写入失败都回滚。本地 SQLite 保留原先的先备份再整届 CAS。
 - validators 拒绝旧后端向 schemaVersion 3 文档重新写入 body。未知新 schema 不能回退读旧 body。maintenance 字段仅被新代码识别，不能视为对所有历史部署的写入封锁。
 
 ### 迁移工具
