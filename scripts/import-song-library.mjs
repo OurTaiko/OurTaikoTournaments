@@ -14,7 +14,7 @@ try {
   await build({ entryPoints: ['lib/song-library.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: dir + '/schema.cjs' });
   const { parseSongLibrary } = (await import(dir + '/schema.cjs')).default;
   const library = parseSongLibrary(JSON.parse(await readFile(file, 'utf8')));
-  assert.equal(library.id, 'edition-1', 'This importer only provisions the first tournament');
+  assert.equal(library.id, 'hachicats-20260927', 'This importer only provisions the first tournament');
   const { id, ...fields } = library;
   const expected = { _id: id, ...fields };
   const collection = client.db(process.env.MONGODB_DB).collection('song_libraries');
@@ -24,7 +24,7 @@ try {
   const stored = await collection.findOne({ _id: id });
   // Avoid printing either document if verification fails.
   if (!stored || JSON.stringify(stored) !== JSON.stringify(expected)) throw Error('Library verification failed');
-  console.log('Verified edition-1: 36 regular charts and 6 designated charts. No existing tournament state was changed.');
+  console.log('Verified hachicats-20260927: 36 regular charts and 6 designated charts. No existing tournament state was changed.');
 } finally {
   await client.close();
   await rm(dir, { recursive: true, force: true });

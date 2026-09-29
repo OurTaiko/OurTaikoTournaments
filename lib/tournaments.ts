@@ -1,5 +1,11 @@
 /** Public directory metadata. Event data and permissions stay with each tournament. */
-export const HACHICATS_TOURNAMENT_ID = "hachicats-20260927";
+export function tournamentId(series: string, edition: string) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(series) || !/^[0-9]{8}$/.test(edition))
+    throw new Error("Tournament path must use a series slug and YYYYMMDD edition");
+  return `${series}-${edition}`;
+}
+
+export const HACHICATS_TOURNAMENT_ID = tournamentId("hachicats", "20260927");
 
 export function tournamentApiPath(tournamentId: string) {
   const tournament = tournaments.find(event => event.id === tournamentId);

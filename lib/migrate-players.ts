@@ -1,10 +1,11 @@
+import { HACHICATS_TOURNAMENT_ID } from './tournaments';
 import type { Database } from './database';
 import { rosters } from './tournament-seed';
 import { hydrateTournament } from './tournament';
 
 // Add profiles without rewriting any historical match, score, winner or advancement.
 export async function migratePlayers(db: Database, apply: boolean) {
-  const current = await db.getTournament('edition-1');
+  const current = await db.getTournament(HACHICATS_TOURNAMENT_ID);
   if (!current) throw new Error('Production tournament is missing');
   const stored = JSON.parse(current.body);
   if (stored.rosters) {

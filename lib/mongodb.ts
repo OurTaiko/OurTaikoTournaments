@@ -1,8 +1,8 @@
 import { MongoClient, MongoServerError, type Db } from 'mongodb';
-import type { Database, SessionRow, TournamentRow, TournamentBackup } from './database';
+import { mongoTournamentRepository } from './mongo-tournaments';
+import type { Database, SessionRow } from './database';
 import type { SongLibrary } from './song-library';
 
-type TournamentDocument = Omit<TournamentRow, 'id'> & { _id: string };
 type SessionDocument = Omit<SessionRow, 'id'> & { _id: string; expiresAt: Date };
 
 // Reuse one bounded connection pool per warm serverless instance.
@@ -26,9 +26,9 @@ export async function mongoConnection() {
 }
 
 export function mongoDatabase(getDb: () => Promise<Db>): Database {
-  const tournaments = async () => (await getDb()).collection<TournamentDocument>('tournaments');
   const sessions = async () => (await getDb()).collection<SessionDocument>('sessions');
   return {
+    ...mongoTournamentRepository(getDb),
     async getSongLibrary(id) {
       const row = await (await getDb()).collection<Omit<SongLibrary, 'id'> & { _id: string }>('song_libraries').findOne({ _id: id });
       if (!row) return null;
@@ -38,26 +38,7 @@ export function mongoDatabase(getDb: () => Promise<Db>): Database {
       try { await (await getDb()).collection<Omit<SongLibrary, 'id'> & { _id: string }>('song_libraries').insertOne({ _id: id, ...library }); }
       catch (error) { if (!(error instanceof MongoServerError && error.code === 11000)) throw error; }
     },
-    async saveTournamentBackup({ id, ...row }) {
-      await (await getDb()).collection<Omit<TournamentBackup, 'id'> & { _id: string }>('tournament_backups').insertOne({ _id: id, ...row });
-    },
     async ping() { await (await getDb()).command({ ping: 1 }); },
-    async getTournament(id) {
-      const row = await (await tournaments()).findOne({ _id: id });
-      return row ? { id: row._id, revision: row.revision, body: row.body } : null;
-    },
-    async createTournament(row) {
-      // A duplicate _id means another instance initialized the same tournament.
-      try { await (await tournaments()).insertOne({ _id: row.id, revision: row.revision, body: row.body }); }
-      catch (error) { if (!(error instanceof MongoServerError && error.code === 11000)) throw error; }
-    },
-    async updateTournament(row, previous) {
-      const result = await (await tournaments()).updateOne(
-        { _id: row.id, revision: previous },
-        { $set: { body: row.body, revision: row.revision } },
-      );
-      return result.matchedCount === 1;
-    },
     async saveSession(row) {
       await (await sessions()).insertOne({ _id: row.id, body: row.body, expires: row.expires, expiresAt: new Date(row.expires) });
     },

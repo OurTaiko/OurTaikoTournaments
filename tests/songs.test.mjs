@@ -16,18 +16,18 @@ try {
   const { parseSongMetadata, resolveSong, songName, designatedId, publicSongCatalog, songMetadata, makeTournament, hydrateTournament, tournamentState, applyAction, runtime, readSongLibrary, parseSongLibrary, demoSongLibrary, songGET, tournamentGET, matchGET, matchPOST } = (await import(dir + '/test.cjs')).default;
   const db = runtime.DB;
   await assert.rejects(readSongLibrary(), /not been configured/);
-  assert.equal(await db.getSongLibrary('edition-1'), null, 'Missing production library must not generate sample selections');
+  assert.equal(await db.getSongLibrary('hachicats-20260927'), null, 'Missing production library must not generate sample selections');
   process.env.DEMO_MODE = 'true';
   const demo = await readSongLibrary();
   assert.equal(demo.id, 'demo');
   assert.deepEqual(await db.getSongLibrary('demo'), demo, 'Demo samples must be persisted');
-  const library = demoSongLibrary('edition-1');
+  const library = demoSongLibrary('hachicats-20260927');
   for (const [i, group] of ['siamese', 'tabby', 'ragdoll'].entries()) {
     library.designated[group] = { final: { songID: 900001 + 2*i, difficultyIndex: 5 }, third: { songID: 900002 + 2*i, difficultyIndex: 4 } };
   }
   await db.createSongLibrary(library);
-  await db.createSongLibrary(demoSongLibrary('edition-1'));
-  assert.deepEqual(await db.getSongLibrary('edition-1'), library, 'Initialization cannot overwrite real selections');
+  await db.createSongLibrary(demoSongLibrary('hachicats-20260927'));
+  assert.deepEqual(await db.getSongLibrary('hachicats-20260927'), library, 'Initialization cannot overwrite real selections');
   process.env.DEMO_MODE = 'false';
   assert.deepEqual(await readSongLibrary(), library);
   for (const bad of [null, {}, { ...library, version: 2 }]) assert.throws(() => parseSongLibrary(bad));
@@ -85,7 +85,7 @@ try {
   assert.throws(()=>applyAction(tournament,final.id,{type:'draft',picks:[['siamese-1','siamese-2'],['siamese-3','tabby-1']]},library.pools.siamese),/本组/);
   console.log('PASS persistent libraries, non-overwrite, explicit production provisioning, five difficulties, metadata refresh/offline fallback, per-match publication and database pool validation.');
 
-  await db.createTournament({id:'edition-1',revision:0,body:JSON.stringify(tournamentState(tournament))});
+  await db.createTournament({id:'hachicats-20260927',revision:0,body:JSON.stringify(tournamentState(tournament))});
   const anon=new Request(process.env.APP_ORIGIN+'/api/matches/siamese-r3-0');
   const params={params:Promise.resolve({id:'siamese-r3-0'})};
   assert.equal((await matchGET(anon,params)).status,401);

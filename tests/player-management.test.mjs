@@ -78,14 +78,14 @@ try {
   console.log('PASS authenticated API, Origin/body validation, atomic competing edits, stale rejection, public filtering, database hydration and roster-preserving reset.');
 
   const legacy = makeTournament(true); delete legacy.rosters;
-  const row = { id: 'edition-1', revision: legacy.revision, body: JSON.stringify(legacy) };
+  const row = { id: 'hachicats-20260927', revision: legacy.revision, body: JSON.stringify(legacy) };
   await database.createTournament(row);
   await assert.rejects(migratePlayers(database, false), /not been migrated/);
   await assert.rejects(migratePlayers({ ...database, saveTournamentBackup: async () => { throw Error('backup failed'); } }, true));
-  assert.equal((await database.getTournament('edition-1')).body, row.body);
+  assert.equal((await database.getTournament('hachicats-20260927')).body, row.body);
   const migration = await migratePlayers(database, true);
   assert.deepEqual(migration, { migrated: true, revision: 1, players: 48 });
-  const migrated = JSON.parse((await database.getTournament('edition-1')).body);
+  const migrated = JSON.parse((await database.getTournament('hachicats-20260927')).body);
   assert.deepEqual(migrated.matches, legacy.matches, 'Migration must leave all match bytes/data intact');
   assert.equal((await migratePlayers(database, true)).migrated, false);
   console.log('PASS legacy migration backup failure, unchanged scores/advancement, monotonic revision and idempotent re-run.');

@@ -5,46 +5,98 @@ import { resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { MongoClient } from 'mongodb';
 
-assert(process.env.MONGODB_URI && process.env.MONGODB_DB, 'Run with --env-file=<private MongoDB env>');
+assert(process.env.MONGODB_URI, 'Run with --env-file=<private MongoDB env>');
+// Never use the configured production database, even when loading its URI.
+const name = 'ott_test_' + randomUUID().replaceAll('-', '').slice(0, 24);
 await mkdir('.data', { recursive: true });
 const dir = await mkdtemp(resolve('.data/mongodb-test-'));
-const id = 'integration-' + randomUUID();
-const clients = [0, 1].map(() => new MongoClient(process.env.MONGODB_URI, { maxPoolSize: 2, serverSelectionTimeoutMS: 10000 }));
+const clients = [0, 1].map(() => new MongoClient(process.env.MONGODB_URI, { maxPoolSize: 5, serverSelectionTimeoutMS: 10000 }));
 try {
-  await build({ stdin: { contents: "export * from './lib/mongodb'; export {demoSongLibrary} from './lib/demo-song-library';", resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', external: ['mongodb'], outfile: dir + '/mongodb.cjs' });
-  const { default: { mongoDatabase, demoSongLibrary } } = await import(dir + '/mongodb.cjs');
-  const databases = clients.map(c => c.db(process.env.MONGODB_DB));
-  const adapters = databases.map(d => mongoDatabase(async () => d));
-  await adapters[0].ping();
-  const library = demoSongLibrary(id);
+  await build({ stdin: { contents: `export * from './lib/mongodb'; export * from './lib/mongo-schema'; export * from './lib/migrate-tournament-schema'; export * from './lib/tournament-documents'; export * from './lib/tournament-seed'; export * from './lib/tournament'; export * from './lib/rules'; export * from './lib/reset-tournament'; export {demoSongLibrary} from './lib/demo-song-library';`, resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', external: ['mongodb'], outfile: dir + '/mongodb.cjs' });
+  const api = (await import(dir + '/mongodb.cjs')).default;
+  const db = clients[0].db(name);
+  const adapters = clients.map(c => api.mongoDatabase(async () => c.db(name)));
+  const id = 'demo';
+  await api.ensureTournamentSchema(db);
+  const state = api.tournamentState(api.makeTournament(false));
+  const row = { id, revision: 0, body: JSON.stringify(state, null, 2) };
+  await db.collection('tournaments').insertOne({ _id: id, revision: 0, body: row.body });
+  assert.equal((await adapters[0].getTournament(id)).body, row.body);
+  await assert.rejects(api.migrateTournamentSchema(db, id, 1, api.bodyHash(row.body)));
+  assert.equal(await db.collection('matches').countDocuments(), 0);
+  await api.migrateTournamentSchema(db, id, 0, api.bodyHash(row.body));
+  assert.equal((await api.migrateTournamentSchema(db, id, 0, api.bodyHash(row.body))).migrated, false);
+  assert.deepEqual(JSON.parse((await adapters[1].getTournament(id)).body), state);
+  assert.equal((await db.collection('tournaments').findOne({ _id: id })).body, undefined);
+  assert.equal((await db.collection('tournament_schema_migrations').findOne({ tournamentId: id })).source.body, row.body);
+  // A pre-migration backend must be unable to append the old body back into schema 3.
+  await assert.rejects(db.collection('tournaments').updateOne({ _id: id }, { $set: { body: row.body } }), e => e.code === 121);
+  await adapters[0].createTournament({ ...row, id: 'other' });
+  await adapters[1].createTournament({ ...row, body: JSON.stringify({ ...state, updatedAt: 'must-not-overwrite' }) });
+  assert.deepEqual(JSON.parse((await adapters[1].getTournament(id)).body), state);
+  const library = api.demoSongLibrary(id);
   await adapters[0].createSongLibrary(library);
-  assert.deepEqual(await adapters[1].getSongLibrary(id), library);
-  const changed = structuredClone(library); changed.designated.siamese.final.songID = 999999;
-  await adapters[1].createSongLibrary(changed);
-  assert.deepEqual(await adapters[0].getSongLibrary(id), library, 'Cannot overwrite an existing library');
-  await adapters[0].saveTournamentBackup({ id, tournamentId: id, revision: 3, body: 'exact prior state', actor: 'integration-test', createdAt: new Date().toISOString() });
-  const backup = await databases[1].collection('tournament_backups').findOne({ _id: id });
-  assert.equal(backup.body, 'exact prior state');
-  assert.equal(backup.revision, 3);
-  await assert.rejects(adapters[1].saveTournamentBackup({ id, tournamentId: id, revision: 4, body: 'overwrite', actor: 'integration-test', createdAt: new Date().toISOString() }));
-  assert.equal((await databases[0].collection('tournament_backups').findOne({ _id: id })).body, 'exact prior state');
-  await adapters[0].createTournament({ id, revision: 0, body: 'initial' });
-  await adapters[1].createTournament({ id, revision: 0, body: 'overwrite' });
-  assert.equal((await adapters[1].getTournament(id)).body, 'initial');
-  const results = await Promise.all(Array.from({ length: 12 }, (_, i) => adapters[i % 2].updateTournament({ id, revision: 1, body: 'winner-' + i }, 0)));
-  assert.equal(results.filter(Boolean).length, 1, 'Exactly one concurrent update must win');
-  assert.equal((await adapters[1].getTournament(id)).revision, 1);
-  const expires = Date.now() + 60000;
-  await adapters[0].saveSession({ id, body: 'test-session', expires });
-  assert(await adapters[1].getSession(id, expires - 1));
-  assert.equal(await adapters[1].getSession(id, expires), null);
-  assert.equal((await Promise.all(adapters.map(a => a.deleteSession(id)))).filter(Boolean).length, 1);
+  const changedLibrary = structuredClone(library); changedLibrary.designated.siamese.final.songID = 999999;
+  await adapters[1].createSongLibrary(changedLibrary);
+  assert.deepEqual(await adapters[0].getSongLibrary(id), library);
 
-  console.log('PASS Atlas library persistence/non-overwrite, cross-client persistence, concurrent revision updates, session expiry/one-use deletion.');
+  const action = (station, score) => ({ type: 'start', station,
+    picks: [['siamese-1', 'siamese-2'], ['siamese-3', 'siamese-4']], bans: ['siamese-3', 'siamese-1'],
+    scores: [{ songId: 'siamese-2', a: score, b: 90 }, { songId: 'siamese-4', a: score, b: 80 }],
+  });
+  const a = 'siamese-r0-0', b = 'siamese-r0-1';
+  const read = async () => api.hydrateTournament(JSON.parse((await adapters[0].getTournament(id)).body));
+  const write = (next, previous, adapter = adapters[0]) => adapter.updateTournament({ id, revision: next.revision, body: JSON.stringify(api.tournamentState(next)) }, previous);
+  // Two rules calculations both see an empty station. Global CAS allows only one.
+  const initial = await read();
+  const candidates = [a, b].map(mid => api.applyAction(initial, mid, action('A', 100), library.pools.siamese));
+  const results = await Promise.all(candidates.map((next, i) => write(next, initial.revision, adapters[i])));
+  assert.equal(results.filter(Boolean).length, 1);
+  const won = results[0] ? a : b, lost = results[0] ? b : a;
+  let current = await read();
+  assert.throws(() => api.applyAction(current, lost, action('A', 110), library.pools.siamese));
+  assert.equal(await write(api.applyAction(current, lost, action('B', 110), library.pools.siamese), current.revision), true);
+  current = await read();
+  const finished = api.applyAction(current, won, { type: 'finish' }, library.pools.siamese);
+  // Force a validation failure after tournament revision is staged: all writes roll back.
+  const before = await adapters[0].getTournament(id);
+  await db.command({ collMod: 'matches', validator: { status: { $ne: 'complete' } }, validationLevel: 'strict' });
+  await assert.rejects(write(finished, current.revision));
+  assert.deepEqual(await adapters[0].getTournament(id), before);
+  await api.ensureTournamentSchema(db);
+  await write(finished, current.revision);
+  current = await read();
+  const source = current.matches.find(m => m.id === won);
+  const nextRound = current.matches.find(m => m.id === 'siamese-r1-0');
+  assert.equal(nextRound[won === a ? 'a' : 'b'].id, source.winner);
+  assert.equal(nextRound.revision, current.revision);
+  assert.deepEqual(JSON.parse((await adapters[0].getTournament('other')).body), state);
+
+  const input = { revision: current.revision, confirmation: '重置演示赛事' };
+  const resetBefore = await adapters[0].getTournament(id);
+  await db.command({ collMod: 'tournament_backups', validator: { actor: { $ne: 'fail-backup' } }, validationLevel: 'strict' });
+  await assert.rejects(api.resetTournament(adapters[0], true, input, 'fail-backup'));
+  assert.deepEqual(await adapters[0].getTournament(id), resetBefore);
+  await db.command({ collMod: 'tournament_backups', validator: {} });
+  const reset = await api.resetTournament(adapters[0], true, input, 'atlas-test');
+  const backup = await db.collection('tournament_backups').findOne({ _id: reset.backupId });
+  assert.equal(backup.body, undefined);
+  assert.deepEqual(backup.snapshot, JSON.parse(resetBefore.body));
+  assert.equal(backup.schemaVersion, 3);
+  assert(reset.tournament.matches.every(m => m.revision === reset.tournament.revision));
+  await assert.rejects(api.resetTournament(adapters[0], true, input, 'atlas-test'), e => e.status === 409);
+  assert.deepEqual(await adapters[0].getSongLibrary(id), library);
+  const expires = Date.now() + 60000;
+  await adapters[0].saveSession({ id: 'session', body: 'test-session', expires });
+  assert(await adapters[1].getSession('session', expires - 1));
+  assert.equal(await adapters[1].getSession('session', expires), null);
+  assert.equal((await Promise.all(adapters.map(a => a.deleteSession('session')))).filter(Boolean).length, 1);
+  // Lost child data must fail closed; never initialize an empty tournament over it.
+  await db.collection('matches').deleteOne({ tournamentId: 'other' });
+  await assert.rejects(adapters[0].getTournament('other'));
+  console.log('PASS isolated Atlas migration/idempotency, native collections, old-writer rejection, competing stations/CAS, atomic advancement, write failure rollback, reset+backup transaction, scope isolation and sessions.');
 } finally {
-  // Only the uniquely named records created by this run are removed.
-  for (const collection of ['tournaments', 'sessions', 'tournament_backups', 'song_libraries'])
-    await clients[0].db(process.env.MONGODB_DB).collection(collection).deleteOne({ _id: id });
+  await clients[0].db(name).dropDatabase(); // This unique database was created by this test only.
   await Promise.all(clients.map(c => c.close()));
   await rm(dir, { recursive: true, force: true });
 }

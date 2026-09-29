@@ -4,7 +4,7 @@ import { existsSync } from 'node:fs';
 
 const result = await build({ entryPoints: ['app/page.tsx', 'app/hachicats/20260927/page.tsx', 'components/auth/sso-context.tsx'], outdir: 'unused-browser-check', bundle: true, platform: 'browser', write: false, metafile: true, logLevel: 'silent' });
 const forbidden = Object.keys(result.metafile.inputs).filter(path =>
-  /(?:^|\/)lib\/(?:.*\.server|runtime(?:\.cloudflare)?|mongodb|sql-database|tournament-scope|tournament-access|store|demo-song-library|song-library|tournament-seed)\.ts$/.test(path) ||
+  /(?:^|\/)lib\/(?:.*\.server|runtime(?:\.cloudflare)?|mongodb|mongo-tournaments|tournament-documents|sql-database|tournament-scope|tournament-access|store|demo-song-library|song-library|tournament-seed)\.ts$/.test(path) ||
   /(?:^|\/)data\/(?:songs|designated-songs|players)\.json$/.test(path) ||
   path.includes('node_modules/server-only/'),
 );

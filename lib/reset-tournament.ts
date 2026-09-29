@@ -22,10 +22,18 @@ export async function resetTournament(database: Database, demo: boolean, input: 
   // Invalidate every open editor, including untouched first-round matches.
   for (const match of next.matches) match.revision = next.revision;
   const backupId = crypto.randomUUID();
-  // Preserve the exact prior state before attempting the conditional write.
-  // A racing update can leave an unused backup, but cannot be overwritten.
-  await database.saveTournamentBackup({ ...current, id: backupId, tournamentId: id, createdAt: new Date().toISOString(), actor });
-  if (!await database.updateTournament({ id, revision: next.revision, body: JSON.stringify(tournamentState(next)) }, revision))
+  const backup = { ...current, id: backupId, tournamentId: id, createdAt: new Date().toISOString(), actor };
+  const row = { id, revision: next.revision, body: JSON.stringify(tournamentState(next)) };
+  // Atlas commits the snapshot and every affected document atomically.
+  // SQLite/D1 retain backup-before-CAS with the existing whole-state storage.
+  let updated: boolean;
+  if (database.updateTournamentWithBackup) {
+    updated = await database.updateTournamentWithBackup(row, revision, backup);
+  } else {
+    await database.saveTournamentBackup(backup);
+    updated = await database.updateTournament(row, revision);
+  }
+  if (!updated)
     throw new RuleError('赛况已更新，本次未重置，请重新确认。', 409);
   return { tournament: next, backupId };
 }

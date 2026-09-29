@@ -11,7 +11,7 @@
 | 仓库 / 发布分支 | `KirisameVanilla/HachiCats` / `main` |
 | 托管 | Vercel 项目 `vanillaaaa/hachicats`，Node.js 24，函数区域 `hnd1` |
 | 生产构建 | `vercel.json` → `npm run build:server` → `next build --webpack`，产物 `.next` |
-| 数据库 | MongoDB Atlas `OurTaiko` 集群，数据库 `hachicats`，东京区域 |
+| 数据库 | MongoDB Atlas `OurTaiko` 集群，数据库 `tournaments`，东京区域 |
 | SSO | `https://sso.ourtaiko.org`，Application 名称 `HachiCats` |
 | 正式回调 | `https://hachicats.ourtaiko.org/api/auth/callback` |
 | 管理员权限来源 | SSO Client roles，选择 HachiCats Application；按稳定用户 ID 授权 |
@@ -92,7 +92,9 @@ flowchart LR
 
 | 集合 | 关键字段 / 行为 |
 | --- | --- |
-| `tournaments` | `_id: edition-1` 或 `demo`；`revision`；`body` 是 JSON 字符串，内部也有 revision，`rosters` 保存三组选手资料 |
+| `tournaments` | schemaVersion 3 元信息：`_id`、`revision`、`updatedAt`、groups 和记录计数；没有 body |
+| `tournament_participants` | 原生选手字段；`tournamentId + playerId` 唯一，rosterOrder 保留名册顺序 |
+| `matches` | 原生比赛及 scores / picks / bans；`tournamentId + matchId` 唯一，matchOrder 保留数组顺序 |
 | `song_libraries` | `_id` 同上；`version: 1`；原生对象 `pools`、`designated` |
 | `admins` | 历史身份绑定，仅留存回退，不再读取或写入，不授予权限 |
 | `sessions` | `_id` 为随机会话 ID；`body` 含会话数据；`expires` 为毫秒时间戳，`expiresAt` 为 MongoDB Date |
@@ -100,17 +102,17 @@ flowchart LR
 
 `admins` 不参与当前认证，`sessions` 也不是所有 SSO 用户的注册表。会话读取始终校验过期时间；`sessions_expiry` TTL 索引按 `expiresAt` 清理，不能只依赖异步 TTL 删除来判断登录有效。
 
-比赛写入使用 `_id + previous revision` 条件更新，单次 CAS 只有一位并发写入者成功。新客户端同时发送打开详情时的 `matchRevision`（`match.revision ?? 0`）：本场未变化时，其他场次更新不再要求重开详情；后端读取最新赛况、重新校验机台 / 选曲 / 晋级规则再保存，写入竞态最多尝试四次。同场变更仍返回 409，不覆盖其他人的成绩。旧客户端未发送 `matchRevision` 时继续按整届 revision 检查，需要刷新网页一次才能使用新逻辑。数据库外层 `revision` 与 `body` 内的 revision 必须同步。单场 `match.revision` 在本场保存、参赛选手资料 / 位置变更以及晋级带来选手变化时，更新为此次整届 revision；未变的比赛保持原值，旧文档缺省为 0，无需迁移。重置会把全部场次版本设为新整届 revision，即使空白场次也会让旧编辑窗口失效。不要把 `song_libraries.version` 当比赛版本号：它目前是固定的数据结构版本。
+比赛写入使用 `_id + previous revision` 条件更新，单次 CAS 只有一位并发写入者成功。新客户端同时发送打开详情时的 `matchRevision`（`match.revision ?? 0`）：本场未变化时，其他场次更新不再要求重开详情；后端读取最新赛况、重新校验机台 / 选曲 / 晋级规则再保存，写入竞态最多尝试四次。同场变更仍返回 409，不覆盖其他人的成绩。旧客户端未发送 `matchRevision` 时继续按整届 revision 检查，需要刷新网页一次才能使用新逻辑。schemaVersion 3 仅在赛事元信息中持久化全局 revision，repository 重组 API 状态时带回该版本；旧 body 格式仍要求内外版本一致。单场 `match.revision` 在本场保存、参赛选手资料 / 位置变更以及晋级带来选手变化时，更新为此次整届 revision；未变的比赛保持原值，旧文档缺省为 0，无需迁移。重置会把全部场次版本设为新整届 revision，即使空白场次也会让旧编辑窗口失效。不要把 `song_libraries.version` 当比赛版本号：它目前是固定的数据结构版本。
 
 ### 选手
 
-姓名、初始 seed、rating 在 MongoDB `tournaments/edition-1` 的 `body.rosters` 中。每场比赛的 a/b 只保存选手 ID 和位置 seed，读取时关联数据库当前资料。`data/players.json` 仅为一次性迁移 / 本地初始化资料，不再作为正式读取来源，也不进入浏览器依赖图。修改资料立即生效，无需部署。
+姓名、初始 seed、rating 在 MongoDB `tournament_participants` 中，以 tournamentId 关联赛事。每场比赛的 a/b 只保存选手 ID 和位置 seed，读取时关联数据库当前资料。`data/players.json` 仅为一次性迁移 / 本地初始化资料，不再作为正式读取来源，也不进入浏览器依赖图。修改资料立即生效，无需部署。
 
-选手资料、首轮位置和比赛进度共用赛事 revision，单文档 CAS 写入使换人、替补状态、资料和录分不会被并发旧请求覆盖。替补由「本组名册中未占首轮位置的选手」计算，已淘汰选手仍占原首轮位置，不会误入替补区。新增选手分配稳定 UUID，固定组别，先进入替补。已有选手只能编辑姓名与 rating，不能更改 ID / 组别 / 初始 seed。
+选手资料、首轮位置和比赛进度共用赛事 revision；Atlas 通过整届 CAS 和跨集合事务保证换人、替补、资料和录分不会被并发旧请求覆盖。替补由「本组名册中未占首轮位置的选手」计算，已淘汰选手仍占原首轮位置，不会误入替补区。新增选手分配稳定 UUID，固定组别，先进入替补。已有选手只能编辑姓名与 rating，不能更改 ID / 组别 / 初始 seed。
 
 2026-09-24 已将 48 位资料迁入现有 Atlas，并在 `tournament_backups` 留存完整迁移前文档（actor: `migration:database-players`）；当时 revision 从 11 增至 12，所有比赛内容不变。本版本提供管理前端与 API；功能通过 Git → Vercel 随代码发布，数据库迁移本身不部署代码。
 
-迁移工具仅处理 `hachicats/edition-1`，不覆盖已迁入的名册。正式库缺少 rosters 时新版本拒绝服务，避免静默回退旧资料：
+迁移工具仅处理 `tournaments/hachicats-20260927`，不覆盖已迁入的名册。正式库缺少 rosters 时新版本拒绝服务，避免静默回退旧资料：
 
 ```sh
 node --env-file=.data/migration/atlas.env scripts/migrate-players.mjs --apply
@@ -146,7 +148,7 @@ node --env-file=.data/migration/atlas.env scripts/migrate-players.mjs --verify
 | `APP_ORIGIN` | `https://hachicats.ourtaiko.org`；影响写入来源检查和回调 |
 | `DEMO_MODE` | `false` |
 | `MONGODB_URI` | Secret；专用应用账号连接串，不能放进文档或日志 |
-| `MONGODB_DB` | `hachicats` |
+| `MONGODB_DB` | `tournaments` |
 | `SSO_ISSUER` | `https://sso.ourtaiko.org` |
 | `SSO_CLIENT_ID` / `SSO_CLIENT_SECRET` | 已登记的 HachiCats 客户端；密钥保存为 Secret |
 | SSO 后台的接口权限 | HachiCats 仅开启“允许网站令牌查询和撤销”；游戏、资料查询无需开启 |
@@ -155,7 +157,7 @@ node --env-file=.data/migration/atlas.env scripts/migrate-players.mjs --verify
 
 Production 凭证不复制到 Preview。Vercel 缺少 MongoDB 配置时拒绝运行数据库操作，不回退到临时 SQLite；正式 Atlas 缺少赛事或曲库文档时需要明确初始化 / 导入，不能自动生成演示数据。
 
-Atlas 使用专用应用账号 `hachicats_app`，仅有 `hachicats` 库读写权限。本次迁移已采用经授权的 `0.0.0.0/0` 网络规则适配 Vercel Hobby 动态出口，连接仍需 TLS 与数据库凭证。排障时先核对现有规则和目标集群，不要误删其他应用的网络配置或临时扩大账号权限。
+Atlas 原专用应用账号为 `hachicats_app`；切换数据库名后，应确认所用账号具有 `tournaments` 库读写权限（本次代码修改未更改 Atlas 授权）。本次迁移已采用经授权的 `0.0.0.0/0` 网络规则适配 Vercel Hobby 动态出口，连接仍需 TLS 与数据库凭证。排障时先核对现有规则和目标集群，不要误删其他应用的网络配置或临时扩大账号权限。
 
 ### 添加或移除管理员
 
@@ -213,13 +215,13 @@ Ban 只移除对方所选的一首，不全局删除另一方保留的同名曲�
 
 ### 更新曲库
 
-网页目前没有编辑入口。正式配置在 Atlas `hachicats.song_libraries` 的 `edition-1` 文档中维护。修改前备份完整原文档到私有目录，确认目标组别、用途、`songID` 和 `difficultyIndex`，用 `parseSongLibrary` 校验完整候选配置。
+网页目前没有编辑入口。正式配置在 Atlas `tournaments.song_libraries` 的 `hachicats-20260927` 文档中维护。修改前备份完整原文档到私有目录，确认目标组别、用途、`songID` 和 `difficultyIndex`，用 `parseSongLibrary` 校验完整候选配置。
 
 保存配置后，下一次后端读取即可生效；观众通常随 30 秒刷新更新，管理员重新打开比赛以读取新曲库。无需重新部署。不能在已录分后随意改变稳定 ID 对应的曲目，否则已有成绩会被解释成另一首歌。
 
 指定曲仍应只保存到数据库。真实配置不能进入 README、测试快照、种子脚本、错误信息或提交说明。旧 Git 历史 / 历史部署中可能已有过去配置；迁移不消除既有泄露。如需防范已看过旧源码的人，由主办方更换未提交过的新指定曲。
 
-`import-song-library.mjs` 是一次性创建 / 核对工具，不是更新工具：仅允许 `edition-1`，已有内容不同时会拒绝覆盖。以下路径是占位路径，执行前替换为私有文件：
+`import-song-library.mjs` 是一次性创建 / 核对工具，不是更新工具：仅允许 `hachicats-20260927`，已有内容不同时会拒绝覆盖。以下路径是占位路径，执行前替换为私有文件：
 
 ```sh
 node --env-file=.data/private-atlas.env scripts/import-song-library.mjs .data/private-song-library.json --apply
@@ -234,7 +236,7 @@ node --env-file=.data/private-atlas.env scripts/import-song-library.mjs .data/pr
 
 重置三个组全部 48 场的选曲、Ban、成绩、轮空、胜者和晋级状态，恢复数据库名册前 16 位对应的初始对阵；新增选手仍为替补。保留选手资料、曲库、管理员绑定及会话。演示模式确认文字为 `重置演示赛事`，只操作 `demo`。
 
-后端先保存完整原始赛事文档，再以原 revision 条件更新为当前 revision + 1。备份失败就不重置；竞态失败可能留下一条未用于重置的备份，但不会覆盖其他人刚录入的成绩。旧录分窗口提交会返回 409。网络中断时先重新读取赛况，不要假定失败而连续提交。
+Atlas 后端在同一事务中保存完整赛事 snapshot，再以原 revision 条件更新为当前 revision + 1，并提交全部场次。备份失败就不重置；事务冲突不会覆盖其他人刚录入的成绩。本地 SQLite/D1 仍可能留下一条未用于重置的备份。旧录分窗口提交会返回 409。网络中断时先重新读取赛况，不要假定失败而连续提交。
 
 ### 备份与恢复
 
@@ -249,7 +251,7 @@ node --env-file=.data/private-atlas.env scripts/import-song-library.mjs .data/pr
 5. 以 `_id + 当前 revision` 条件更新，并同时写入外层 revision 与 `body` 内 revision。发生冲突就停止，重新评估当前数据，不做无条件覆盖。
 6. 读取数据库、公开接口和管理页面核对内容，再恢复录分。不要修改曲库、绑定或会话来“配合”恢复。
 
-重新部署、重启函数或回滚代码都不会自动回滚 MongoDB。禁止通过删除 `tournaments/edition-1` 来重置 / 恢复。
+重新部署、重启函数或回滚代码都不会自动回滚 MongoDB。禁止通过删除 `tournaments/hachicats-20260927` 来重置 / 恢复。
 
 ## 6. 开发、验证与部署
 
@@ -281,7 +283,7 @@ npm run dev
 | UI | 手机 390px 视口、五个 tab、独立 `/login`、登录错误 / 退出、比赛详情换人及草稿清空；管理员 / 观众已结束比赛的逐曲记录运行 `node tests/match-summary.test.mjs`；检查控制台，不以构建通过代替浏览器检查 |
 | 纯文档 | 核对代码事实、文件链接、命令脚本和差异；不启动服务或操作生产库 |
 
-Atlas 适配器变更可运行下面的集成测试。优先使用隔离测试库；必须事先明确目标库。该脚本会写入唯一命名的临时记录，并仅删除本次创建的记录，不是纯只读检查：
+Atlas 适配器变更可运行下面的集成测试。优先使用隔离测试库；必须事先明确目标库。该脚本自动创建 `ott_test_` 加随机 ID 的隔离库，忽略环境中配置的生产库名，结束后只删除该测试库，不是纯只读检查：
 
 ```sh
 node --env-file=.data/private-test-atlas.env tests/mongodb.test.mjs
@@ -313,7 +315,7 @@ node --env-file=.data/private-test-atlas.env tests/mongodb.test.mjs
 | 503「无法验证登录权限」 | 检查 SSO 可用性、现有应用凭据及网站令牌接口权限；不得回退旧管理员名单 |
 | 409 | 新录分窗口：同场 / 参赛选手改变需重开本场；若提示「其他比赛正在更新」，保留输入并稍后重试。旧页面仍按整届版本检查，刷新网页升级；不能强制覆盖 |
 | 503 / 数据库连接失败 | MongoDB Secret、数据库名、账号权限、Atlas 网络规则、服务端日志；不要输出连接串 |
-| 健康检查正常但曲库 503 | `song_libraries/edition-1` 是否存在且满足 schema；health 只做 ping |
+| 健康检查正常但曲库 503 | `song_libraries/hachicats-20260927` 是否存在且满足 schema；health 只做 ping |
 | 曲目显示编号或星级未知 | 上游曲目接口、songID、对应 level 字段与 30 秒缓存；不要编造难度 |
 | 已部署但仍是旧内容 | 对应 commit 是否 Ready、生产域名 alias、浏览器是否刷新；数据库配置修改与代码部署分开检查 |
 | 重置请求断线 | 先读当前 revision 和赛况，再查备份；存在备份不一定代表重置成功 |
@@ -340,7 +342,7 @@ node --env-file=.data/private-test-atlas.env tests/mongodb.test.mjs
 
 ## 10. 赛事平台与共享登录（本地实现，尚未发布）
 
-`/` 是 OurTaiko 赛事目录，条目定义于 `lib/tournaments.ts`。原八猫杯完整页面迁至 `/hachicats/20260927`，保留五个页签、比赛管理和总结。此改动不迁移数据库、不修改正式赛事键，不改变现有 API 的八猫杯归属。新增赛事必须提供独立的数据读取与服务端权限检查；目录条目本身不会创建赛事或授权。
+`/` 是 OurTaiko 赛事目录，条目定义于 `lib/tournaments.ts`。原八猫杯完整页面迁至 `/hachicats/20260927`，保留五个页签、比赛管理和总结。页面迁移本身不修改数据库；赛事键变更见下方迁移流程，不改变现有 API 的八猫杯归属。新增赛事必须提供独立的数据读取与服务端权限检查；目录条目本身不会创建赛事或授权。
 
 根布局 `app/layout.tsx` 挂载 `components/auth/sso-context.tsx` 的 `SsoProvider`。所有赛事客户端可调用 `useSSO()` 共享身份、加载 / 错误状态、刷新、SSO 跳转、本地演示登录及退出；页面不再各自查询 session。窗口获得焦点时重新验证身份；验证失败清除客户端身份并显示重试入口。服务端仍逐请求向 SSO 验证权限。`user.admin` 仍为现有 HachiCats Application 角色，不可用于授权其他赛事。
 
@@ -350,9 +352,9 @@ node --env-file=.data/private-test-atlas.env tests/mongodb.test.mjs
 
 ## 11. 八猫杯后端作用域迁移（本地实现，尚未发布）
 
-这是代码层面的原位适配，无须运行生产数据迁移脚本。不要复制 `edition-1` 为新的公共 ID，不要删除、初始化或重新保存现有正式文档来完成迁移。
+正式赛事 ID 由路径的系列和届次以 `-` 连接。旧 `edition-1` 数据必须先按下方流程迁移，不能重新初始化。
 
-- `lib/tournaments.ts` 是公开目录；`lib/tournament-scope.ts` 是服务端允许列表，明确绑定 `hachicats-20260927` → 正式 `edition-1` / 演示 `demo`。赛事与曲库沿用相同的旧键，重置备份的 `tournamentId` 也保留旧存储键，以兼容恢复流程。
+- `lib/tournaments.ts` 是公开目录；`lib/tournament-scope.ts` 是服务端允许列表，明确绑定 `hachicats-20260927` → 正式 `hachicats-20260927` / 演示 `demo`。赛事、曲库与重置备份的 `tournamentId` 统一使用该正式 ID；旧键通过事务脚本迁移。
 - `lib/tournament-api/` 保存共用处理器。新动态路由先解析已注册赛事，再将同一 scope 传入赛况读写、曲库读取、权限和重置。未知 ID 返回 404，发生在身份验证、数据库读取及初始化之前。旧 API 固定解析为八猫杯，复用这些处理器，因此旧页面仍可工作且与新页面共用 CAS。
 - 正式数据、名册 ID、比赛 ID、曲目内部 ID、songID / difficultyIndex、revision 和比赛进度均不因部署而改变。原有 hydration / legacy special 引用展示兼容保持不变；读取不写回数据库。
 - 每次管理请求仍实时调用原 SSO introspect；`requireTournamentAdmin` 仅为八猫杯显式接受旧客户端 isAdmin。应用显示名可更改，客户端 ID、Secret、回调和 Cookie 保持兼容。`Viewer.id` 为稳定 SSO 用户 ID；浏览器使用 `/access` 的 `canManage`，不将全局 `user.admin` 当所有赛事的授权。同一账号重新验证权限不会卸载编辑器；失效身份或权限错误会停止显示管理 UI。
@@ -360,8 +362,87 @@ node --env-file=.data/private-test-atlas.env tests/mongodb.test.mjs
 
 验证覆盖：`tests/tournament-scope.test.mjs` 使用临时 SQLite 和伪 SSO / 曲名服务，检查新旧接口响应一致、读前读后赛事和曲库原始字节一致、未知 ID 不发生 I/O、匿名 / 普通用户 / 实时撤权 / SSO 故障 / Origin 拒绝、旧新客户端相互版本冲突，以及相同 match ID 的其他记录不受影响。`tests/songs.test.mjs` 的全部 64 种指定曲公布组合、并发录分、选手管理和重置测试已改为经过实际 scoped route，浏览器依赖测试排除 scope / access / 存储与私有曲库模块。
 
-发布时使用既有 Git → Vercel 流程。发布前保存私有只读快照，发布后比对新旧公开 API 并核对数据库 revision / 原始记录；验收不向正式比赛录分或重置。无需变更 Atlas 数据库名、SSO Client ID 或部署项目。尚未发布时，本地测试不代表生产已完成切换。
+发布时使用既有 Git → Vercel 流程。发布前保存私有只读快照，发布后比对新旧公开 API 并核对数据库 revision / 原始记录；验收不向正式比赛录分或重置。赛事路由迁移本身无需变更 Atlas 数据库名、SSO Client ID 或部署项目；后续按用户要求将目标数据库名改为 `tournaments`，须同步 `MONGODB_DB`。尚未发布时，本地测试不代表生产已完成切换。
 
 ### 分层 API 地址
 
-标准前缀为 `/api/tournaments/[series]/[edition]`，八猫杯为 `/api/tournaments/hachicats/20260927`，与页面路径保持一致。服务端按目录中的 `seriesSlug` 和 `edition` 精确匹配，解析到内部 ID `hachicats-20260927`，再读取原 `edition-1` / `demo` 数据；不拼接 URL 参数生成数据库键。未知系列或届次均返回 404。此前未发布的扁平 `/api/tournaments/hachicats-20260927` 路由已移除，最早的单赛事兼容 API 保持原样。
+标准前缀为 `/api/tournaments/[series]/[edition]`，八猫杯为 `/api/tournaments/hachicats/20260927`，与页面路径保持一致。服务端按目录中的 `seriesSlug` 和 `edition` 精确匹配，解析到内部 ID `hachicats-20260927`，再读取原 `hachicats-20260927` / `demo` 数据；不拼接 URL 参数生成数据库键。未知系列或届次均返回 404。此前未发布的扁平 `/api/tournaments/hachicats-20260927` 路由已移除，最早的单赛事兼容 API 保持原样。
+
+### 数据库名更新为 tournaments
+
+运行时仍要求显式提供 `MONGODB_DB`，不回退到旧库。本次配置值为 `tournaments`；生产需在 Vercel 设置 `MONGODB_DB=tournaments` 并重新部署，本地 `.env.local` 不会自动更新线上环境。`scripts/migrate-players.mjs` 的目标库校验也改为 `tournaments`，赛事键现为 `hachicats-20260927`。不要为了改名重新执行初始化 / 选手迁移；此改动没有复制、删除或重置数据库记录。确认已有数据位于目标库后再切换运行环境。
+
+### 正式赛事 ID 迁移：edition-1 → hachicats-20260927
+
+后续赛事统一使用 `tournamentId(seriesSlug, edition)` 生成 ID，规则为 `系列-YYYYMMDD`，例如页面 `/hachicats/20260927` 对应 `hachicats-20260927`。服务端仍只接受已注册赛事；不允许任意 URL 直接访问数据库。当前八猫杯本地演示键仍为 `demo`。
+
+本次代码需要一次真实数据迁移，不能只部署代码。先暂停旧版本的赛事写入并保存完整私有备份，在 `tournaments` 库运行下面命令，再发布使用新键的代码。旧版服务在迁移后无法读取旧键，应在维护窗口内切换。
+
+```sh
+node --env-file=<私有环境文件> scripts/migrate-tournament-id.mjs --apply
+node --env-file=<私有环境文件> scripts/migrate-tournament-id.mjs --verify
+```
+
+脚本使用 Atlas 事务，先把原赛事、私有曲库和受影响备份 ID 归档到 `tournament_id_migrations`，然后修改 `tournaments` / `song_libraries` 的 `_id` 和历史 `tournament_backups.tournamentId`。保留 body 原始字符串、revision、选手 / 比赛 / 曲目 ID、比分和曲库配置。任一步失败均回滚；目标记录已存在但旧记录仍在时拒绝覆盖；完整迁移后重复执行不写入。归档集合包含私有曲库，须与原数据库同样保护，纳入私有备份，不提供公开 API。会话与 demo 不变。
+
+`import-mongodb.mjs` 是历史 SQLite 导入工具，仍接受旧 `edition-1` 快照，仅用于空的隔离恢复库；恢复后补齐原私有曲库，再运行 ID 迁移，不能对当前生产库重复执行。新的曲库导入文件使用 `id: hachicats-20260927`。
+
+2026-09-28 已执行 Atlas 数据迁移。现场确认目标 `tournaments` 库原为空，原始数据仍在 `hachicats`，因此使用事务将原库五个集合迁入目标库，同时将赛事 / 曲库键改为 `hachicats-20260927` 并转换历史备份引用。迁移时 revision 为 168，所有目标记录按原始内容逐项核对通过（仅改变上述键）；复制了会话 TTL 索引。原库保留，未删除或重置。
+
+完整迁移前 EJSON 备份位于本维护机忽略目录 `.data/migration/atlas-before-id-migration-8d7521d2-9edd-436e-9df1-4218e3319b48.ejson`，权限 600，包含私有数据，不能提交或公开。本次是跨库复制，未运行原位脚本的 `--apply`，因此目标库没有 `tournament_id_migrations` 归档；原库和本地完整备份承担此次回退来源。原位脚本的 `--verify` 用于确认目标键已切换。
+
+Vercel 应用发布和 Production 环境变量尚未在本次操作中变更。上线须使用新键代码及 `MONGODB_DB=tournaments`；若旧库在迁移后继续产生写入，切换前必须暂停写入并比对两库，不能直接覆盖新库或丢弃旧库新增赛况。
+
+## 12. 数据结构原始规划（实施路线已调整）
+
+参见 [MongoDB 原生字段与集合拆分规划](MONGODB-DATA-MODEL-PLAN.md)。这是历史设计讨论；用户随后要求直接落到最终分集合结构，实施结果见第 13 节。
+
+## 13. Atlas 分集合结构（schemaVersion 3）
+
+按用户要求直接从旧 body 字符串迁到最终结构，没有 schemaVersion 2 的中间发布。`lib/mongo-tournaments.ts` 实现 Atlas repository；`lib/tournament-documents.ts` 做严格校验和无损拆分 / 重组；`lib/mongo-schema.ts` 配置约束和索引。公开目录及权限注册表仍在代码中，本次未引入数据库建赛后台或新增赛制。
+
+### 当前数据模型与读写
+
+- `tournaments`：赛事 `_id` 不变，仅保存 schemaVersion、revision、updatedAt、组别及记录计数，可设置 maintenance 阻断新后端写入。
+- `tournament_participants`：每位选手一条原生记录，包含 tournamentId、playerId、groupId、rosterOrder、name、seed、rating。
+- `matches`：每场比赛一条，包含 tournamentId、matchId、matchOrder 和原有场次字段。比分、选曲、Ban 仍嵌入该场。场次 seed 与选手初始 seed 分开保留。
+- 两个子集合物理 `_id` 是 `[tournamentId, 业务ID]` 的 JSON 数组字符串，消除拼接碰撞；对外的 playerId / matchId 不变。所有子集合操作必须包含 tournamentId。
+- 私有 `song_libraries` 不改写。新的 `tournament_backups` 使用 schemaVersion 3 + 原生 snapshot，不再写 body；历史备份按原格式保留。迁移归档 `tournament_schema_migrations.source` 为回退保留原始 body，不能公开。
+- 全量读取使用 snapshot 事务，缺少子记录、未知版本或跨赛事引用均拒绝服务。API 与 SQLite/D1 的 `TournamentRow.body` 仍是内部兼容 DTO，Atlas 存储没有该字符串。
+- 规则计算仍在应用层，先读一致快照、计算，再以该整届 revision 在写事务内重新检查并提交。中途其他写入会使 CAS 失败，因此旧规则计算不能覆盖新状态；新客户端按现有机制重读再计算。
+- 提交只替换变化的选手 / 比赛文档，且和全局版本一起提交；晋级多场同步生效。比赛唯一索引覆盖 `(tournamentId, group, round, index)`，目前按八猫杯规则使用。
+- Atlas 重置在同一事务写完整 snapshot 并更新所有场次；备份或任何场次写入失败都回滚。本地 SQLite/D1 保留原先的先备份再整届 CAS。
+- validators 拒绝旧后端向 schemaVersion 3 文档重新写入 body。未知新 schema 不能回退读旧 body。maintenance 字段仅被新代码识别，不能视为对所有历史部署的写入封锁。
+
+### 迁移工具
+
+以下工具都针对显式 MONGODB_DB 和赛事 ID；apply 每次先保存全库快照、索引和集合选项到忽略目录 `.data/migration/`，文件权限 600。只对目标赛事做事务转换，保留原始 revision 和业务字段，不调用 hydration 改写旧指定曲引用。
+
+```sh
+node --env-file=.env.local scripts/migrate-tournament-schema.mjs --dry-run hachicats-20260927
+node --env-file=.env.local scripts/migrate-tournament-schema.mjs --apply hachicats-20260927
+node --env-file=.env.local scripts/migrate-tournament-schema.mjs --verify hachicats-20260927
+```
+
+先核实活动数据库和源版本，暂停相关赛事写入或在尚未切换的目标库迁移。事务提交前要求源版本和原始 body 哈希仍等于完整备份；目标已有子记录则拒绝覆盖。已为 schemaVersion 3 时，apply 仅执行读取校验，不重新初始化。生产凭证不能用于 npm 的本地回归测试；Atlas 集成测试会自行创建隔离库。
+
+### 回退与发布边界
+
+数据库迁移和 Vercel 发布是两件事。旧后端不能读取 schemaVersion 3；必须发布本次代码并设置正确的 MONGODB_DB 才能切换到新库。原 hachicats 库保留时，原站可以继续读旧库，但它若有新增写入，不会自动同步到新库，切换前必须重新核对，不得用旧快照覆盖新比分。
+
+结构回退必须在维护期间执行：备份当前状态，从一致快照重组最新 TournamentRow，再在事务中替换为 legacy 文档并移除该赛事子记录；原生 snapshot 可作为重组来源。未发生业务写入时可使用归档原始字节；发生写入后不得直接恢复迁移前快照。当前未提供自动结构回退命令，需受控执行并验证。业务赛果恢复仍必须使用当前 revision + 1，不能借结构回退降低版本。
+
+验证包含原有规则 / 权限 / 指定曲边界 / 并发 / 重置测试、原生结构往返测试，以及隔离 Atlas 上真实事务、机台竞争、晋级、写失败回滚、备份失败、旧写入拒绝与会话测试。具体线上执行结果记录在本节末尾。
+
+### 本次执行记录：2026-09-28
+
+已完成 `tournaments` 数据库中 `hachicats-20260927` 的实际 schemaVersion 3 迁移。记录为 1 条元信息、50 位选手、48 场比赛；revision 保持 168。迁移前后按重组后的完整业务对象比较一致，原始 body 还保存在私有迁移归档；song_libraries 内容未改变。原 hachicats 库未修改，最终核对时其版本与备份仍一致。
+
+备份文件仅在当前维护机，已验证权限为 600：
+
+- 新旧两库完整预备份：`.data/migration/atlas-before-schema3-a1528ee0-061c-4bfa-93d1-887d56dcf7cf.ejson`。
+- apply 前目标库完整快照（含索引和集合选项）：`.data/migration/atlas-schema3-aa226389-78e3-46ab-aaa2-0fd5ed870f25.ejson`。
+
+通过：npm test、test:reset、test:storage、test:admins、typecheck、lint、build:server，以及自动独立 Atlas 测试库中的真实事务集成测试。最后用本地构建的实际后端处理器只读访问正式 Atlas，公开赛况 200、匿名私有详情 401、完整状态与备份一致；这不是 Vercel 线上新版本验收。
+
+Vercel 查询到当前 production 仍为 `b50e1fd`，本次未提交、推送或部署。网站仍需发布当前后端并设置 `MONGODB_DB=tournaments` 后使用新结构；发布前应再次确认旧库没有新增成绩。旧版本不支持新结构，不能仅更改线上数据库名。

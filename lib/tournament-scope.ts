@@ -1,10 +1,9 @@
 import { RuleError } from './rules';
-import { HACHICATS_TOURNAMENT_ID } from './tournaments';
+import { HACHICATS_TOURNAMENT_ID, tournaments, tournamentId } from './tournaments';
 
 /** Server registry. Public IDs never become database keys directly. */
 const definitions = {
   [HACHICATS_TOURNAMENT_ID]: {
-    storageId: 'edition-1',
     demoStorageId: 'demo',
     format: 'hachicats-single-elimination',
     authorization: 'existing-hachicats-sso-role',
@@ -28,7 +27,10 @@ export function tournamentDefinition(tournamentId: string) {
 
 export function tournamentStorageId(scope: TournamentScope) {
   const definition = tournamentDefinition(scope.tournamentId);
-  return scope.demo ? definition.demoStorageId : definition.storageId;
+  const event = tournaments.find(event => event.id === scope.tournamentId);
+  if (!event || event.id !== tournamentId(event.seriesSlug, event.edition))
+    throw new Error('Tournament ID must match its registered path');
+  return scope.demo ? definition.demoStorageId : event.id;
 }
 
 /** Compatibility only: old APIs and maintenance tools address this event. */
