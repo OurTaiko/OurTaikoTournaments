@@ -12,7 +12,7 @@ await mkdir('.data', { recursive: true });
 const dir = await mkdtemp(resolve('.data/mongodb-test-'));
 const clients = [0, 1].map(() => new MongoClient(process.env.MONGODB_URI, { maxPoolSize: 5, serverSelectionTimeoutMS: 10000 }));
 try {
-  await build({ stdin: { contents: `export * from './lib/mongodb'; export * from './lib/mongo-schema'; export * from './lib/migrate-tournament-schema'; export * from './lib/tournament-documents'; export * from './lib/tournament-seed'; export * from './lib/tournament'; export * from './lib/rules'; export * from './lib/reset-tournament'; export {demoSongLibrary} from './lib/demo-song-library';`, resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', external: ['mongodb'], outfile: dir + '/mongodb.cjs' });
+  await build({ stdin: { contents: `export * from './lib/mongodb'; export * from './lib/mongo-schema'; export * from './lib/migrate-tournament-schema'; export * from './lib/tournament-documents'; export * from './lib/tournament-seed'; export * from './lib/tournament'; export * from './lib/rules'; export * from './lib/reset-tournament'; export {demoSongLibrary} from './lib/demo-song-library'; export {makeCenturyLink} from './lib/centurylink'; export {applyClPlayerAction} from './lib/centurylink-rules';`, resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', external: ['mongodb'], outfile: dir + '/mongodb.cjs' });
   const api = (await import(dir + '/mongodb.cjs')).default;
   const db = clients[0].db(name);
   const adapters = clients.map(c => api.mongoDatabase(async () => c.db(name)));
@@ -94,7 +94,23 @@ try {
   // Lost child data must fail closed; never initialize an empty tournament over it.
   await db.collection('matches').deleteOne({ tournamentId: 'other' });
   await assert.rejects(adapters[0].getTournament('other'));
-  console.log('PASS isolated Atlas migration/idempotency, native collections, old-writer rejection, competing stations/CAS, atomic advancement, write failure rollback, reset+backup transaction, scope isolation and sessions.');
+  // CenturyLink roster reorder/removal swaps rosterOrder under a unique index; commits must not collide.
+  const cl = 'centurylink-atlas-test';
+  let clState = api.makeCenturyLink();
+  await adapters[0].createTournament({ id: cl, revision: 0, body: JSON.stringify(clState) });
+  const clWrite = async action => {
+    const next = api.applyClPlayerAction(clState, action);
+    assert(await adapters[0].updateTournament({ id: cl, revision: next.revision, body: JSON.stringify(next) }, clState.revision));
+    clState = JSON.parse((await adapters[1].getTournament(cl)).body);
+    assert.deepEqual(clState, next);
+  };
+  for (const n of ['A', 'B', 'C']) await clWrite({ type: 'add', name: n });
+  await clWrite({ type: 'move', id: clState.players[0].id, offset: 1 });
+  assert.deepEqual(clState.players.map(p => p.name), ['B', 'A', 'C']);
+  await clWrite({ type: 'remove', id: clState.players[0].id });
+  assert.deepEqual(clState.players.map(p => p.name), ['A', 'C']);
+  assert.equal(await db.collection('tournament_participants').countDocuments({ tournamentId: cl }), 2);
+  console.log('PASS isolated Atlas migration/idempotency, native collections, old-writer rejection, competing stations/CAS, atomic advancement, write failure rollback, reset+backup transaction, scope isolation, sessions and CenturyLink roster reorder/removal.');
 } finally {
   await clients[0].db(name).dropDatabase(); // This unique database was created by this test only.
   await Promise.all(clients.map(c => c.close()));

@@ -407,7 +407,7 @@ Vercel 应用发布和 Production 环境变量尚未在本次操作中变更。�
 - 私有 `song_libraries` 不改写。新的 `tournament_backups` 使用 schemaVersion 3 + 原生 snapshot，不再写 body；历史备份按原格式保留。迁移归档 `tournament_schema_migrations.source` 为回退保留原始 body，不能公开。
 - 全量读取使用 snapshot 事务，缺少子记录、未知版本或跨赛事引用均拒绝服务。API 与 SQLite 的 `TournamentRow.body` 仍是内部兼容 DTO，Atlas 存储没有该字符串。
 - 规则计算仍在应用层，先读一致快照、计算，再以该整届 revision 在写事务内重新检查并提交。中途其他写入会使 CAS 失败，因此旧规则计算不能覆盖新状态；新客户端按现有机制重读再计算。
-- 提交只替换变化的选手 / 比赛文档，且和全局版本一起提交；晋级多场同步生效。比赛唯一索引覆盖 `(tournamentId, group, round, index)`，目前按八猫杯规则使用。
+- 提交只替换变化的选手 / 比赛文档，且和全局版本一起提交；晋级多场同步生效。变化或删除的子文档在同一个有序 bulkWrite 中先删除再插入，避免顺序调整时触发 `rosterOrder` 等唯一索引冲突（此前世纪汇调整 / 移除选手会因 E11000 返回 503）。比赛唯一索引覆盖 `(tournamentId, group, round, index)`，目前按八猫杯规则使用。
 - Atlas 重置在同一事务写完整 snapshot 并更新所有场次；备份或任何场次写入失败都回滚。本地 SQLite 保留原先的先备份再整届 CAS。
 - validators 拒绝旧后端向 schemaVersion 3 文档重新写入 body。未知新 schema 不能回退读旧 body。maintenance 字段仅被新代码识别，不能视为对所有历史部署的写入封锁。
 

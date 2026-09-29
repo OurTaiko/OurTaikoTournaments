@@ -72,13 +72,17 @@ export function mongoTournamentRepository(getDb: () => Promise<Db>): Pick<Databa
         ['matches', before.matches, candidate.matches],
       ] as const) {
         const previousRows = new Map<string, Document>(oldRows.map(r => [r._id, r]));
-        const operations = newRows.filter(r => !isDeepStrictEqual(previousRows.get(r._id), r))
-          .map(document => ({ replaceOne: { filter: { _id: document._id, tournamentId: row.id }, replacement: document, upsert: true } }));
-        const target = db.collection<Document & { _id: string }>(name);
-        if (operations.length) await target.bulkWrite(operations, { session, ordered: true });
+        const changed = newRows.filter(r => !isDeepStrictEqual(previousRows.get(r._id), r));
         const nextIds = new Set(newRows.map(r => r._id));
-        const removed = oldRows.filter(r => !nextIds.has(r._id)).map(r => r._id);
-        if (removed.length) await target.deleteMany({ tournamentId: row.id, _id: { $in: removed } }, { session });
+        // Reordering or removing rows can swap values covered by unique indexes (e.g. rosterOrder),
+        // so clear every changed or removed row before inserting the new versions.
+        const cleared = [...oldRows.filter(r => !nextIds.has(r._id)), ...changed.filter(r => previousRows.has(r._id))].map(r => r._id);
+        const target = db.collection<Document & { _id: string }>(name);
+        const operations = [
+          ...(cleared.length ? [{ deleteMany: { filter: { tournamentId: row.id, _id: { $in: cleared } } } }] : []),
+          ...changed.map(document => ({ insertOne: { document } })),
+        ];
+        if (operations.length) await target.bulkWrite(operations, { session, ordered: true });
       }
       return true;
     });
