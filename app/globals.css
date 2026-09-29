@@ -1760,3 +1760,5 @@ button.champion-card:hover { border-color: #0071e3; box-shadow: 0 4px 20px #866d
 }
 .cl-toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 100; max-width: calc(100vw - 32px); padding: 10px 16px; border-radius: 10px; font-size: 14px; box-shadow: 0 8px 24px #00000018; background: #ecfdf3; color: #067647; border: 1px solid #abefc6; }
 .cl-toast.error { background: #fef3f2; color: #b42318; border-color: #fecdca; }
+.cl-song-link { color: inherit; text-decoration: none; }
+.cl-song-link:hover, .cl-song-link:focus-visible { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }

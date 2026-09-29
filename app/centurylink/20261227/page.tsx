@@ -14,7 +14,7 @@ import ResetTournament from "@/components/reset-tournament";
 import ClMatchEditor from "@/components/centurylink/cl-match-editor";
 import ClMatchSummary from "@/components/centurylink/cl-match-summary";
 import { ClPlayerManager, ClRankingManager } from "@/components/centurylink/cl-admin";
-import { clSongName, clSongNumber } from "@/components/centurylink/cl-songs";
+import { clSongName, clSongNumber, songWikiUrl } from "@/components/centurylink/cl-songs";
 import { loginHref } from "@/lib/auth-navigation";
 import { CENTURYLINK_TOURNAMENT_ID, tournamentApiPath } from "@/lib/tournaments";
 import { difficultyNames, type Song } from "@/lib/songs";
@@ -375,7 +375,9 @@ export default function CenturyLinkPage() {
                       <div className="song-row" key={id}>
                         <span className="song-index">{String(clSongNumber(id)).padStart(2, "0")}</span>
                         <Music2 size={20} />
-                        <span className="song-title">{song?.title ?? "曲目信息加载中"}{song && song.difficultyIndex !== 4 && <small>{difficultyNames[song.difficultyIndex]}</small>}</span>
+                        <span className="song-title">{song
+                          ? <a className="cl-song-link" href={songWikiUrl(song.songID)} target="_blank" rel="noreferrer">{song.title}</a>
+                          : "曲目信息加载中"}{song && song.difficultyIndex !== 4 && <small>{difficultyNames[song.difficultyIndex]}</small>}</span>
                         <span className="stars">★ {song?.stars ?? "—"}</span>
                       </div>
                     );
@@ -390,7 +392,9 @@ export default function CenturyLinkPage() {
                 {clDesignatedKeys.map(key => (
                   <div className="song-row" key={key}>
                     <span className="song-index"><Trophy size={15} /></span>
-                    <span className="song-title">{clDesignatedLabels[key]}<small>{catalog[clSpecialId(key)] ? clSongName(clSpecialId(key), catalog) : "现场公布"}</small></span>
+                    <span className="song-title">{clDesignatedLabels[key]}<small>{catalog[clSpecialId(key)]
+                      ? <a className="cl-song-link" href={songWikiUrl(catalog[clSpecialId(key)].songID)} target="_blank" rel="noreferrer">{clSongName(clSpecialId(key), catalog)}</a>
+                      : "现场公布"}</small></span>
                     <span className="stars">{catalog[clSpecialId(key)] ? `★ ${catalog[clSpecialId(key)].stars ?? "—"}` : ""}</span>
                   </div>
                 ))}

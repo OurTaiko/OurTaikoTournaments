@@ -459,6 +459,7 @@ Vercel 查询到当前 production 仍为 `b50e1fd`，本次未提交、推送或
 
 ### 公开与权限
 
+- 「比赛曲库」页的曲名链接到 `https://wiki.ourtaiko.org/songs/{songID}`（新标签页打开）；指定曲 / 决胜曲只在公开后才显示名称和链接。
 - 未开始（未公布）的比赛不公开 Ban / 选曲 / 比分；排位分数在第一次保存后公开。指定曲与决胜曲只有在已公布比赛的曲目表里出现后才进入公开曲库（排位赛指定曲在排位开始后公开）；管理员打开比赛时可提前看到本场指定曲。
 - 管理权限：在 `lib/tournament-scope.ts` 以 `ourtaiko-tournaments-sso-role` 显式登记，与八猫杯使用同一 SSO Client role（Is admin）。如需分开授权，需要新的角色来源，不能靠前端判断。
 - 所有写入沿用 Origin、管理员、整届 revision CAS；比赛写入另校验 `matchRevision`，其他场次并发时重放。

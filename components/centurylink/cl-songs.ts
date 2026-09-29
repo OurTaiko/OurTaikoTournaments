@@ -8,3 +8,5 @@ export function clSongName(id: string, catalog: SongCatalog) {
 }
 /** Organiser numbering: `cl-7` is 曲 7. */
 export const clSongNumber = (id: string) => Number(id.slice(3));
+/** OurTaiko wiki page for a chart's song. */
+export const songWikiUrl = (songID: number) => `https://wiki.ourtaiko.org/songs/${songID}`;
