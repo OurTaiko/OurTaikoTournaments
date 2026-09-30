@@ -42,6 +42,34 @@ export function clRegularCount(m: Pick<ClMatch, "id">) {
   return kind === "designated" ? 3 : kind === "points" ? 4 : 2;
 }
 
+/** Draw one final-stage song after the current songs are scored, stopping once decided. */
+export function clCanDrawNext(m: Pick<ClMatch, "id" | "scores">) {
+  return clDefinition(m.id).kind === "points" && m.scores.length < clDrawCount(m.id) &&
+    m.scores.every(s => s.a !== null && s.b !== null) && clDecision(m) === null;
+}
+
+function validateClDraw(previous: ClMatch, scores: ClMatch["scores"]) {
+  // Keep already stored sheets (including the former four-song draw) intact.
+  insist(scores.length >= previous.scores.length && previous.scores.every((s, i) => s.songId === scores[i].songId),
+    "已抽取的曲目不能删除、替换或调整顺序。");
+  const added = scores.slice(previous.scores.length);
+  insist(added.length <= 1, "决赛曲目须逐首抽取，每次只能增加一首。");
+  if (!added.length) return;
+  const before = { ...previous, scores: scores.slice(0, -1) };
+  if (before.scores.length) insist(previous.status === "live", "请先开始比赛，再抽取下一首。");
+  const song = added[0].songId;
+  if (before.scores.length < clDrawCount(previous.id)) {
+    insist(clCanDrawNext(before), "请录完当前曲目的双方成绩；已决出胜负时不能继续抽曲。");
+    insist(!isSpecial(song), "前四首须从决赛阶段曲库逐首抽取。");
+  } else {
+    insist(before.scores.every(s => s.a !== null && s.b !== null) && clDecision(before) === null,
+      "比分持平且当前成绩完整时才能加入决胜曲或加赛曲。");
+    insist(before.scores.length === clDrawCount(previous.id)
+      ? song === clSpecialId(clDesignatedFor(previous.id)!) : !isSpecial(song),
+      "四首后同分须先演奏本场决胜曲，之后同分再抽取加赛曲。");
+  }
+}
+
 export function applyClAction(t: CenturyLink, id: string, action: ClAction): CenturyLink {
   const next = structuredClone(t);
   const m = next.matches.find(match => match.id === id);
@@ -55,9 +83,9 @@ export function applyClAction(t: CenturyLink, id: string, action: ClAction): Cen
     clAdvance(next, m);
   } else {
     const definition = clDefinition(id);
-    const locked = m.status === "live";
+    const locked = m.status === "live" || (definition.kind === "points" && m.scores.length > 0);
     if (action.bans !== undefined) {
-      insist(!locked || JSON.stringify(action.bans) === JSON.stringify(m.bans), "比赛开始后不能修改 Ban 曲。");
+      insist(!locked || JSON.stringify(action.bans) === JSON.stringify(m.bans), "比赛开始或决赛抽曲后不能修改 Ban 曲。");
       insist(Array.isArray(action.bans) && action.bans.length === 2 && action.bans.every(Array.isArray), "Ban 曲数据格式不正确。");
       for (const side of sides) {
         insist(action.bans[side].length <= clBanCount(id, side), "Ban 曲数量超过规则限制。");
@@ -94,6 +122,11 @@ export function applyClAction(t: CenturyLink, id: string, action: ClAction): Cen
           insist(v === null || (Number.isSafeInteger(v) && v >= 0 && v <= 2000000), "成绩需为 0～2,000,000 的整数。");
       }
       insist(new Set(action.scores.map(s => s.songId)).size === action.scores.length, "比赛曲目不能重复。");
+      if (definition.kind === "points") {
+        if (action.scores.length) for (const side of sides)
+          insist(m.bans[side].length === clBanCount(id, side), "请先完成双方的 Ban 曲。");
+        validateClDraw(t.matches.find(match => match.id === id)!, action.scores);
+      }
       m.scores = action.scores.map(({ songId, a, b }) => ({ songId, a, b }));
     }
     if (action.type !== "draft") {
@@ -103,13 +136,13 @@ export function applyClAction(t: CenturyLink, id: string, action: ClAction): Cen
         insist(m.picks[side].length === clPickCount(id), "请先完成双方选曲。");
       }
       const regular = clRegularCount(m);
-      insist(m.scores.length >= regular, "请先生成本场比赛曲目。");
+      insist(m.scores.length >= (definition.kind === "points" ? 1 : regular), "请先生成本场比赛曲目。");
       const head = m.scores.slice(0, regular).map(s => s.songId);
       if (definition.kind === "pickban") insist(head.every(song => m.picks.flat().includes(song)), "前两首须为双方所选曲目。");
       if (definition.kind === "designated")
         insist(m.picks.flat().every(song => head.slice(0, 2).includes(song)) && head[2] === clSpecialId(clDesignatedFor(id)!), "前两首须为双方所选曲目，第三首为指定曲。");
-      if (definition.kind === "draw" || definition.kind === "points")
-        insist(head.length === clDrawCount(id) && head.every(song => !isSpecial(song)), `前 ${clDrawCount(id)} 首须为抽取曲目。`);
+      if (definition.kind === "points")
+        insist(head.every(song => !isSpecial(song)), `前 ${clDrawCount(id)} 首须为抽取曲目。`);
       if (definition.kind === "points") {
         const tiebreak = m.scores.findIndex(s => isSpecial(s.songId));
         insist(tiebreak === -1 || tiebreak === regular, "决胜曲须在四首抽取曲之后游玩。");

@@ -40,7 +40,7 @@ export type CenturyLink = {
 };
 
 export const CL_PLAYER_COUNT = 8;
-export type ClKind = "pickban" | "draw" | "designated" | "points";
+export type ClKind = "pickban" | "designated" | "points";
 type Source = { seed: number } | { winner: string } | { loser: string };
 export type ClSlotDefinition = {
   id: string;
@@ -57,8 +57,8 @@ export const clBracket: readonly ClSlotDefinition[] = [
   { id: "G2", round: 1, kind: "pickban", title: "首轮", a: { seed: 2 }, b: { seed: 7 } },
   { id: "G3", round: 1, kind: "pickban", title: "首轮", a: { seed: 3 }, b: { seed: 6 } },
   { id: "G4", round: 1, kind: "pickban", title: "首轮", a: { seed: 4 }, b: { seed: 5 } },
-  { id: "G5", round: 1, kind: "draw", title: "0-1 组", a: { loser: "G1" }, b: { loser: "G4" }, eliminates: "第 7–8 名" },
-  { id: "G6", round: 1, kind: "draw", title: "0-1 组", a: { loser: "G2" }, b: { loser: "G3" }, eliminates: "第 7–8 名" },
+  { id: "G5", round: 1, kind: "pickban", title: "0-1 组", a: { loser: "G1" }, b: { loser: "G4" }, eliminates: "第 7–8 名" },
+  { id: "G6", round: 1, kind: "pickban", title: "0-1 组", a: { loser: "G2" }, b: { loser: "G3" }, eliminates: "第 7–8 名" },
   { id: "G7", round: 2, kind: "designated", title: "1-0 组", a: { winner: "G1" }, b: { winner: "G4" } },
   { id: "G8", round: 2, kind: "designated", title: "1-0 组", a: { winner: "G2" }, b: { winner: "G3" } },
   { id: "G9", round: 2, kind: "designated", title: "1-1 组", a: { winner: "G5" }, b: { loser: "G8" }, eliminates: "第 5–6 名" },
@@ -106,12 +106,11 @@ export function clDesignatedFor(id: string): ClDesignatedKey | null {
 }
 /** Number of pool bans each side may make. The winners-bracket champion bans once more in the grand final. */
 export function clBanCount(id: string, side: 0 | 1) {
-  const { kind } = clDefinition(id);
-  if (kind === "draw") return 0;
+  clDefinition(id);
   return id === "G14" && side === 0 ? 2 : 1;
 }
 export const clPickCount = (id: string) => ["pickban", "designated"].includes(clDefinition(id).kind) ? 1 : 0;
-export const clDrawCount = (id: string) => ({ pickban: 0, draw: 2, designated: 0, points: 4 })[clDefinition(id).kind];
+export const clDrawCount = (id: string) => clDefinition(id).kind === "points" ? 4 : 0;
 
 export function emptyClMatch(definition: ClSlotDefinition): ClMatch {
   return {

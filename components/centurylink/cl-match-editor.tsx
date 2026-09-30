@@ -12,15 +12,14 @@ import {
   clBanCount, clDecision, clDefinition, clDrawCount, clPickCount, clPlayer, clPoints, clSeed,
   clTotals, isSpecial, type CenturyLink, type ClMatch,
 } from "@/lib/centurylink";
-import { clDrawable, clPickable, clRegularCount, type ClAction } from "@/lib/centurylink-rules";
+import { clCanDrawNext, clDrawable, clPickable, clRegularCount, type ClAction } from "@/lib/centurylink-rules";
 import ClMatchSummary from "./cl-match-summary";
 import { clSongName, clSongNumber } from "./cl-songs";
 
 const kindHelp = {
   pickban: "高顺位选手先禁用 1 首，低顺位后禁用 1 首；再由高顺位先选 1 首、低顺位后选 1 首。比较两首总分。",
-  draw: "不 Ban 不选，由主办方从本阶段曲库重新抽取 2 首（双方本阶段已游玩的曲目除外）。比较两首总分。",
   designated: "双方各禁用 1 首、各选 1 首，再演奏 1 首指定曲。比较三首总分；第三首由前两首总分低者先演奏。",
-  points: "双方轮流各禁用 1 首（总决赛中胜者组冠军多禁用 1 首），主办方随机抽取 4 首。每首得分高者得 1 分，先得 3 分获胜；2:2 时演奏决胜曲。",
+  points: "双方轮流各禁用 1 首（总决赛中胜者组冠军多禁用 1 首）。每次随机抽取 1 首，录完双方成绩后再抽下一首，最多抽 4 首。每首得分高者得 1 分，先得 3 分获胜；2:2 时演奏决胜曲。",
 } as const;
 
 function randomItem<T>(items: T[]) {
@@ -56,6 +55,8 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
   const pickCount = clPickCount(match.id);
   const selectionReady = [0, 1].every(side => bans[side].length === banCounts[side] && picks[side].length === pickCount);
   const points = definition.kind === "points";
+  const selectionLocked = live || (points && scores.length > 0);
+  const canDrawNext = points && selectionReady && (!scores.length || live) && clCanDrawNext(draft);
   const [ta, tb] = points ? clPoints(draft) : clTotals(draft);
   const decision = clDecision(draft);
   const regular = clRegularCount(match);
@@ -82,25 +83,27 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
     else if (definition.kind === "designated") {
       if (!designated) { setError("指定曲信息不可用，请重新打开比赛。"); return; }
       setScores([...picks.flat(), designated.id].map(songId => ({ songId, a: null, b: null })));
-    } else {
-      const available = clDrawable(tournament, match, bans, []);
-      const count = clDrawCount(match.id);
-      if (available.length < count) { setError("可抽取的曲目不足，请联系裁判确认。"); return; }
-      const drawn: string[] = [];
-      while (drawn.length < count) drawn.push(available.splice(available.indexOf(randomItem(available)), 1)[0]);
-      setScores(drawn.map(songId => ({ songId, a: null, b: null })));
     }
     setError("");
+  }
+  function drawNext() {
+    if (!canDrawNext) return;
+    const available = clDrawable(tournament, match, bans, scores);
+    if (!available.length) { setError("可抽取的曲目不足，请联系裁判确认。"); return; }
+    // Persist each draw together with the current scores so reopening cannot redraw it.
+    void submit({ type: live ? "save" : "draft", scores: [...scores, { songId: randomItem(available), a: null, b: null }] });
   }
   function extra() {
     const available = clDrawable(tournament, match, bans, scores);
     if (!available.length) { setError("本阶段可抽取的曲目已用完，请联系裁判确认后续规则。"); return; }
-    setScores([...scores, { songId: randomItem(available), a: null, b: null }]);
+    const next = [...scores, { songId: randomItem(available), a: null, b: null }];
+    if (points) void submit({ type: "save", scores: next });
+    else setScores(next);
     setError("");
   }
   function addTiebreak() {
     if (!designated) { setError("决胜曲信息不可用，请重新打开比赛。"); return; }
-    setScores([...scores, { songId: designated.id, a: null, b: null }]);
+    void submit({ type: "save", scores: [...scores, { songId: designated.id, a: null, b: null }] });
   }
   async function submit(action: ClAction) {
     setSaving(true);
@@ -140,7 +143,7 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
         <Music2 size={15} />
         <span>{kindHelp[definition.kind]}</span>
       </div>
-      {definition.kind !== "draw" && <>
+      <>
         <div className="form-heading">
           <h3>01 <span>{pickCount ? "Ban 曲与选曲" : "Ban 曲"}</span></h3>
           <span>{pickCount ? "各 Ban 1 首 · 各选 1 首" : match.id === "G14" ? "胜者组冠军 Ban 2 首" : "各 Ban 1 首"}</span>
@@ -155,11 +158,11 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
                 <span className="player-rating">排位 #{clSeed(tournament, player.id) ?? "—"}</span>
                 {Array.from({ length: banCounts[side] }, (_, i) => (
                   <Picker key={`ban-${i}`} label={`${player.name} Ban 曲${banCounts[side] > 1 ? ` ${i + 1}` : ""}`}
-                    value={bans[side][i] ?? ""} disabled={live} onChange={v => changeBan(side, i, v)}
+                    value={bans[side][i] ?? ""} disabled={selectionLocked} onChange={v => changeBan(side, i, v)}
                     options={pool.map(song => ({ value: song.id, label: songLabel(song),
                       disabled: otherBans.includes(song.id) || bans[side].some((id, j) => j !== i && id === song.id) }))} />
                 ))}
-                {pickCount > 0 && <Picker label={`${player.name} 选曲`} value={picks[side][0] ?? ""} disabled={live}
+                {pickCount > 0 && <Picker label={`${player.name} 选曲`} value={picks[side][0] ?? ""} disabled={selectionLocked}
                   onChange={v => changePick(side, v)}
                   options={clPickable(tournament, match, bans).map(id => pool.find(song => song.id === id)!).filter(Boolean)
                     .map(song => ({ value: song.id, label: songLabel(song), disabled: picks[1 - side].includes(song.id) }))} />}
@@ -167,28 +170,28 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
             );
           })}
         </div>
-      </>}
+      </>
       <div className="editor-inline">
         <Picker label="比赛机台" value={station} onChange={setStation} disabled={live}
           options={[{ value: "A", label: "A 台" }, { value: "B", label: "B 台" }]} />
-        <button className="secondary-button" disabled={saving || live || !selectionReady} onClick={generate}>
+        {(!points || (scores.length < regular && decision === null)) && <button className="secondary-button" disabled={saving || (points ? !canDrawNext : live || !selectionReady)} onClick={points ? drawNext : generate}>
           <Shuffle size={16} />
-          {definition.kind === "draw" || points ? `抽取 ${clDrawCount(match.id)} 首曲目` : "生成比赛曲目"}
-        </button>
+          {points ? `抽取第 ${Math.min(scores.length + 1, clDrawCount(match.id))} 首曲目` : "生成比赛曲目"}
+        </button>}
       </div>
       <div className="form-heading">
-        <h3>{definition.kind === "draw" ? "01" : "02"} <span>成绩录入</span></h3>
+        <h3>02 <span>成绩录入</span></h3>
         <span>{points ? "逐曲得分制 · 先得 3 分" : definition.kind === "designated" ? "三首总分制" : "两首总分制"}</span>
       </div>
       {scores.length === 0 ? (
-        <p className="form-help">{definition.kind === "draw" || points ? "点击抽取后生成比赛曲目；" : "Ban 曲与选曲完成后生成曲目；"}每首成绩由裁判手动填写。</p>
+        <p className="form-help">{points ? "完成 Ban 曲后抽取第一首，再开始比赛；每首录完双方成绩后抽取下一首。" : "Ban 曲与选曲完成后生成曲目。"}每首成绩由裁判手动填写。</p>
       ) : (
         <>
           <div className="score-column-head"><span>课题曲</span><span>{players[0].name}</span><span>{players[1].name}</span></div>
           {scores.map((s, i) => (
             <div className="score-input-row" key={s.songId}>
               <div>
-                <small>{String(i + 1).padStart(2, "0")} · {isSpecial(s.songId) ? (points ? "决胜曲" : "指定曲") : i >= regular ? "加赛曲" : points || definition.kind === "draw" ? "抽取曲" : "选曲"}</small>
+                <small>{String(i + 1).padStart(2, "0")} · {isSpecial(s.songId) ? (points ? "决胜曲" : "指定曲") : i >= regular ? "加赛曲" : points ? "抽取曲" : "选曲"}</small>
                 <span>{name(s.songId)}</span>
               </div>
               {(["a", "b"] as const).map((side, sideIndex) => (
@@ -208,10 +211,10 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
             <strong>{tb.toLocaleString()}</strong>
           </div>
           <div className="cl-editor-extra">
-            {points && !tiebreakAdded && <button className="text-button" onClick={addTiebreak} disabled={saving || !pointsTied}>
+            {points && !tiebreakAdded && <button className="text-button" onClick={addTiebreak} disabled={saving || !live || !pointsTied}>
               <Swords size={14} />2:2 平 · 加入决胜曲
             </button>}
-            {(!points || tiebreakAdded) && <button className="text-button" onClick={extra} disabled={saving}>
+            {(!points || tiebreakAdded) && <button className="text-button" onClick={extra} disabled={saving || (points && (!live || !pointsTied))}>
               <Shuffle size={14} />同分加赛 · 抽取一首
             </button>}
           </div>
@@ -221,7 +224,7 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
         {match.status === "pending" ? (
           <>
             <button className="secondary-button" disabled={saving} onClick={() => void submit({ type: "draft" })}><Save size={16} />保存草稿</button>
-            <button className="primary-button" disabled={saving || scores.length < regular} onClick={() => void submit({ type: "start" })}><Radio size={16} />开始比赛</button>
+            <button className="primary-button" disabled={saving || scores.length < (points ? 1 : regular)} onClick={() => void submit({ type: "start" })}><Radio size={16} />开始比赛</button>
           </>
         ) : (
           <>
@@ -230,6 +233,7 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
           </>
         )}
       </div>
+      {points && live && scores.length < regular && decision === null && <p className="form-help">录完当前曲目的双方成绩后，可抽取下一首；抽取时会一并保存比分，曲目自动向观众显示。</p>}
       {(pointsTied || sumTied) && <p className="form-help">{pointsTied && !tiebreakAdded ? "四曲后比分持平，请加入决胜曲。" : "比分持平，请抽取加赛曲目后再确认赛果。"}</p>}
       <div className="bye-area">
         <h3>弃权 / 判负</h3>

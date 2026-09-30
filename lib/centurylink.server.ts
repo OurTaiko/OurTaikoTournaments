@@ -50,27 +50,16 @@ type Metadata = Awaited<ReturnType<typeof songMetadata>>['metadata'];
 const designatedSong = (library: CenturyLinkSongLibrary, key: ClDesignatedKey, metadata: Metadata) =>
   resolveSong(clSpecialId(key), library.designated[key], metadata);
 
-/** Designated songs are public only after the ranking round starts or a published match uses them. */
-export function revealedDesignated(t: CenturyLink): Set<ClDesignatedKey> {
-  const revealed = new Set<ClDesignatedKey>();
-  if (t.ranking.status !== 'pending') revealed.add('ranking');
-  for (const m of t.matches)
-    if (m.published) for (const s of m.scores) {
-      const key = clDesignatedKeys.find(k => clSpecialId(k) === s.songId);
-      if (key) revealed.add(key);
-    }
-  return revealed;
-}
-
-export async function publicCenturyLinkCatalog(t: CenturyLink, scope: TournamentScope) {
+/** The organiser has announced all CenturyLink songs, including designated and tiebreak songs. */
+export async function publicCenturyLinkCatalog(scope: TournamentScope) {
   const [library, state] = await Promise.all([readCenturyLinkSongLibrary(scope), songMetadata()]);
   const catalog: SongCatalog = Object.fromEntries(library.songs.map(ref => [ref.id, resolveSong(ref.id, ref, state.metadata)]));
-  for (const key of revealedDesignated(t)) catalog[clSpecialId(key)] = designatedSong(library, key, state.metadata);
+  for (const key of clDesignatedKeys) catalog[clSpecialId(key)] = designatedSong(library, key, state.metadata);
   return { catalog, pools: clPools, updatedAt: state.updatedAt, stale: state.stale,
     incomplete: Object.values(catalog).some(song => song.stars === null) };
 }
 
-/** Admin-only: the match's designated song, if any, before it is announced. */
+/** The match editor's stage pool and designated song, if any. */
 export async function adminMatchSongs(match: ClMatch, scope: TournamentScope) {
   const [library, { metadata }] = await Promise.all([readCenturyLinkSongLibrary(scope), songMetadata()]);
   const key = clDesignatedFor(match.id);

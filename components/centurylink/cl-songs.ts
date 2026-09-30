@@ -1,9 +1,8 @@
 import { difficultyNames, type SongCatalog } from "@/lib/songs";
-import { isSpecial } from "@/lib/centurylink";
 
 export function clSongName(id: string, catalog: SongCatalog) {
   const song = catalog[id];
-  if (!song) return isSpecial(id) ? "指定曲（现场公布）" : "曲目信息加载中";
+  if (!song) return "曲目信息加载中";
   return `${song.title}${song.difficultyIndex === 4 ? "" : `（${difficultyNames[song.difficultyIndex]}）`}`;
 }
 /** Organiser numbering: `cl-7` is 曲 7. */

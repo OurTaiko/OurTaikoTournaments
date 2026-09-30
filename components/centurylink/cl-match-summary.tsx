@@ -29,7 +29,7 @@ export default function ClMatchSummary({ tournament, match, catalog }: {
           {([0, 1] as const).map(side => <div className="selection-record" key={side}>
             <h4>{names[side]}</h4>
             <p>禁用：{match.bans[side].length ? match.bans[side].map(id => clSongName(id, catalog)).join("、") : "无"}</p>
-            {definition.kind !== "points" && definition.kind !== "draw" &&
+            {definition.kind !== "points" &&
               <p>选曲：{match.picks[side].length ? match.picks[side].map(id => clSongName(id, catalog)).join("、") : "暂无"}</p>}
           </div>)}
         </section>}

@@ -342,7 +342,7 @@ export default function CenturyLinkPage() {
               <Music2 size={22} />
               <div>
                 <h3>排位赛指定曲</h3>
-                <p>{catalog[clSpecialId("ranking")] ? clSongName(clSpecialId("ranking"), catalog) : "由主办方在现场公布。"}</p>
+                <p>{clSongName(clSpecialId("ranking"), catalog)}</p>
               </div>
             </div>
             <div className="cl-ranking-table">
@@ -394,7 +394,7 @@ export default function CenturyLinkPage() {
                     <span className="song-index"><Trophy size={15} /></span>
                     <span className="song-title">{clDesignatedLabels[key]}<small>{catalog[clSpecialId(key)]
                       ? <a className="cl-song-link" href={songWikiUrl(catalog[clSpecialId(key)].songID)} target="_blank" rel="noreferrer">{clSongName(clSpecialId(key), catalog)}</a>
-                      : "现场公布"}</small></span>
+                      : "曲目信息加载中"}</small></span>
                     <span className="stars">{catalog[clSpecialId(key)] ? `★ ${catalog[clSpecialId(key)].stars ?? "—"}` : ""}</span>
                   </div>
                 ))}
@@ -416,7 +416,7 @@ export default function CenturyLinkPage() {
               <article>
                 <span>01</span>
                 <h3>第一阶段 · 8 进 6</h3>
-                <p>曲库为曲 1–10。高顺位先禁用 1 首、低顺位后禁用 1 首，再依次各选 1 首，比较两首总分。败者进入 0-1 组，从曲库重新抽取 2 首比拼，负者获得第 7、8 名。</p>
+                <p>曲库为曲 1–10。首轮与 0-1 组均由高顺位先禁用 1 首、低顺位后禁用 1 首，再依次各选 1 首，比较两首总分。首轮败者进入 0-1 组，0-1 组负者获得第 7、8 名。</p>
               </article>
               <article>
                 <span>02</span>
@@ -426,7 +426,7 @@ export default function CenturyLinkPage() {
               <article>
                 <span>03</span>
                 <h3>决赛阶段 · 抢 3 分</h3>
-                <p>曲库为曲 19–32。双方轮流各禁用 1 首，总决赛中胜者组冠军可再禁用 1 首。主办方随机抽取 4 首，每首得分高者得 1 分；2:2 时演奏决胜曲，先得 3 分者获胜。</p>
+                <p>曲库为曲 19–32。双方轮流各禁用 1 首，总决赛中胜者组冠军可再禁用 1 首。主办方每次随机抽取 1 首，录完双方成绩后再抽下一首，最多抽 4 首。每首得分高者得 1 分，先得 3 分者获胜；2:2 时演奏决胜曲。</p>
               </article>
               <article>
                 <span>04</span>

@@ -18,7 +18,7 @@ export async function state(scope: TournamentScope) {
 
 export async function songs(scope: TournamentScope) {
   try {
-    return Response.json(await publicCenturyLinkCatalog(await readCenturyLink(scope), scope), { headers: noStore });
+    return Response.json(await publicCenturyLinkCatalog(scope), { headers: noStore });
   } catch (e) { return errorResponse(e); }
 }
 
