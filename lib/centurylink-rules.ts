@@ -42,10 +42,10 @@ export function clRegularCount(m: Pick<ClMatch, "id">) {
   return kind === "designated" ? 3 : kind === "points" ? 4 : 2;
 }
 
-/** Draw one final-stage song after the current songs are scored, stopping once decided. */
+/** Draw final-stage songs individually, including before play, stopping once decided. */
 export function clCanDrawNext(m: Pick<ClMatch, "id" | "scores">) {
   return clDefinition(m.id).kind === "points" && m.scores.length < clDrawCount(m.id) &&
-    m.scores.every(s => s.a !== null && s.b !== null) && clDecision(m) === null;
+    clDecision(m) === null;
 }
 
 function validateClDraw(previous: ClMatch, scores: ClMatch["scores"]) {
@@ -56,10 +56,9 @@ function validateClDraw(previous: ClMatch, scores: ClMatch["scores"]) {
   insist(added.length <= 1, "决赛曲目须逐首抽取，每次只能增加一首。");
   if (!added.length) return;
   const before = { ...previous, scores: scores.slice(0, -1) };
-  if (before.scores.length) insist(previous.status === "live", "请先开始比赛，再抽取下一首。");
   const song = added[0].songId;
   if (before.scores.length < clDrawCount(previous.id)) {
-    insist(clCanDrawNext(before), "请录完当前曲目的双方成绩；已决出胜负时不能继续抽曲。");
+    insist(clCanDrawNext(before), "已决出胜负时不能继续抽曲。");
     insist(!isSpecial(song), "前四首须从决赛阶段曲库逐首抽取。");
   } else {
     insist(before.scores.every(s => s.a !== null && s.b !== null) && clDecision(before) === null,

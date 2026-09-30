@@ -105,11 +105,15 @@ try {
   assert.throws(() => api.applyClAction(t, 'G12', { type: 'draft', bans: [['cl-25'], ['cl-20']] }), /不能修改 Ban/);
   assert.throws(() => api.applyClAction(t, 'G12', { type: 'draft', scores: [] }), /不能删除/);
   assert.throws(() => api.applyClAction(t, 'G12', { type: 'draft', scores: rows(['cl-22']) }), /不能删除/);
-  assert.throws(() => api.applyClAction(t, 'G12', { type: 'draft', scores: rows(drawn.slice(0, 2)) }), /先开始/);
+  const preDrawn = drawn.reduce((state, _, i) => i === 0 ? state : api.applyClAction(state, 'G12', { type: 'draft', scores: rows(drawn.slice(0, i + 1)) }), structuredClone(t));
+  assert.equal(preDrawn.matches.find(m => m.id === 'G12').scores.length, 4);
+  const preStarted = api.applyClAction(preDrawn, 'G12', { type: 'start', station: 'A' });
+  assert.equal(preStarted.matches.find(m => m.id === 'G12').scores.length, 4);
   t = api.applyClAction(t, 'G12', { type: 'start', station: 'A' });
   assert.equal(m('G12').scores.length, 1);
   assert.equal(api.publicCenturyLink(t).matches.find(m => m.id === 'G12').scores.length, 1);
-  assert.throws(() => api.applyClAction(t, 'G12', { type: 'save', scores: rows(drawn.slice(0, 2)) }), /录完/);
+  const unscoredNext = api.applyClAction(t, 'G12', { type: 'save', scores: rows(drawn.slice(0, 2)) });
+  assert.equal(unscoredNext.matches.find(m => m.id === 'G12').scores.length, 2);
   assert.throws(() => api.applyClAction(t, 'G12', { type: 'finish' }), /尚未决出/);
   for (let i = 1; i < 3; i++) {
     assert.throws(() => api.applyClAction(t, 'G12', { type: 'save', scores: [
@@ -256,10 +260,11 @@ try {
   saved = await api.score(request('/matches/G12', secondDraw), context('G12'));
   assert.equal(saved.status, 200); savedBody = await saved.json(); revision = savedBody.revision;
   assert.equal((await api.score(request('/matches/G12', secondDraw), context('G12'))).status, 409, 'Stale draw cannot overwrite stored result');
-  assert.equal((await api.score(request('/matches/G12', { type: 'save', revision, matchRevision: savedBody.match.revision, scores: [...savedBody.match.scores, ...rows(['cl-23'])] }), context('G12'))).status, 400);
+  saved = await api.score(request('/matches/G12', { type: 'save', revision, matchRevision: savedBody.match.revision, scores: [...savedBody.match.scores, ...rows(['cl-23'])] }), context('G12'));
+  assert.equal(saved.status, 200); savedBody = await saved.json(); revision = savedBody.revision;
   assert.deepEqual((await (await api.match(request('/matches/G12'), context('G12'))).json()).match, savedBody.match, 'Reopened editor retains drawn songs and scores');
   const publicLive = (await (await api.state(request('', undefined, false), context())).json()).tournament;
-  assert.deepEqual(publicLive.matches.find(m => m.id === 'G12').scores, savedBody.match.scores, 'Public live sheet contains only two drawn songs');
+  assert.deepEqual(publicLive.matches.find(m => m.id === 'G12').scores, savedBody.match.scores, 'Public live sheet retains successive unscored draws');
   const played = structuredClone(t);
   played.players = stored.players.map((p, i) => ({ ...p, rankingScore: t.players[i].rankingScore }));
   const rename = new Map(t.players.map((p, i) => [p.id, played.players[i].id]));

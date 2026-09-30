@@ -19,7 +19,7 @@ import { clSongName, clSongNumber } from "./cl-songs";
 const kindHelp = {
   pickban: "高顺位选手先禁用 1 首，低顺位后禁用 1 首；再由高顺位先选 1 首、低顺位后选 1 首。比较两首总分。",
   designated: "双方各禁用 1 首、各选 1 首，再演奏 1 首指定曲。比较三首总分；第三首由前两首总分低者先演奏。",
-  points: "双方轮流各禁用 1 首（总决赛中胜者组冠军多禁用 1 首）。每次随机抽取 1 首，录完双方成绩后再抽下一首，最多抽 4 首。每首得分高者得 1 分，先得 3 分获胜；2:2 时演奏决胜曲。",
+  points: "双方轮流各禁用 1 首（总决赛中胜者组冠军多禁用 1 首）。每次随机抽取 1 首，可连续逐首抽完后再比赛，最多抽 4 首。每首得分高者得 1 分，先得 3 分获胜；2:2 时演奏决胜曲。",
 } as const;
 
 function randomItem<T>(items: T[]) {
@@ -56,7 +56,7 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
   const selectionReady = [0, 1].every(side => bans[side].length === banCounts[side] && picks[side].length === pickCount);
   const points = definition.kind === "points";
   const selectionLocked = live || (points && scores.length > 0);
-  const canDrawNext = points && selectionReady && (!scores.length || live) && clCanDrawNext(draft);
+  const canDrawNext = points && selectionReady && clCanDrawNext(draft);
   const [ta, tb] = points ? clPoints(draft) : clTotals(draft);
   const decision = clDecision(draft);
   const regular = clRegularCount(match);
@@ -184,7 +184,7 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
         <span>{points ? "逐曲得分制 · 先得 3 分" : definition.kind === "designated" ? "三首总分制" : "两首总分制"}</span>
       </div>
       {scores.length === 0 ? (
-        <p className="form-help">{points ? "完成 Ban 曲后抽取第一首，再开始比赛；每首录完双方成绩后抽取下一首。" : "Ban 曲与选曲完成后生成曲目。"}每首成绩由裁判手动填写。</p>
+        <p className="form-help">{points ? "完成 Ban 曲后可连续逐首抽选，再开始比赛；无需先登记比分。" : "Ban 曲与选曲完成后生成曲目。"}每首成绩由裁判手动填写。</p>
       ) : (
         <>
           <div className="score-column-head"><span>课题曲</span><span>{players[0].name}</span><span>{players[1].name}</span></div>
@@ -233,7 +233,7 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
           </>
         )}
       </div>
-      {points && live && scores.length < regular && decision === null && <p className="form-help">录完当前曲目的双方成绩后，可抽取下一首；抽取时会一并保存比分，曲目自动向观众显示。</p>}
+      {points && live && scores.length < regular && decision === null && <p className="form-help">可继续逐首抽选，无需先登记比分；抽取时自动保存曲目及已填比分。</p>}
       {(pointsTied || sumTied) && <p className="form-help">{pointsTied && !tiebreakAdded ? "四曲后比分持平，请加入决胜曲。" : "比分持平，请抽取加赛曲目后再确认赛果。"}</p>}
       <div className="bye-area">
         <h3>弃权 / 判负</h3>
