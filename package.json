@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "eslint . --ignore-pattern .next",
     "typecheck": "tsc --noEmit",
-    "test": "node tests/rules.test.mjs && node tests/players.test.mjs && node tests/player-management.test.mjs && node tests/songs.test.mjs && node tests/song-boundaries.test.mjs && node tests/match-concurrency.test.mjs && node tests/match-summary.test.mjs && node tests/tournament-summary.test.mjs && node tests/tournament-scope.test.mjs && node tests/tournament-id-migration.test.mjs && node tests/tournament-documents.test.mjs && node tests/archive.test.mjs && node tests/centurylink.test.mjs",
+    "test": "node tests/rules.test.mjs && node tests/players.test.mjs && node tests/player-management.test.mjs && node tests/songs.test.mjs && node tests/song-boundaries.test.mjs && node tests/match-concurrency.test.mjs && node tests/match-summary.test.mjs && node tests/tournament-summary.test.mjs && node tests/tournament-scope.test.mjs && node tests/tournament-id-migration.test.mjs && node tests/tournament-documents.test.mjs && node tests/archive.test.mjs && node tests/centurylink.test.mjs && node tests/gallery.test.mjs",
     "test:api": "node tests/api.test.mjs",
     "test:storage": "node tests/storage.test.mjs",
     "test:admins": "node tests/admins.test.mjs",

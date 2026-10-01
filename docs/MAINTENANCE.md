@@ -46,6 +46,8 @@ flowchart LR
 | 文件 | 职责 |
 | --- | --- |
 | `app/hachicats/20260927/page.tsx` | 静态赛果存档：赛事总结、赛事对阵、分组曲库（含已公布指定曲）、赛事指南四个 tab 及只读比赛详情；不请求赛事接口 |
+| `app/gallery/page.tsx` / `app/hachicats/20260927/gallery/page.tsx` | 赛事相册总览与八猫杯相册（静态页面），见第 15 节 |
+| `lib/gallery.ts` / `components/gallery/` | 相册照片清单、章节、灯箱、横向胶片条与相册样式 |
 | `data/archive/hachicats-20260927.json` | 八猫杯最终公开赛况与曲目（revision 168）；`scripts/archive-tournament.mjs` 生成，`tests/archive.test.mjs` 校验 |
 | `app/login/page.tsx` / `components/login-page.tsx` | 独立登录页、账号状态、退出及本地演示入口 |
 | `components/player-manager.tsx` | 管理员编辑姓名 / rating、新增同组替补 |
@@ -489,3 +491,20 @@ node --env-file=<私有环境文件> scripts/init-centurylink.mjs .data/centuryl
 ### 验证
 
 `node tests/centurylink.test.mjs`（已加入 `npm test`）：排位 / 同分排序、三种比赛类型规则（G5/G6 Ban / 选曲同首轮）、逐首抽曲及 3:0 / 3:1 / 2:2、赛前连续逐首抽完、未录分时继续抽选、禁止批量抽取 / 替换 / 重排、旧四曲表兼容、阶段内不重复、加赛 / 决胜曲、晋级与最终排名、原生文档往返、公开过滤、API 权限与 revision、全部指定曲开赛前的匿名公开访问、重置后仍公开、重置备份。浏览器依赖测试覆盖新页面。原有 UI 验证包含排位录入与确认、G1 Ban / 选曲 / 录分。2026-09-30 在隔离 SQLite、本地生产构建中检查了 G5 Ban / 选曲 / 生成两曲 / 保存草稿、G12 逐首抽曲和比分自动保存、2:2 决胜曲 / 确认赛果 / 晋级、全部 6 首指定曲链接，以及 390px 手机布局（无横向溢出或浏览器错误）。npm test、typecheck、lint、npm run build 均通过。Atlas 集成测试（`tests/mongodb.test.mjs`）尚未针对 CenturyLink 格式运行。
+
+## 15. 赛事相册（本地实现，尚未发布）
+
+`/gallery` 按赛事展示所有相册：每场赛事一张封面（进入该赛事相册）加一条可横向滑动的胶片条；尚无照片的赛事列在「即将到来」。`/hachicats/20260927/gallery` 为八猫杯相册：全幅封面、可吸顶的章节导航（赛场、对决、颁奖、相聚），每章一张宽幅主图加瀑布流。点击任意照片打开灯箱，支持左右方向键、手机左右滑动、Esc 关闭，并预加载前后两张。入口路径为：首页赛事卡片 → `/hachicats/20260927` → 赛事标题下方的「赛事相册」按钮；首页不直接链接相册。两个页面都是静态预渲染（○），不读取数据库或接口。
+
+照片原图放在 `public/<系列>/<届次>/`，在 `lib/gallery.ts` 中静态导入，由 `next/image` 自动获得尺寸、模糊占位并经 Vercel 图片优化按屏幕宽度输出，浏览器不会直接下载原图。
+
+### 添加或调整照片
+
+1. 把照片放进对应文件夹（如 `public/hachicats/20260927/`），文件名保持不变即可。
+2. 在 `lib/gallery.ts` 中导入该文件，并用 `photo(id, 图片, 替代文本, 标题)` 放入合适的章节；`id` 在同一赛事内唯一，替代文本描述画面内容。章节第一张作为宽幅主图，建议选横图。
+3. 新赛事在 `galleries` 中新增一项并创建 `app/<系列>/<届次>/gallery/page.tsx`（参照八猫杯页面），同时把文件夹加入 `tests/gallery.test.mjs` 的检查列表。
+4. 运行 `node tests/gallery.test.mjs`（已含于 `npm test`）：文件夹中的每张照片都必须在 `lib/gallery.ts` 出现且仅出现一次。再执行 `npm run build`，确认相册路由为静态。
+
+### 验证
+
+桌面与手机 375px 视口检查封面、章节导航、瀑布流、`/gallery` 胶片条滑动及灯箱（方向键、滑动、Esc）；页面不应出现横向滚动。不发布未经主办方同意公开的照片。
