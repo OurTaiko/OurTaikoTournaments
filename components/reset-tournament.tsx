@@ -6,6 +6,9 @@ import { RotateCcw } from 'lucide-react';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { resetConfirmation } from '@/lib/reset-confirmation';
 import type { Tournament } from '@/lib/tournament';
+import { secondaryButton } from '@/components/styles';
+
+const resetButton = 'inline-flex items-center justify-center gap-2 min-h-11 py-2.5 px-4 bg-[#b91c1c] text-white rounded-[8px] text-[14px] font-semibold cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed';
 
 export default function ResetTournament<T extends { revision: number } = Tournament>({ tournamentId, revision, demo, disabled, onReset,
   title = demo ? '演示赛事维护' : '第一届赛事维护',
@@ -57,28 +60,28 @@ export default function ResetTournament<T extends { revision: number } = Tournam
   }
 
   return (
-    <div className="tournament-reset">
-      <h3>{title}</h3>
-      <p>{summary}</p>
-      <button className="reset-button" disabled={disabled} onClick={() => {
+    <div className="w-full max-w-[540px] mt-8 mx-auto p-6 border border-[#fecaca] rounded-[16px] text-left bg-[#fffafa]">
+      <h3 className="text-[17px] font-[650] mb-2">{title}</h3>
+      <p className="max-w-[430px] text-[14px] leading-[1.7] mb-4 text-[#666]">{summary}</p>
+      <button className={resetButton} disabled={disabled} onClick={() => {
         setExpectedRevision(revision);
         setConfirmation('');
         setError('');
         setOpen(true);
       }}><RotateCcw size={16} />{buttonLabel}</button>
       <AlertDialog open={open} onOpenChange={(value) => { if (!locked.current) setOpen(value); }}>
-        <AlertDialogContent className="reset-dialog">
+        <AlertDialogContent className="max-h-[calc(100dvh-32px)] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle>{dialogTitle}</AlertDialogTitle>
             <AlertDialogDescription>{dialogDescription}</AlertDialogDescription>
           </AlertDialogHeader>
-          <p className="reset-backup-note">系统会先保存完整赛况备份。恢复备份需要维护人员操作，页面没有撤销按钮。</p>
-          <label htmlFor="reset-confirmation">请输入「{phrase}」确认</label>
-          <input id="reset-confirmation" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} disabled={pending} autoComplete="off" spellCheck={false} />
-          {(error || (changed && !pending)) && <p role="alert" className="reset-error">{error || '赛况已更新，请取消后重新查看，再确认重置。'}</p>}
+          <p className="text-[13px] leading-[1.7] text-[#666]">系统会先保存完整赛况备份。恢复备份需要维护人员操作，页面没有撤销按钮。</p>
+          <label htmlFor="reset-confirmation" className="text-[14px] font-semibold">请输入「{phrase}」确认</label>
+          <input className="w-full min-h-12 py-2.5 px-3 border border-[#d4d4d4] rounded-[8px] text-[16px] focus:outline-2 focus:outline-[#b91c1c] focus:outline-offset-2" id="reset-confirmation" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} disabled={pending} autoComplete="off" spellCheck={false} />
+          {(error || (changed && !pending)) && <p role="alert" className="text-[#b91c1c] text-[14px]">{error || '赛况已更新，请取消后重新查看，再确认重置。'}</p>}
           <AlertDialogFooter>
-            <button className="secondary-button" disabled={pending} onClick={() => setOpen(false)}>取消</button>
-            <button className="reset-button" disabled={pending || disabled || changed || !!error || confirmation !== phrase} onClick={() => void submit()}>{pending ? '正在备份并重置…' : '备份并重置赛事'}</button>
+            <button className={secondaryButton} disabled={pending} onClick={() => setOpen(false)}>取消</button>
+            <button className={resetButton} disabled={pending || disabled || changed || !!error || confirmation !== phrase} onClick={() => void submit()}>{pending ? '正在备份并重置…' : '备份并重置赛事'}</button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

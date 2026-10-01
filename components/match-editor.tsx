@@ -34,6 +34,8 @@ import {
   type Tournament,
 } from "@/lib/tournament";
 import { retainedSongs, usedSongs, type Action } from "@/lib/rules";
+import * as st from "@/components/styles";
+import { cn } from "@/lib/utils";
 export function Picker({
   label,
   value,
@@ -48,11 +50,11 @@ export function Picker({
   disabled?: boolean;
 }) {
   return (
-    <label className="picker-label">
-      <span>{label}</span>
+    <label className={st.pickerLabel}>
+      <span className={st.pickerLabelText}>{label}</span>
       {/* Native pickers avoid floating-menu resize feedback on small screens. */}
       <NativeSelect
-        className="song-picker"
+        className={st.songPicker}
         aria-label={label}
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -191,14 +193,14 @@ export default function MatchEditor({
   }
   if (done) return <MatchSummary match={match} catalog={catalog} />;
   return (
-    <fieldset className="editor" disabled={saving || disabled}>
+    <fieldset className={st.editor} disabled={saving || disabled}>
       {match.round === 0 && (
-        <section className="match-lineup" aria-labelledby="lineup-heading">
-          <h3 id="lineup-heading">参赛选手 / 替补</h3>
-          <p className="lineup-note">{canReplace(match)
+        <section className="p-[18px] border border-line rounded-[12px] mb-6 bg-[#f8f9fc]" aria-labelledby="lineup-heading">
+          <h3 id="lineup-heading" className="text-[15px] font-semibold mb-2">参赛选手 / 替补</h3>
+          <p className="text-[12px] text-[#6e6e73] mb-4 leading-[1.8]">{canReplace(match)
             ? "选择同组正赛选手可互换位置；选择替补则由其上场，原选手转为替补。换人会清空相关比赛的选曲草稿。"
             : "本场已开赛、公布或录分，参赛选手已锁定。"}</p>
-          <div className="lineup-controls">
+          <div className="grid gap-3 [&_select:disabled]:opacity-55 phone:[&_select]:text-[16px]">
             {(["a", "b"] as const).map(side => (
               <Picker key={side} label={`${side === "a" ? "上位" : "下位"}选手`}
                 value={match[side]?.id ?? ""} disabled={!canReplace(match)}
@@ -217,20 +219,20 @@ export default function MatchEditor({
           </div>
         </section>
       )}
-      <div className="private-note">
+      <div className={st.privateNote}>
         <Music2 size={15} />
         <span>双方各选择两首曲目，再各禁用对手一首。</span>
       </div>
-      <div className="form-heading">
-        <h3>
-          01 <span>选曲与 Ban 曲</span>
+      <div className={st.formHeading}>
+        <h3 className={st.formHeadingTitle}>
+          01 <span className={st.formHeadingName}>选曲与 Ban 曲</span>
         </h3>
-        <span>双方各选 2 首</span>
+        <span className={st.formHeadingNote}>双方各选 2 首</span>
       </div>
-      <div className="pick-sides">
+      <div className={st.pickSides}>
         {([0, 1] as const).map((side) => (
-          <div className="pick-side" key={side}>
-            <h4>{(side === 0 ? match.a : match.b)?.name ?? "等待晋级"}</h4>
+          <div className={st.pickSide} key={side}>
+            <h4 className={st.pickSideName}>{(side === 0 ? match.a : match.b)?.name ?? "等待晋级"}</h4>
             {(side === 0 ? match.a : match.b) && (
               <PlayerRating rating={(side === 0 ? match.a : match.b)!.rating} />
             )}
@@ -271,7 +273,7 @@ export default function MatchEditor({
           </div>
         ))}
       </div>
-      <div className="editor-inline">
+      <div className={st.editorInline}>
         <Picker
           label="比赛机台"
           value={station}
@@ -283,7 +285,7 @@ export default function MatchEditor({
           ]}
         />
         <button
-          className="secondary-button"
+          className={cn(st.secondaryButton, st.editorInlineButton)}
           disabled={saving || !ready || match.status === "live"}
           onClick={generate}
         >
@@ -291,27 +293,27 @@ export default function MatchEditor({
           生成比赛曲目
         </button>
       </div>
-      <div className="form-heading">
-        <h3>
-          02 <span>成绩录入</span>
+      <div className={st.formHeading}>
+        <h3 className={st.formHeadingTitle}>
+          02 <span className={st.formHeadingName}>成绩录入</span>
         </h3>
-        <span>{match.round >= 3 ? "三首总分制" : "两首总分制"}</span>
+        <span className={st.formHeadingNote}>{match.round >= 3 ? "三首总分制" : "两首总分制"}</span>
       </div>
       {scores.length === 0 ? (
-        <p className="form-help">
+        <p className={st.formHelp}>
           选曲完成后生成曲目；选曲重复时自动随机补足。每首成绩由裁判手动填写。
         </p>
       ) : (
         <>
-          <div className="score-column-head">
+          <div className={st.scoreColumnHead}>
             <span>课题曲</span>
             <span>{match.a?.name}</span>
             <span>{match.b?.name}</span>
           </div>
           {scores.map((s, i) => (
-            <div className="score-input-row" key={s.songId}>
-              <div>
-                <small>
+            <div className={st.scoreInputRow} key={s.songId}>
+              <div className={st.scoreSong}>
+                <small className={st.scoreSongNote}>
                   {String(i + 1).padStart(2, "0")} ·{" "}
                   {s.songId.startsWith("special:")
                     ? "指定曲"
@@ -323,6 +325,7 @@ export default function MatchEditor({
               </div>
               {(["a", "b"] as const).map((side) => (
                 <input
+                  className={st.scoreInput}
                   key={side}
                   aria-label={`${displaySongName(match.group, s.songId)} ${side === "a" ? match.a?.name : match.b?.name}成绩`}
                   inputMode="numeric"
@@ -342,22 +345,22 @@ export default function MatchEditor({
               ))}
             </div>
           ))}
-          <div className="total-row">
+          <div className={st.totalRow}>
             <b>总分</b>
-            <strong>{sum[0].toLocaleString()}</strong>
-            <strong>{sum[1].toLocaleString()}</strong>
+            <strong className={st.totalValue}>{sum[0].toLocaleString()}</strong>
+            <strong className={st.totalValue}>{sum[1].toLocaleString()}</strong>
           </div>
-          <button className="text-button" onClick={extra} disabled={saving}>
+          <button className={st.textButton} onClick={extra} disabled={saving}>
             <Shuffle size={14} />
             平分加赛 · 抽取一首
           </button>
         </>
       )}
-      <div className="editor-actions">
+      <div className={st.editorActions}>
         {match.status === "pending" ? (
           <>
             <button
-              className="secondary-button"
+              className={st.secondaryButton}
               disabled={saving || !ready}
               onClick={() => submit({ type: "draft" })}
             >
@@ -365,7 +368,7 @@ export default function MatchEditor({
               保存选曲
             </button>
             <button
-              className="primary-button"
+              className={st.primaryButton}
               disabled={saving || !scores.length}
               onClick={() => submit({ type: "start" })}
             >
@@ -376,7 +379,7 @@ export default function MatchEditor({
         ) : (
           <>
             <button
-              className="secondary-button"
+              className={st.secondaryButton}
               disabled={saving}
               onClick={() => submit({ type: "save" })}
             >
@@ -384,7 +387,7 @@ export default function MatchEditor({
               保存比分
             </button>
             <button
-              className="primary-button"
+              className={st.primaryButton}
               disabled={
                 saving ||
                 !scores.length ||
@@ -402,13 +405,13 @@ export default function MatchEditor({
       {scores.length > 0 &&
         scores.every((s) => s.a !== null && s.b !== null) &&
         sum[0] === sum[1] && (
-          <p className="form-help">
+          <p className={st.formHelp}>
             双方总分相同，请抽取加赛曲目后再确认赛果。
           </p>
         )}
-      <div className="bye-area">
-        <h3>轮空 / 对手缺席</h3>
-        <p>指定一位选手直接晋级，无需填写成绩。</p>
+      <div className={st.byeArea}>
+        <h3 className={st.byeTitle}>轮空 / 对手缺席</h3>
+        <p className={st.byeText}>指定一位选手直接晋级，无需填写成绩。</p>
         <Picker
           label="直接晋级的选手"
           value={bye}
@@ -418,7 +421,7 @@ export default function MatchEditor({
             .map((p) => ({ value: p.id, label: p.name }))}
         />
         <button
-          className="text-button"
+          className={st.textButton}
           disabled={!bye || saving}
           onClick={() => setConfirm({ type: "bye", winner: bye })}
         >
@@ -427,7 +430,7 @@ export default function MatchEditor({
         </button>
       </div>
       {error && (
-        <p role="alert" className="form-error">
+        <p role="alert" className={st.formError}>
           {error}
         </p>
       )}
@@ -453,7 +456,7 @@ export default function MatchEditor({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={saving}>返回检查</AlertDialogCancel>
             <AlertDialogAction
-              className="primary-button"
+              className={st.primaryButton}
               disabled={saving}
               onClick={(e) => {
                 e.preventDefault();

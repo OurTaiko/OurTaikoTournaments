@@ -3,6 +3,10 @@ import { useState } from "react";
 import { ArrowDown, ArrowUp, Check, Pencil, Plus, RotateCcw, Save, Trash2 } from "lucide-react";
 import { CL_PLAYER_COUNT, type CenturyLink } from "@/lib/centurylink";
 import { clCanReopenRanking, type ClPlayerAction } from "@/lib/centurylink-rules";
+import * as st from "@/components/styles";
+import { cn } from "@/lib/utils";
+
+const note = cn(st.adminText, st.muted);
 
 type Props = {
   tournament: CenturyLink;
@@ -10,43 +14,45 @@ type Props = {
   onSave: (action: ClPlayerAction, revision: number) => Promise<boolean>;
 };
 
+const iconButton = "inline-flex items-center justify-center w-8 h-8 border border-line rounded-[8px] bg-white text-[#4a4a52]";
+
 export function ClPlayerManager({ tournament, disabled, onSave }: Props) {
   const [draft, setDraft] = useState<{ id: string | null; name: string; revision: number } | null>(null);
   const locked = tournament.ranking.status === "complete";
   const stale = !!draft && draft.revision !== tournament.revision;
-  return <section className="player-manager" aria-label="选手管理">
-    <div className="section-heading"><h2>正赛选手 <span className="count">{tournament.players.length} / {CL_PLAYER_COUNT}</span></h2>
-      <button className="secondary-button" disabled={disabled || !!draft || locked || tournament.players.length >= CL_PLAYER_COUNT}
+  return <section className={st.playerManager} aria-label="选手管理">
+    <div className={st.playerManagerHeading}><h2 className={st.sectionTitle}>正赛选手 <span className={st.count}>{tournament.players.length} / {CL_PLAYER_COUNT}</span></h2>
+      <button className={st.secondaryButton} disabled={disabled || !!draft || locked || tournament.players.length >= CL_PLAYER_COUNT}
         onClick={() => setDraft({ id: null, name: "", revision: tournament.revision })}><Plus size={15} />添加选手</button>
     </div>
-    <p className="muted">{locked
+    <p className={note}>{locked
       ? "排位已确认，名单已锁定。如需替换选手（例如工作人员陪跑递补），可直接修改昵称。"
       : "海选与 Last Chance 结束后录入 8 位晋级选手的昵称。排位确认前可随时增删、调整。"}</p>
-    {draft && <form className="player-edit-form" onSubmit={async e => {
+    {draft && <form className={st.playerEditForm} onSubmit={async e => {
       e.preventDefault();
       const action: ClPlayerAction = draft.id ? { type: "edit", id: draft.id, name: draft.name } : { type: "add", name: draft.name };
       if (await onSave(action, draft.revision)) setDraft(null);
     }}>
       <h3>{draft.id ? "修改昵称" : "添加正赛选手"}</h3>
-      <label>选手昵称<input required autoFocus maxLength={40} value={draft.name} disabled={disabled} onChange={e => setDraft({ ...draft, name: e.target.value })} /></label>
-      {stale && <p role="status">赛事已更新。请取消后重新打开，避免覆盖其他工作人员的修改。</p>}
-      <div className="player-form-actions">
-        <button className="primary-button" disabled={disabled || stale} type="submit"><Save size={15} />保存</button>
-        <button className="secondary-button" disabled={disabled} type="button" onClick={() => setDraft(null)}>取消</button>
+      <label className={st.playerEditLabel}>选手昵称<input className={st.playerEditInput} required autoFocus maxLength={40} value={draft.name} disabled={disabled} onChange={e => setDraft({ ...draft, name: e.target.value })} /></label>
+      {stale && <p role="status" className={st.adminText}>赛事已更新。请取消后重新打开，避免覆盖其他工作人员的修改。</p>}
+      <div className={st.playerFormActions}>
+        <button className={st.primaryButton} disabled={disabled || stale} type="submit"><Save size={15} />保存</button>
+        <button className={st.secondaryButton} disabled={disabled} type="button" onClick={() => setDraft(null)}>取消</button>
       </div>
     </form>}
-    <div className="roster-list">
-      {tournament.players.map((p, i) => <div className="roster-row cl-roster-row" key={p.id}>
-        <span className="player-profile"><b>{p.name}</b></span>
-        {!locked && <span className="cl-row-tools">
-          <button className="icon-button" aria-label={`上移 ${p.name}`} disabled={disabled || !!draft || i === 0} onClick={() => void onSave({ type: "move", id: p.id, offset: -1 }, tournament.revision)}><ArrowUp size={15} /></button>
-          <button className="icon-button" aria-label={`下移 ${p.name}`} disabled={disabled || !!draft || i === tournament.players.length - 1} onClick={() => void onSave({ type: "move", id: p.id, offset: 1 }, tournament.revision)}><ArrowDown size={15} /></button>
-          <button className="icon-button" aria-label={`移除 ${p.name}`} disabled={disabled || !!draft} onClick={() => { if (confirm(`移除选手「${p.name}」？`)) void onSave({ type: "remove", id: p.id }, tournament.revision); }}><Trash2 size={15} /></button>
+    <div className={st.rosterList}>
+      {tournament.players.map((p, i) => <div className={cn(st.rosterRow, "gap-2")} key={p.id}>
+        <span className={st.rosterProfile}><b>{p.name}</b></span>
+        {!locked && <span className="inline-flex gap-1">
+          <button className={iconButton} aria-label={`上移 ${p.name}`} disabled={disabled || !!draft || i === 0} onClick={() => void onSave({ type: "move", id: p.id, offset: -1 }, tournament.revision)}><ArrowUp size={15} /></button>
+          <button className={iconButton} aria-label={`下移 ${p.name}`} disabled={disabled || !!draft || i === tournament.players.length - 1} onClick={() => void onSave({ type: "move", id: p.id, offset: 1 }, tournament.revision)}><ArrowDown size={15} /></button>
+          <button className={iconButton} aria-label={`移除 ${p.name}`} disabled={disabled || !!draft} onClick={() => { if (confirm(`移除选手「${p.name}」？`)) void onSave({ type: "remove", id: p.id }, tournament.revision); }}><Trash2 size={15} /></button>
         </span>}
-        <button className="secondary-button" disabled={disabled || !!draft} aria-label={`修改 ${p.name} 的昵称`}
+        <button className={st.secondaryButton} disabled={disabled || !!draft} aria-label={`修改 ${p.name} 的昵称`}
           onClick={() => setDraft({ id: p.id, name: p.name, revision: tournament.revision })}><Pencil size={14} />昵称</button>
       </div>)}
-      {!tournament.players.length && <p className="muted">尚未录入选手。</p>}
+      {!tournament.players.length && <p className={note}>尚未录入选手。</p>}
     </div>
   </section>;
 }
@@ -79,45 +85,45 @@ export function ClRankingManager({ tournament, disabled, onSave }: Props) {
     [next[i], next[i + 1]] = [next[i + 1], next[i]];
     setTieOrder(next);
   }
-  return <section className="player-manager cl-ranking-manager" aria-label="排位赛录分">
-    <div className="section-heading"><h2>排位赛</h2>
-      <span>{confirmed ? "排位已确认" : tournament.ranking.status === "live" ? "录分中 · 分数实时公开" : "尚未开始"}</span>
+  return <section className={st.playerManager} aria-label="排位赛录分">
+    <div className={st.playerManagerHeading}><h2 className={st.sectionTitle}>排位赛</h2>
+      <span className={st.sectionNote}>{confirmed ? "排位已确认" : tournament.ranking.status === "live" ? "录分中 · 分数实时公开" : "尚未开始"}</span>
     </div>
-    <p className="muted">每位选手单独游玩一首指定曲，按分数从高到低确定 1–8 号顺位（首轮 1v8、2v7、3v6、4v5）。保存分数即向观众公开；同分时请按加赛结果调整顺序后再确认。</p>
+    <p className={note}>每位选手单独游玩一首指定曲，按分数从高到低确定 1–8 号顺位（首轮 1v8、2v7、3v6、4v5）。保存分数即向观众公开；同分时请按加赛结果调整顺序后再确认。</p>
     {!confirmed && <>
-      <div className="cl-ranking-inputs">
-        {tournament.players.map(p => <label key={p.id}>{p.name}
-          <input inputMode="numeric" type="number" min="0" max="2000000" step="1" placeholder="待录入" value={scores[p.id] ?? ""} disabled={disabled}
+      <div className="grid grid-cols-2 gap-y-2.5 gap-x-4 my-3.5 mobile:grid-cols-[1fr]">
+        {tournament.players.map(p => <label key={p.id} className="flex flex-col gap-1.5 text-[13px] font-semibold text-left">{p.name}
+          <input className="h-10 border border-line rounded-[10px] px-3 text-[15px] tabular-nums" inputMode="numeric" type="number" min="0" max="2000000" step="1" placeholder="待录入" value={scores[p.id] ?? ""} disabled={disabled}
             onChange={e => setScores({ ...scores, [p.id]: e.target.value })} />
         </label>)}
       </div>
-      <div className="player-form-actions">
-        <button className="secondary-button" disabled={disabled || !dirty || !valid || !tournament.players.length} onClick={() => void onSave({
+      <div className={st.playerFormActions}>
+        <button className={st.secondaryButton} disabled={disabled || !dirty || !valid || !tournament.players.length} onClick={() => void onSave({
           type: "ranking-scores",
           scores: tournament.players.map(p => ({ id: p.id, score: scores[p.id] === "" || scores[p.id] === undefined ? null : Number(scores[p.id]) })),
         }, tournament.revision)}><Save size={15} />保存排位分数</button>
       </div>
     </>}
-    {tournament.players.length > 0 && <ol className="cl-seed-preview">
+    {tournament.players.length > 0 && <ol className="list-none p-0 my-3.5 flex flex-col gap-1.5">
       {order.map((id, i) => {
         const tieWithNext = !confirmed && i < order.length - 1 && score(id) !== null && score(id) === score(order[i + 1]);
-        return <li key={id}>
-          <span className="cl-seed-no">#{i + 1}</span><b>{name(id)}</b>
-          <span className="cl-seed-score">{score(id)?.toLocaleString() ?? "—"}</span>
-          {tieWithNext && <button className="text-button" disabled={disabled} onClick={() => swap(i)}>同分 · 与下一位交换</button>}
+        return <li key={id} className="flex items-center gap-2.5 flex-wrap py-[9px] px-3 bg-[#f8f9fc] rounded-[10px] text-[14px] text-left">
+          <span className="w-7 text-[#7a7a82] tabular-nums">#{i + 1}</span><b>{name(id)}</b>
+          <span className="ml-auto tabular-nums text-[#4a4a52]">{score(id)?.toLocaleString() ?? "—"}</span>
+          {tieWithNext && <button className={st.textButton} disabled={disabled} onClick={() => swap(i)}>同分 · 与下一位交换</button>}
         </li>;
       })}
     </ol>}
-    <div className="player-form-actions">
+    <div className={st.playerFormActions}>
       {confirmed
-        ? <button className="secondary-button" disabled={disabled || !clCanReopenRanking(tournament)} onClick={() => {
+        ? <button className={st.secondaryButton} disabled={disabled || !clCanReopenRanking(tournament)} onClick={() => {
           if (confirm("撤回排位后首轮对阵将清空，确认撤回？")) void onSave({ type: "ranking-reopen" }, tournament.revision);
         }}><RotateCcw size={15} />撤回排位</button>
-        : <button className="primary-button" disabled={disabled || dirty || !allScored} onClick={() => {
+        : <button className={st.primaryButton} disabled={disabled || dirty || !allScored} onClick={() => {
           if (confirm("按当前顺序确认排位并生成首轮对阵？")) void onSave({ type: "ranking-confirm", order }, tournament.revision);
         }}><Check size={15} />确认排位并生成首轮对阵</button>}
     </div>
-    {!confirmed && !allScored && <p className="form-help">需要 {CL_PLAYER_COUNT} 位选手且全部录入分数后才能确认排位。</p>}
-    {confirmed && !clCanReopenRanking(tournament) && <p className="form-help">首轮比赛已有选曲或已开始，排位已锁定。</p>}
+    {!confirmed && !allScored && <p className={cn(st.formHelp, st.adminText, "leading-[1.8]")}>需要 {CL_PLAYER_COUNT} 位选手且全部录入分数后才能确认排位。</p>}
+    {confirmed && !clCanReopenRanking(tournament) && <p className={cn(st.formHelp, st.adminText, "leading-[1.8]")}>首轮比赛已有选曲或已开始，排位已锁定。</p>}
   </section>;
 }

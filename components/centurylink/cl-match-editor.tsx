@@ -15,6 +15,8 @@ import {
 import { clCanDrawNext, clDrawable, clPickable, clRegularCount, type ClAction } from "@/lib/centurylink-rules";
 import ClMatchSummary from "./cl-match-summary";
 import { clSongName, clSongNumber } from "./cl-songs";
+import * as st from "@/components/styles";
+import { cn } from "@/lib/utils";
 
 const kindHelp = {
   pickban: "高顺位选手先禁用 1 首，低顺位后禁用 1 首；再由高顺位先选 1 首、低顺位后选 1 首。比较两首总分。",
@@ -129,7 +131,7 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
     }
   }
   if (["complete", "bye"].includes(match.status)) return <ClMatchSummary tournament={tournament} match={match} catalog={catalog} />;
-  if (!players[0] || !players[1]) return <div className="empty-live">等待前置比赛结束后确定对阵。</div>;
+  if (!players[0] || !players[1]) return <div className={st.emptyLive}>等待前置比赛结束后确定对阵。</div>;
   const winnerName = confirm?.type === "bye"
     ? players.find(p => p?.id === forfeit)?.name
     : decision === null ? "" : players[decision]?.name;
@@ -138,24 +140,24 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
   const sumTied = !points && scores.length > 0 && scores.every(s => s.a !== null && s.b !== null) && ta === tb;
 
   return (
-    <fieldset className="editor" disabled={saving || disabled}>
-      <div className="private-note">
+    <fieldset className={st.editor} disabled={saving || disabled}>
+      <div className={st.privateNote}>
         <Music2 size={15} />
         <span>{kindHelp[definition.kind]}</span>
       </div>
       <>
-        <div className="form-heading">
-          <h3>01 <span>{pickCount ? "Ban 曲与选曲" : "Ban 曲"}</span></h3>
-          <span>{pickCount ? "各 Ban 1 首 · 各选 1 首" : match.id === "G14" ? "胜者组冠军 Ban 2 首" : "各 Ban 1 首"}</span>
+        <div className={st.formHeading}>
+          <h3 className={st.formHeadingTitle}>01 <span className={st.formHeadingName}>{pickCount ? "Ban 曲与选曲" : "Ban 曲"}</span></h3>
+          <span className={st.formHeadingNote}>{pickCount ? "各 Ban 1 首 · 各选 1 首" : match.id === "G14" ? "胜者组冠军 Ban 2 首" : "各 Ban 1 首"}</span>
         </div>
-        <div className="pick-sides">
+        <div className={st.pickSides}>
           {([0, 1] as const).map(side => {
             const player = players[side]!;
             const otherBans = bans[1 - side];
             return (
-              <div className="pick-side" key={side}>
-                <h4>{player.name}</h4>
-                <span className="player-rating">排位 #{clSeed(tournament, player.id) ?? "—"}</span>
+              <div className={st.pickSide} key={side}>
+                <h4 className={st.pickSideName}>{player.name}</h4>
+                <span className={st.playerRating}>排位 #{clSeed(tournament, player.id) ?? "—"}</span>
                 {Array.from({ length: banCounts[side] }, (_, i) => (
                   <Picker key={`ban-${i}`} label={`${player.name} Ban 曲${banCounts[side] > 1 ? ` ${i + 1}` : ""}`}
                     value={bans[side][i] ?? ""} disabled={selectionLocked} onChange={v => changeBan(side, i, v)}
@@ -171,31 +173,31 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
           })}
         </div>
       </>
-      <div className="editor-inline">
+      <div className={st.editorInline}>
         <Picker label="比赛机台" value={station} onChange={setStation} disabled={live}
           options={[{ value: "A", label: "A 台" }, { value: "B", label: "B 台" }]} />
-        {(!points || (scores.length < regular && decision === null)) && <button className="secondary-button" disabled={saving || (points ? !canDrawNext : live || !selectionReady)} onClick={points ? drawNext : generate}>
+        {(!points || (scores.length < regular && decision === null)) && <button className={cn(st.secondaryButton, st.editorInlineButton)} disabled={saving || (points ? !canDrawNext : live || !selectionReady)} onClick={points ? drawNext : generate}>
           <Shuffle size={16} />
           {points ? `抽取第 ${Math.min(scores.length + 1, clDrawCount(match.id))} 首曲目` : "生成比赛曲目"}
         </button>}
       </div>
-      <div className="form-heading">
-        <h3>02 <span>成绩录入</span></h3>
-        <span>{points ? "逐曲得分制 · 先得 3 分" : definition.kind === "designated" ? "三首总分制" : "两首总分制"}</span>
+      <div className={st.formHeading}>
+        <h3 className={st.formHeadingTitle}>02 <span className={st.formHeadingName}>成绩录入</span></h3>
+        <span className={st.formHeadingNote}>{points ? "逐曲得分制 · 先得 3 分" : definition.kind === "designated" ? "三首总分制" : "两首总分制"}</span>
       </div>
       {scores.length === 0 ? (
-        <p className="form-help">{points ? "完成 Ban 曲后可连续逐首抽选，再开始比赛；无需先登记比分。" : "Ban 曲与选曲完成后生成曲目。"}每首成绩由裁判手动填写。</p>
+        <p className={st.formHelp}>{points ? "完成 Ban 曲后可连续逐首抽选，再开始比赛；无需先登记比分。" : "Ban 曲与选曲完成后生成曲目。"}每首成绩由裁判手动填写。</p>
       ) : (
         <>
-          <div className="score-column-head"><span>课题曲</span><span>{players[0].name}</span><span>{players[1].name}</span></div>
+          <div className={st.scoreColumnHead}><span>课题曲</span><span>{players[0].name}</span><span>{players[1].name}</span></div>
           {scores.map((s, i) => (
-            <div className="score-input-row" key={s.songId}>
-              <div>
-                <small>{String(i + 1).padStart(2, "0")} · {isSpecial(s.songId) ? (points ? "决胜曲" : "指定曲") : i >= regular ? "加赛曲" : points ? "抽取曲" : "选曲"}</small>
+            <div className={st.scoreInputRow} key={s.songId}>
+              <div className={st.scoreSong}>
+                <small className={st.scoreSongNote}>{String(i + 1).padStart(2, "0")} · {isSpecial(s.songId) ? (points ? "决胜曲" : "指定曲") : i >= regular ? "加赛曲" : points ? "抽取曲" : "选曲"}</small>
                 <span>{name(s.songId)}</span>
               </div>
               {(["a", "b"] as const).map((side, sideIndex) => (
-                <input key={side} aria-label={`${name(s.songId)} ${players[sideIndex]!.name}成绩`}
+                <input className={st.scoreInput} key={side} aria-label={`${name(s.songId)} ${players[sideIndex]!.name}成绩`}
                   inputMode="numeric" type="number" min="0" max="2000000" step="1" value={s[side] ?? ""} placeholder="待录入"
                   onChange={e => {
                     const next = structuredClone(scores);
@@ -205,46 +207,46 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
               ))}
             </div>
           ))}
-          <div className="total-row">
+          <div className={st.totalRow}>
             <b>{points ? "得分" : "总分"}</b>
-            <strong>{ta.toLocaleString()}</strong>
-            <strong>{tb.toLocaleString()}</strong>
+            <strong className={st.totalValue}>{ta.toLocaleString()}</strong>
+            <strong className={st.totalValue}>{tb.toLocaleString()}</strong>
           </div>
-          <div className="cl-editor-extra">
-            {points && !tiebreakAdded && <button className="text-button" onClick={addTiebreak} disabled={saving || !live || !pointsTied}>
+          <div className="flex gap-3.5 flex-wrap">
+            {points && !tiebreakAdded && <button className={st.textButton} onClick={addTiebreak} disabled={saving || !live || !pointsTied}>
               <Swords size={14} />2:2 平 · 加入决胜曲
             </button>}
-            {(!points || tiebreakAdded) && <button className="text-button" onClick={extra} disabled={saving || (points && (!live || !pointsTied))}>
+            {(!points || tiebreakAdded) && <button className={st.textButton} onClick={extra} disabled={saving || (points && (!live || !pointsTied))}>
               <Shuffle size={14} />同分加赛 · 抽取一首
             </button>}
           </div>
         </>
       )}
-      <div className="editor-actions">
+      <div className={st.editorActions}>
         {match.status === "pending" ? (
           <>
-            <button className="secondary-button" disabled={saving} onClick={() => void submit({ type: "draft" })}><Save size={16} />保存草稿</button>
-            <button className="primary-button" disabled={saving || scores.length < (points ? 1 : regular)} onClick={() => void submit({ type: "start" })}><Radio size={16} />开始比赛</button>
+            <button className={st.secondaryButton} disabled={saving} onClick={() => void submit({ type: "draft" })}><Save size={16} />保存草稿</button>
+            <button className={st.primaryButton} disabled={saving || scores.length < (points ? 1 : regular)} onClick={() => void submit({ type: "start" })}><Radio size={16} />开始比赛</button>
           </>
         ) : (
           <>
-            <button className="secondary-button" disabled={saving} onClick={() => void submit({ type: "save" })}><Save size={16} />保存比分</button>
-            <button className="primary-button" disabled={saving || decision === null} onClick={() => setConfirm({ type: "finish" })}><Check size={16} />确认赛果</button>
+            <button className={st.secondaryButton} disabled={saving} onClick={() => void submit({ type: "save" })}><Save size={16} />保存比分</button>
+            <button className={st.primaryButton} disabled={saving || decision === null} onClick={() => setConfirm({ type: "finish" })}><Check size={16} />确认赛果</button>
           </>
         )}
       </div>
-      {points && live && scores.length < regular && decision === null && <p className="form-help">可继续逐首抽选，无需先登记比分；抽取时自动保存曲目及已填比分。</p>}
-      {(pointsTied || sumTied) && <p className="form-help">{pointsTied && !tiebreakAdded ? "四曲后比分持平，请加入决胜曲。" : "比分持平，请抽取加赛曲目后再确认赛果。"}</p>}
-      <div className="bye-area">
-        <h3>弃权 / 判负</h3>
-        <p>选手缺席、退赛或被判负时，指定获胜的一方，无需填写成绩。</p>
+      {points && live && scores.length < regular && decision === null && <p className={st.formHelp}>可继续逐首抽选，无需先登记比分；抽取时自动保存曲目及已填比分。</p>}
+      {(pointsTied || sumTied) && <p className={st.formHelp}>{pointsTied && !tiebreakAdded ? "四曲后比分持平，请加入决胜曲。" : "比分持平，请抽取加赛曲目后再确认赛果。"}</p>}
+      <div className={st.byeArea}>
+        <h3 className={st.byeTitle}>弃权 / 判负</h3>
+        <p className={st.byeText}>选手缺席、退赛或被判负时，指定获胜的一方，无需填写成绩。</p>
         <Picker label="获胜的选手" value={forfeit} onChange={setForfeit}
           options={players.map(p => ({ value: p!.id, label: p!.name }))} />
-        <button className="text-button" disabled={!forfeit || saving} onClick={() => setConfirm({ type: "bye", winner: forfeit })}>
+        <button className={st.textButton} disabled={!forfeit || saving} onClick={() => setConfirm({ type: "bye", winner: forfeit })}>
           判定获胜<ChevronRight size={15} />
         </button>
       </div>
-      {error && <p role="alert" className="form-error">{error}</p>}
+      {error && <p role="alert" className={st.formError}>{error}</p>}
       <AlertDialog open={!!confirm} onOpenChange={v => !v && setConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -255,7 +257,7 @@ export default function ClMatchEditor({ tournamentId, tournament, match, revisio
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={saving}>返回检查</AlertDialogCancel>
-            <AlertDialogAction className="primary-button" disabled={saving} onClick={e => { e.preventDefault(); if (confirm) void submit(confirm); }}>
+            <AlertDialogAction className={st.primaryButton} disabled={saving} onClick={e => { e.preventDefault(); if (confirm) void submit(confirm); }}>
               {saving ? "正在保存…" : "确认并更新对阵"}
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -33,10 +33,11 @@ try {
     assert.equal((html.match(/<tbody>(.*?)<\/tbody>/s)[1].match(/<tr>/g) ?? []).length, 3);
     assert(html.includes('1,000,000') && html.includes('2,930,000'));
     assert(html.includes('获得冠军') && html.includes('指定曲'));
-    const records = [...html.matchAll(/<div class="selection-record">(.*?)<\/div>/gs)].map(m => m[1]);
-    assert.match(records[0], /Sample 1<\/span><small>被对方 Ban/);
-    assert.doesNotMatch(records[0], /Sample 2<\/span><small>被对方 Ban/);
-    assert.match(records[1], /Sample 2<\/span><small>被对方 Ban/);
+    // Each player's record is an <h4> name followed by their picks; match structure, not styling.
+    const records = [...html.matchAll(/<h4[^>]*>.*?<\/h4>(.*?)<\/div>/gs)].map(m => m[1]);
+    assert.match(records[0], /Sample 1<\/span><small[^>]*>被对方 Ban/);
+    assert.doesNotMatch(records[0], /Sample 2<\/span><small[^>]*>被对方 Ban/);
+    assert.match(records[1], /Sample 2<\/span><small[^>]*>被对方 Ban/);
     assert.doesNotMatch(html, /<input/);
   }
   const privateHtml = viewer({ ...props, match: { ...match, published: false, status: 'pending', winner: null } });
