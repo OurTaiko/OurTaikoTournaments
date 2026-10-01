@@ -1,0 +1,193 @@
+{
+  "tournamentId": "hachicats-20260927",
+  "directory": "hachicats/20260927",
+  "location": "猫鼓旗舰店 · 上海",
+  "summary": "暹罗、狸花、布偶三组 48 位选手，在猫鼓旗舰店度过的一整天。",
+  "cover": "4341D3689F9AE411BFA180DCDA68B204.jpg",
+  "chapters": [
+    {
+      "id": "venue",
+      "title": "赛场",
+      "en": "The Venue",
+      "description": "猫鼓旗舰店的鼓台、易拉宝和限定徽章，为八猫杯准备就绪。",
+      "photos": [
+        {
+          "file": "DB333B14F709F73960A9CE30D59B99FF.jpg",
+          "alt": "猫鼓旗舰店的立体招牌",
+          "caption": "猫鼓旗舰店",
+          "width": 1920,
+          "height": 1280,
+          "blurDataURL": "data:image/webp;base64,UklGRkwAAABXRUJQVlA4IEAAAACwAQCdASoIAAUAAkA4JYgCdAEOuwSAAP6tQgDtZJGyUDAlC5DO/HgKQABQDbWXrsg9B/i17eN8bsV9UzB2AAAA"
+        },
+        {
+          "file": "C5234DEB4F60934767B321FCD103F29C.jpg",
+          "alt": "印有三只猫咪的八猫杯易拉宝",
+          "caption": "八猫杯易拉宝",
+          "width": 1440,
+          "height": 1920,
+          "blurDataURL": "data:image/webp;base64,UklGRmAAAABXRUJQVlA4IFQAAADwAQCdASoIAAsAAkA4JYgCdAD0MdMECAAA++ETc22/2xsE3AYETdRvacadVHmIhdDtTy3O12bIQCv0ODDTqOM7Z1QXJ3QqDYfxul/Purh0Fn5QAAA="
+        },
+        {
+          "file": "5467D6A14D8A203790AF237D3F3459AB.jpg",
+          "alt": "鼓台上的太鼓与鼓棒",
+          "caption": "等待开赛的鼓台",
+          "width": 1280,
+          "height": 1920,
+          "blurDataURL": "data:image/webp;base64,UklGRmQAAABXRUJQVlA4IFgAAADwAQCdASoIAAwAAkA4JZACdAD0oUc2VTAA/tGF0uREmYjL8pWLeCpftf4f10rBbQc1QSAWinnuJib+2SBLwUle9kFc2QRICB/EfZ3WlxaXSQFO3C067AAA"
+        },
+        {
+          "file": "CB23C00F9EAD5B4D2B4CB37E21E33FA7.jpg",
+          "alt": "三枚八猫杯猫咪徽章",
+          "caption": "八猫杯纪念徽章",
+          "width": 1920,
+          "height": 1307,
+          "blurDataURL": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACwAQCdASoIAAUAAkA4JZwAAlyoaJmAAOAKKyi/zjKM+ROPp0qMVIeLTAv0AAAA"
+        },
+        {
+          "file": "66FB238613655A980E17F6E611155533.jpg",
+          "alt": "选手握着鼓棒的特写",
+          "caption": "握紧鼓棒",
+          "width": 1920,
+          "height": 1280,
+          "blurDataURL": "data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAABQAgCdASoIAAUAAkA4JbACdLoAyv8D7FP5VqgA/ub+popsKe0CgnfughTR0NZsPlvGTNC5PM0MNAa7J5QRS01Yx619Rk0IEoAAAA=="
+        }
+      ]
+    },
+    {
+      "id": "matches",
+      "title": "对决",
+      "en": "The Matches",
+      "description": "两台机台并行，屏幕前每一个音符都关乎晋级。",
+      "photos": [
+        {
+          "file": "F7647375C6453F522B9970C87CEB9168.jpg",
+          "alt": "选手在机台前演奏，观众在旁举着手机记录",
+          "caption": "全力以赴",
+          "width": 1920,
+          "height": 1280,
+          "blurDataURL": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADQAQCdASoIAAUAAkA4JQBOgCLJ6OCfwAD+8boZUVG3CtdvdXGKZP9a2Lpdar9yxb339Kk1wtrnCtl3O4Uc4h8AwFQAAA=="
+        },
+        {
+          "file": "F4127C06DCA16196441F05AA97D280A1.jpg",
+          "alt": "机台前鼓棒落下的瞬间",
+          "caption": "机台前",
+          "width": 1920,
+          "height": 1280,
+          "blurDataURL": "data:image/webp;base64,UklGRlIAAABXRUJQVlA4IEYAAADQAQCdASoIAAUAAkA4JZgCdAD5i0jpkAD+ikOMyuPDFdWnvPBY//kmY+YROj0scTAntvuIdhJB7s6NspVYbeGmgTMWAAAA"
+        },
+        {
+          "file": "E0C504EFCE82EADF9AF36E8481735E5E.jpg",
+          "alt": "直播画面上的比赛实况",
+          "caption": "比赛直播",
+          "width": 1920,
+          "height": 1280,
+          "blurDataURL": "data:image/webp;base64,UklGRkYAAABXRUJQVlA4IDoAAADwAQCdASoIAAUAAkA4JZQC7AEO9W31kgAA/ok/Ytnr/xVnCPRGM8CtIYQ9r431X2/3mjRfIhyiwpAA"
+        }
+      ]
+    },
+    {
+      "id": "awards",
+      "title": "颁奖",
+      "en": "The Podium",
+      "description": "各组获奖选手捧着奖品，留下这一天的高光。",
+      "photos": [
+        {
+          "file": "D351BD6B629B456C5FA6265D16FCF5DA.jpg",
+          "alt": "获奖选手在猫鼓旗舰店招牌下手持奖品合影",
+          "caption": "获奖选手",
+          "width": 4096,
+          "height": 2304,
+          "blurDataURL": "data:image/webp;base64,UklGRlQAAABXRUJQVlA4IEgAAADQAQCdASoIAAUAAkA4JaACdAEOZ/KjgAD+3Vja5so5NJMXF/TqTr0Ad3klN87QTB5jx5tcetHVAXFhCyak2L89VlxK5IwAAAA="
+        },
+        {
+          "file": "0B883B1158B7A9E7EC67897A178D445A.jpg",
+          "alt": "四位获奖选手在店门口展示奖品",
+          "caption": "奖品到手",
+          "width": 3210,
+          "height": 2230,
+          "blurDataURL": "data:image/webp;base64,UklGRlIAAABXRUJQVlA4IEYAAADwAQCdASoIAAYAAkA4JYwCdAD0oby3jgAA/q3FlNNoXkaR8geQf9FzLDbQ8O4RaodCWMjNQULhRAsa1dUEWzhs0ZiIFgAA"
+        },
+        {
+          "file": "A44D4627CBD432D65DB14E886B63D5AC.jpg",
+          "alt": "获奖选手在横幅下手持奖品合影",
+          "caption": "领奖时刻",
+          "width": 4224,
+          "height": 2376,
+          "blurDataURL": "data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAACwAQCdASoIAAUAAkA4JagCdADyfwWAAP6D8Vg+omCm8c9iBc3DDMk0WdTzEw4MjKlqov4zevDu/xNZLfNC13Wi/7aleMOyrQAAAA=="
+        },
+        {
+          "file": "C3F6869A6B8EBC3AE3923910B0BE304C.jpg",
+          "alt": "获奖选手与观众在横幅前合影",
+          "caption": "台下的掌声",
+          "width": 4096,
+          "height": 2304,
+          "blurDataURL": "data:image/webp;base64,UklGRlQAAABXRUJQVlA4IEgAAADQAQCdASoIAAUAAkA4JagCdAEOZ/JwAAD+wR84Lubcyily2WHy3cnddxsatuvyJTkUzUBv568oAm9+v7atTUj1WytvrZKAAAA="
+        }
+      ]
+    },
+    {
+      "id": "together",
+      "title": "相聚",
+      "en": "Together",
+      "description": "比赛之外，是签名、合影、互动，以及赛后的那顿饭。",
+      "photos": [
+        {
+          "file": "D16C2583ED2CF910EAFB190AAC352543.jpg",
+          "alt": "选手与观众前排就座的大合影",
+          "caption": "大合影",
+          "width": 1920,
+          "height": 1280,
+          "blurDataURL": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADwAQCdASoIAAUAAkA4JZQCdEf/gbah/ygA+WoMz/0z+kOMPUr6gaz5aTmyL8i7nR/XH1fOVRbHTovprNUstpC9XVOAAA=="
+        },
+        {
+          "file": "4341D3689F9AE411BFA180DCDA68B204.jpg",
+          "alt": "八猫杯全体选手与工作人员在猫鼓旗舰店横幅前合影",
+          "caption": "全体合影",
+          "width": 1920,
+          "height": 1080,
+          "blurDataURL": "data:image/webp;base64,UklGRk4AAABXRUJQVlA4IEIAAACwAQCdASoIAAUAAkA4JQBOgCHXYL3gAP6+iiWIk4ClPhjTYTd+4xLW0UgOvLg4j08tSx2p8LI5ed5zuS10dfzeAAA="
+        },
+        {
+          "file": "4080D3678370252581C25AFE163D0296.jpg",
+          "alt": "参与者与猫咪 cosplayer 比心互动",
+          "caption": "比心",
+          "width": 1920,
+          "height": 1280,
+          "blurDataURL": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAACwAQCdASoIAAUAAkA4JZgCdAD0h/pcAM3zeCVkJ1f2svXLcMP83Gx7KxLkfoy2wWlCzEYwZ/BtieGPk+S79a4mftbgAA=="
+        },
+        {
+          "file": "69713AFB855D886B35299317D1A5E40C.jpg",
+          "alt": "紫发猫耳 cosplayer 手持太鼓周边",
+          "caption": "现场 cosplay",
+          "width": 1280,
+          "height": 1920,
+          "blurDataURL": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAADwAQCdASoIAAwAAkA4JYwCw7EO2lkyDgAA/u+jS+JYXEHxIzkeqbYCUruaIkVth2rbniEI4/SL3hTreH41NP8CC4Yvr9zwMoKT1pyoAAA="
+        },
+        {
+          "file": "B3937AD648AD40A9404AE65DB1D60F9B.jpg",
+          "alt": "cosplayer 在桌边与小朋友互动",
+          "caption": "与小选手互动",
+          "width": 1920,
+          "height": 1280,
+          "blurDataURL": "data:image/webp;base64,UklGRkwAAABXRUJQVlA4IEAAAACwAQCdASoIAAUAAkA4JQBOgB5vdcWAAP5MdSzTbMa7qlG7xvIG5t/kanSN9Sy6c2uSvWlhMQQufkuhqBaIAAAA"
+        },
+        {
+          "file": "A27FC33144A201D521760A89102BDC61.jpg",
+          "alt": "在红色八猫杯签名板上签名",
+          "caption": "签名留念",
+          "width": 1920,
+          "height": 1280,
+          "blurDataURL": "data:image/webp;base64,UklGRlwAAABXRUJQVlA4IFAAAAAQAgCdASoIAAUAAkA4JbACdLoAAx8YxQpwAP6tvctG14SVwbCue6g4A87obFABLR4yHKP+mDTzlzX3THot/+JUcX+Tf5RgST0qOL/Jv0YAAA=="
+        },
+        {
+          "file": "F60E6664DECE82EEC103FBDA92DF2A32.jpg",
+          "alt": "赛后聚餐，大家举起手机围成一圈",
+          "caption": "赛后聚餐",
+          "width": 1920,
+          "height": 1440,
+          "blurDataURL": "data:image/webp;base64,UklGRk4AAABXRUJQVlA4IEIAAADQAQCdASoIAAYAAkA4JQBOgB6LANWDQAD+2tB0Jp7rHCdgBK3bW4PYQ4SjidP1zY2k0fYLSJctMjeIiC4ePjAAAAA="
+        }
+      ]
+    }
+  ]
+}

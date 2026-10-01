@@ -46,6 +46,9 @@ flowchart LR
 | 文件 | 职责 |
 | --- | --- |
 | `app/hachicats/20260927/page.tsx` | 静态赛果存档：赛事总结、赛事对阵、分组曲库（含已公布指定曲）、赛事指南四个 tab 及只读比赛详情；不请求赛事接口 |
+| `app/gallery/page.tsx` / `app/hachicats/20260927/gallery/page.tsx` | 赛事相册总览与八猫杯相册（静态页面），见第 15 节 |
+| `data/gallery/*.json` / `scripts/gallery-metadata.mjs` | 各赛事相册清单（照片、描述、章节）及尺寸 / 模糊占位生成脚本 |
+| `lib/gallery.ts` / `components/gallery/` | 读取并解析相册清单；灯箱、横向胶片条与相册样式 |
 | `data/archive/hachicats-20260927.json` | 八猫杯最终公开赛况与曲目（revision 168）；`scripts/archive-tournament.mjs` 生成，`tests/archive.test.mjs` 校验 |
 | `app/login/page.tsx` / `components/login-page.tsx` | 独立登录页、账号状态、退出及本地演示入口 |
 | `components/player-manager.tsx` | 管理员编辑姓名 / rating、新增同组替补 |
@@ -489,3 +492,21 @@ node --env-file=<私有环境文件> scripts/init-centurylink.mjs .data/centuryl
 ### 验证
 
 `node tests/centurylink.test.mjs`（已加入 `npm test`）：排位 / 同分排序、三种比赛类型规则（G5/G6 Ban / 选曲同首轮）、逐首抽曲及 3:0 / 3:1 / 2:2、赛前连续逐首抽完、未录分时继续抽选、禁止批量抽取 / 替换 / 重排、旧四曲表兼容、阶段内不重复、加赛 / 决胜曲、晋级与最终排名、原生文档往返、公开过滤、API 权限与 revision、全部指定曲开赛前的匿名公开访问、重置后仍公开、重置备份。浏览器依赖测试覆盖新页面。原有 UI 验证包含排位录入与确认、G1 Ban / 选曲 / 录分。2026-09-30 在隔离 SQLite、本地生产构建中检查了 G5 Ban / 选曲 / 生成两曲 / 保存草稿、G12 逐首抽曲和比分自动保存、2:2 决胜曲 / 确认赛果 / 晋级、全部 6 首指定曲链接，以及 390px 手机布局（无横向溢出或浏览器错误）。npm test、typecheck、lint、npm run build 均通过。Atlas 集成测试（`tests/mongodb.test.mjs`）尚未针对 CenturyLink 格式运行。
+
+## 15. 赛事相册（本地实现，尚未发布）
+
+`/gallery` 按赛事展示所有相册：每场赛事一张封面（进入该赛事相册）加一条可横向滑动的胶片条；尚无照片的赛事列在「即将到来」。`/hachicats/20260927/gallery` 为八猫杯相册：全幅封面、可吸顶的章节导航（赛场、对决、颁奖、相聚），每章一张宽幅主图加瀑布流。点击任意照片打开灯箱，支持左右方向键、手机左右滑动、Esc 关闭，并预加载前后两张。入口路径为：首页赛事卡片 → `/hachicats/20260927` → 赛事标题下方的「赛事相册」按钮；首页不直接链接相册。两个页面都是静态预渲染（○），不读取数据库或接口。
+
+照片原图放在 `public/<系列>/<届次>/`。每场赛事一份清单 `data/gallery/<赛事 ID>.json`：`directory` 指向照片文件夹，`cover` 为封面文件名（必须出现在某个章节中），`chapters` 按顺序列出章节及其照片（`file`、`alt` 替代文本、`caption` 标题）；`width`、`height`、`blurDataURL` 由脚本生成，不要手改。`lib/gallery.ts` 读取并解析清单，赛事名称和日期取自 `lib/tournaments.ts`。`next/image` 按清单尺寸和模糊占位渲染，并经 Vercel 图片优化按屏幕宽度输出，浏览器不会直接下载原图。
+
+### 添加或调整照片
+
+1. 把照片放进对应文件夹（如 `public/hachicats/20260927/`），文件名保持不变即可。
+2. 在该赛事的 JSON 清单中加入 `{ "file": "...", "alt": "...", "caption": "..." }`，放进合适的章节；替代文本描述画面内容。章节第一张作为宽幅主图，建议选横图。
+3. 运行 `node scripts/gallery-metadata.mjs data/gallery/<赛事 ID>.json` 补全尺寸与模糊占位（使用 Next.js 自带的 sharp；会处理 EXIF 旋转）。
+4. 新赛事：新建清单，在 `lib/gallery.ts` 的 `manifests` 中导入并加入，再创建 `app/<系列>/<届次>/gallery/page.tsx`（参照八猫杯页面）。
+5. 运行 `node tests/gallery.test.mjs`（已含于 `npm test`）：检查 `data/gallery/` 下每份清单——文件夹中的每张照片都必须出现且仅出现一次、封面在章节中、替代文本与模糊占位齐全、尺寸与文件一致，且清单已被 `lib/gallery.ts` 加载并有对应页面。再执行 `npm run build`，确认相册路由为静态。
+
+### 验证
+
+桌面与手机 375px 视口检查封面、章节导航、瀑布流、`/gallery` 胶片条滑动及灯箱（方向键、滑动、Esc）；页面不应出现横向滚动。不发布未经主办方同意公开的照片。

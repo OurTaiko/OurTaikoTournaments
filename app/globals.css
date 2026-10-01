@@ -148,6 +148,21 @@ svg {
   background: none;
   padding: 10px 0;
 }
+.gallery-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 18px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: #1d1d1f;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+}
+.gallery-button:hover {
+  background: #000;
+}
 .container {
   max-width: 1060px;
   margin: auto;

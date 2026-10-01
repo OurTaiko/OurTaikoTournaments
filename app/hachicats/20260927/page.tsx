@@ -13,6 +13,7 @@ import {
   GitBranch,
   Flag,
   ChartNoAxesColumn,
+  Images,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -170,6 +171,11 @@ export default function Home() {
                 猫鼓旗舰店 · 上海
               </span>
             </div>
+            <Link className="gallery-button" href="/hachicats/20260927/gallery">
+              <Images size={16} />
+              赛事相册
+              <ArrowUpRight size={15} />
+            </Link>
           </div>
           <div className="event-format">
             <span>
