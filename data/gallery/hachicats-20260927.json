@@ -2,7 +2,7 @@
   "tournamentId": "hachicats-20260927",
   "directory": "hachicats/20260927",
   "location": "猫鼓旗舰店 · 上海",
-  "summary": "暹罗、狸花、布偶三组 48 位选手，在猫鼓旗舰店度过的一整天。",
+  "summary": "暹罗、狸花、布偶三组 48 位选手，在猫鼓旗舰店度过的一下午。",
   "cover": "4341D3689F9AE411BFA180DCDA68B204.jpg",
   "chapters": [
     {
@@ -55,14 +55,14 @@
     },
     {
       "id": "matches",
-      "title": "对决",
-      "en": "The Matches",
-      "description": "两台机台并行，屏幕前每一个音符都关乎晋级。",
+      "title": "赛前赛后",
+      "en": "Before & After Match",
+      "description": "同好拼机交友中...",
       "photos": [
         {
           "file": "F7647375C6453F522B9970C87CEB9168.jpg",
-          "alt": "选手在机台前演奏，观众在旁举着手机记录",
-          "caption": "全力以赴",
+          "alt": "玩家在机台前演奏",
+          "caption": "大随高手",
           "width": 1920,
           "height": 1280,
           "blurDataURL": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADQAQCdASoIAAUAAkA4JQBOgCLJ6OCfwAD+8boZUVG3CtdvdXGKZP9a2Lpdar9yxb339Kk1wtrnCtl3O4Uc4h8AwFQAAA=="
@@ -70,7 +70,7 @@
         {
           "file": "F4127C06DCA16196441F05AA97D280A1.jpg",
           "alt": "机台前鼓棒落下的瞬间",
-          "caption": "机台前",
+          "caption": "鼓棒落下的瞬间",
           "width": 1920,
           "height": 1280,
           "blurDataURL": "data:image/webp;base64,UklGRlIAAABXRUJQVlA4IEYAAADQAQCdASoIAAUAAkA4JZgCdAD5i0jpkAD+ikOMyuPDFdWnvPBY//kmY+YROj0scTAntvuIdhJB7s6NspVYbeGmgTMWAAAA"
@@ -78,7 +78,7 @@
         {
           "file": "E0C504EFCE82EADF9AF36E8481735E5E.jpg",
           "alt": "直播画面上的比赛实况",
-          "caption": "比赛直播",
+          "caption": "直播",
           "width": 1920,
           "height": 1280,
           "blurDataURL": "data:image/webp;base64,UklGRkYAAABXRUJQVlA4IDoAAADwAQCdASoIAAUAAkA4JZQC7AEO9W31kgAA/ok/Ytnr/xVnCPRGM8CtIYQ9r431X2/3mjRfIhyiwpAA"
@@ -93,32 +93,32 @@
       "photos": [
         {
           "file": "D351BD6B629B456C5FA6265D16FCF5DA.jpg",
-          "alt": "获奖选手在猫鼓旗舰店招牌下手持奖品合影",
-          "caption": "获奖选手",
+          "alt": "布偶组前四名在猫鼓旗舰店招牌下合影",
+          "caption": "布偶组前四名合影",
           "width": 4096,
           "height": 2304,
           "blurDataURL": "data:image/webp;base64,UklGRlQAAABXRUJQVlA4IEgAAADQAQCdASoIAAUAAkA4JaACdAEOZ/KjgAD+3Vja5so5NJMXF/TqTr0Ad3klN87QTB5jx5tcetHVAXFhCyak2L89VlxK5IwAAAA="
         },
         {
           "file": "0B883B1158B7A9E7EC67897A178D445A.jpg",
-          "alt": "四位获奖选手在店门口展示奖品",
-          "caption": "奖品到手",
+          "alt": "暹罗组前四名在横幅下合影-正面",
+          "caption": "暹罗组前四名合影-正",
           "width": 3210,
           "height": 2230,
           "blurDataURL": "data:image/webp;base64,UklGRlIAAABXRUJQVlA4IEYAAADwAQCdASoIAAYAAkA4JYwCdAD0oby3jgAA/q3FlNNoXkaR8geQf9FzLDbQ8O4RaodCWMjNQULhRAsa1dUEWzhs0ZiIFgAA"
         },
         {
           "file": "A44D4627CBD432D65DB14E886B63D5AC.jpg",
-          "alt": "获奖选手在横幅下手持奖品合影",
-          "caption": "领奖时刻",
+          "alt": "暹罗组前四名在横幅下合影-侧面",
+          "caption": "暹罗组前四名合影-侧",
           "width": 4224,
           "height": 2376,
           "blurDataURL": "data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAACwAQCdASoIAAUAAkA4JagCdADyfwWAAP6D8Vg+omCm8c9iBc3DDMk0WdTzEw4MjKlqov4zevDu/xNZLfNC13Wi/7aleMOyrQAAAA=="
         },
         {
           "file": "C3F6869A6B8EBC3AE3923910B0BE304C.jpg",
-          "alt": "获奖选手与观众在横幅前合影",
-          "caption": "台下的掌声",
+          "alt": "狸花组前四名合影",
+          "caption": "狸花组前四名合影",
           "width": 4096,
           "height": 2304,
           "blurDataURL": "data:image/webp;base64,UklGRlQAAABXRUJQVlA4IEgAAADQAQCdASoIAAUAAkA4JagCdAEOZ/JwAAD+wR84Lubcyily2WHy3cnddxsatuvyJTkUzUBv568oAm9+v7atTUj1WytvrZKAAAA="
@@ -133,47 +133,47 @@
       "photos": [
         {
           "file": "D16C2583ED2CF910EAFB190AAC352543.jpg",
-          "alt": "选手与观众前排就座的大合影",
+          "alt": "大合影",
           "caption": "大合影",
           "width": 1920,
           "height": 1280,
-          "blurDataURL": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADwAQCdASoIAAUAAkA4JZQCdEf/gbah/ygA+WoMz/0z+kOMPUr6gaz5aTmyL8i7nR/XH1fOVRbHTovprNUstpC9XVOAAA=="
-        },
-        {
-          "file": "4341D3689F9AE411BFA180DCDA68B204.jpg",
-          "alt": "八猫杯全体选手与工作人员在猫鼓旗舰店横幅前合影",
-          "caption": "全体合影",
-          "width": 1920,
-          "height": 1080,
           "blurDataURL": "data:image/webp;base64,UklGRk4AAABXRUJQVlA4IEIAAACwAQCdASoIAAUAAkA4JQBOgCHXYL3gAP6+iiWIk4ClPhjTYTd+4xLW0UgOvLg4j08tSx2p8LI5ed5zuS10dfzeAAA="
         },
         {
+          "file": "4341D3689F9AE411BFA180DCDA68B204.jpg",
+          "alt": "合影",
+          "caption": "合影",
+          "width": 1920,
+          "height": 1080,
+          "blurDataURL": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADwAQCdASoIAAUAAkA4JZQCdEf/gbah/ygA+WoMz/0z+kOMPUr6gaz5aTmyL8i7nR/XH1fOVRbHTovprNUstpC9XVOAAA=="
+        },
+        {
           "file": "4080D3678370252581C25AFE163D0296.jpg",
-          "alt": "参与者与猫咪 cosplayer 比心互动",
-          "caption": "比心",
+          "alt": "总裁、sui、夜夜和佑川",
+          "caption": "我也不知道在干什么",
           "width": 1920,
           "height": 1280,
           "blurDataURL": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAACwAQCdASoIAAUAAkA4JZgCdAD0h/pcAM3zeCVkJ1f2svXLcMP83Gx7KxLkfoy2wWlCzEYwZ/BtieGPk+S79a4mftbgAA=="
         },
         {
           "file": "69713AFB855D886B35299317D1A5E40C.jpg",
-          "alt": "紫发猫耳 cosplayer 手持太鼓周边",
-          "caption": "现场 cosplay",
+          "alt": "刻晴 Kiger 手持太鼓周边",
+          "caption": "现场 Kigurumi",
           "width": 1280,
           "height": 1920,
           "blurDataURL": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAADwAQCdASoIAAwAAkA4JYwCw7EO2lkyDgAA/u+jS+JYXEHxIzkeqbYCUruaIkVth2rbniEI4/SL3hTreH41NP8CC4Yvr9zwMoKT1pyoAAA="
         },
         {
           "file": "B3937AD648AD40A9404AE65DB1D60F9B.jpg",
-          "alt": "cosplayer 在桌边与小朋友互动",
-          "caption": "与小选手互动",
+          "alt": "Kiger 在桌边与小朋友互动",
+          "caption": "与小朋友互动",
           "width": 1920,
           "height": 1280,
           "blurDataURL": "data:image/webp;base64,UklGRkwAAABXRUJQVlA4IEAAAACwAQCdASoIAAUAAkA4JQBOgB5vdcWAAP5MdSzTbMa7qlG7xvIG5t/kanSN9Sy6c2uSvWlhMQQufkuhqBaIAAAA"
         },
         {
           "file": "A27FC33144A201D521760A89102BDC61.jpg",
-          "alt": "在红色八猫杯签名板上签名",
+          "alt": "在红色签名板上签名",
           "caption": "签名留念",
           "width": 1920,
           "height": 1280,
@@ -181,7 +181,7 @@
         },
         {
           "file": "F60E6664DECE82EEC103FBDA92DF2A32.jpg",
-          "alt": "赛后聚餐，大家举起手机围成一圈",
+          "alt": "赛后聚餐，神秘仪式",
           "caption": "赛后聚餐",
           "width": 1920,
           "height": 1440,
