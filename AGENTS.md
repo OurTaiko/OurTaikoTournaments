@@ -21,7 +21,7 @@ OurTaiko 社区的太鼓赛事网站：Next.js 16（App Router，webpack 构建�
 | `scripts/` | 一次性迁移 / 存档 / 初始化工具，运行前先读脚本头部注释和维护手册 | 视脚本而定 |
 | `tests/*.test.mjs` | 纯 Node 测试（无测试框架），`npm test` 串行执行 | 默认用临时 SQLite |
 
-样式写在 `app/globals.css`（全站，Apple 风格浅色）和各功能自己的 CSS（如 `components/gallery/gallery.css`，相册为深色）。Tailwind v4 可用，但现有页面主要使用语义化 class，新代码沿用周边写法。
+样式全部使用 Tailwind CSS v4 工具类，直接写在组件的 `className` 上；不要新增手写的 CSS 类或样式文件。`app/globals.css` 只保留主题变量（颜色、相册深色 `g-*` 色板、动画）、`mobile:`（≤760px）/ `phone:`（≤640px）两个自定义断点变体、`@utility` 自定义工具类和 `@layer base` 元素基础样式；基础样式放在 `@layer base` 中，未分层的 CSS 会压过所有工具类。多个页面共用的类组合放在 `components/styles.ts`（如顶栏、按钮、比赛卡片、编辑器），组合或覆盖类时用 `cn()`（tailwind-merge），不要拼接字符串。注意 tailwind-merge 会在后出现的字号类之后丢弃前面的 `leading-*`，需要时在最后重写行高。
 
 ### 常见任务怎么做
 

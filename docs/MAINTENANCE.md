@@ -48,7 +48,8 @@ flowchart LR
 | `app/hachicats/20260927/page.tsx` | 静态赛果存档：赛事总结、赛事对阵、分组曲库（含已公布指定曲）、赛事指南四个 tab 及只读比赛详情；不请求赛事接口 |
 | `app/gallery/page.tsx` / `app/hachicats/20260927/gallery/page.tsx` | 赛事相册总览与八猫杯相册（静态页面），见第 15 节 |
 | `data/gallery/*.json` / `scripts/gallery-metadata.mjs` | 各赛事相册清单（照片、描述、章节）及尺寸 / 模糊占位生成脚本 |
-| `lib/gallery.ts` / `components/gallery/` | 读取并解析相册清单；灯箱、横向胶片条与相册样式 |
+| `lib/gallery.ts` / `components/gallery/` | 读取并解析相册清单；灯箱与横向胶片条 |
+| `components/styles.ts` / `app/globals.css` | 共用 Tailwind 类组合；主题变量、`mobile:` / `phone:` 断点变体、动画与 `@layer base` 基础样式（见第 16 节） |
 | `data/archive/hachicats-20260927.json` | 八猫杯最终公开赛况与曲目（revision 168）；`scripts/archive-tournament.mjs` 生成，`tests/archive.test.mjs` 校验 |
 | `app/login/page.tsx` / `components/login-page.tsx` | 独立登录页、账号状态、退出及本地演示入口 |
 | `components/player-manager.tsx` | 管理员编辑姓名 / rating、新增同组替补 |
@@ -495,7 +496,7 @@ node --env-file=<私有环境文件> scripts/init-centurylink.mjs .data/centuryl
 
 ## 15. 赛事相册（本地实现，尚未发布）
 
-`/gallery` 按赛事展示所有相册：每场赛事一张封面（进入该赛事相册）加一条可横向滑动的胶片条；尚无照片的赛事列在「即将到来」。`/hachicats/20260927/gallery` 为八猫杯相册：全幅封面、可吸顶的章节导航（赛场、对决、颁奖、相聚），每章一张宽幅主图加瀑布流。点击任意照片打开灯箱，支持左右方向键、手机左右滑动、Esc 关闭，并预加载前后两张。入口路径为：首页赛事卡片 → `/hachicats/20260927` → 赛事标题下方的「赛事相册」按钮；首页不直接链接相册。两个页面都是静态预渲染（○），不读取数据库或接口。
+`/gallery` 按赛事展示所有相册：每场赛事一张封面（进入该赛事相册）加一条可横向滑动的胶片条；尚无照片的赛事列在「即将到来」。`/hachicats/20260927/gallery` 为八猫杯相册：全幅封面、可吸顶的章节导航（赛场、对决、颁奖、相聚），每章一张宽幅主图加瀑布流。点击任意照片打开灯箱，支持左右方向键、手机左右滑动、Esc 关闭，并预加载前后两张。入口：首页标题区「浏览赛事」旁的「赛事相册」按钮进入 `/gallery`；首页赛事卡片 → `/hachicats/20260927` → 赛事标题下方的「赛事相册」按钮进入该赛事相册。两个页面都是静态预渲染（○），不读取数据库或接口。
 
 照片原图放在 `public/<系列>/<届次>/`。每场赛事一份清单 `data/gallery/<赛事 ID>.json`：`directory` 指向照片文件夹，`cover` 为封面文件名（必须出现在某个章节中），`chapters` 按顺序列出章节及其照片（`file`、`alt` 替代文本、`caption` 标题）；`width`、`height`、`blurDataURL` 由脚本生成，不要手改。`lib/gallery.ts` 读取并解析清单，赛事名称和日期取自 `lib/tournaments.ts`。`next/image` 按清单尺寸和模糊占位渲染，并经 Vercel 图片优化按屏幕宽度输出，浏览器不会直接下载原图。
 
@@ -510,3 +511,19 @@ node --env-file=<私有环境文件> scripts/init-centurylink.mjs .data/centuryl
 ### 验证
 
 桌面与手机 375px 视口检查封面、章节导航、瀑布流、`/gallery` 胶片条滑动及灯箱（方向键、滑动、Esc）；页面不应出现横向滚动。不发布未经主办方同意公开的照片。
+
+## 16. 样式：Tailwind CSS（本地实现，尚未发布）
+
+全站样式已从手写 CSS 迁移为 Tailwind CSS v4 工具类，写在各组件的 `className` 上；`components/gallery/gallery.css` 已删除，`app/globals.css` 不再包含组件样式。
+
+- **断点：** 沿用原来的桌面优先断点，用自定义变体表示：`mobile:` = `max-width: 760px`，`phone:` = `max-width: 640px`。不要换成 Tailwind 默认的 `sm:` / `md:`（移动优先、阈值不同）。
+- **主题：** `@theme` 中定义站点色（`primary` 等）、`line` 边框色、相册深色色板 `g-bg` / `g-surface` / `g-text` / `g-muted` / `g-soft` / `g-accent`，以及相册动画 `animate-gallery-*`。滚动渐显用 `@utility reveal-on-scroll`（`animation-timeline` 必须写在 `animation` 简写之后，工具类排序无法保证，故单独定义）。
+- **基础样式：** 字体、链接、按钮过渡与按下效果、焦点环、标题字重等元素规则在 `@layer base`。未分层的 CSS 优先级高于所有工具类，不要在 `globals.css` 中新增未分层规则。
+- **共用类：** `components/styles.ts` 导出顶栏、事件头、主 tab、比赛卡片、曲目行、规则卡、比赛详情抽屉、比分表、录分编辑器、选手管理与相册等类组合。用 `cn()` 组合或覆盖；tailwind-merge 会按顺序去重冲突类，后出现的字号类会去掉前面的 `leading-*`。
+- **shadcn 组件：** 原来通过全局 `[data-slot=…]` 选择器覆盖的样式（遮罩颜色、抽屉关闭按钮、确认框圆角与阴影、说明文字行高）已直接写进 `components/ui/sheet.tsx`、`alert-dialog.tsx`；`TabsTrigger` 去掉了 `transition-all`，使用站点统一的按钮过渡。
+- **测试：** `tests/match-summary.test.mjs` 按结构（`<h4>` 与列表）而不是 CSS 类名检查选曲记录，修改样式不应影响它。
+
+### 迁移验证
+
+迁移前后在本地隔离 SQLite 演示服务中，对首页、登录页（登录前后）、八猫杯存档全部 tab、比赛详情、世纪汇全部 tab 及排位 / 曲库 / 指南 / 管理、进行中与已结束比赛详情、录分编辑器（进行中、待开始）、选手编辑表单、重置确认框、两个相册页及灯箱，分别在 1280×900 和 375×812 视口下逐元素比对了约 100 项计算样式（含 `::before` / `::after`）。除以下不可见差异外全部一致：零宽边框的颜色 / 线型、Tailwind 阴影栈中的透明层、相册动画 keyframes 改名、灯箱中仅供读屏的标题获得 `sr-only` 的 −1px 外边距。悬停 / 焦点等交互状态未逐项比对，按原 CSS 逐条转写。
+
