@@ -92,6 +92,10 @@
   body:has([data-gallery-page]) {
     background: var(--color-g-bg);
   }
+  html:has([data-obs-overlay]),
+  body:has([data-obs-overlay]) {
+    background: transparent;
+  }
   button,
   a,
   input,

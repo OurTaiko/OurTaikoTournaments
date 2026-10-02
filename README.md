@@ -8,6 +8,8 @@
 
 第二届世纪汇单店赛（CenturyLink）位于 `/centurylink/20261227`，为 8 人双败正赛：管理员录入选手昵称和排位赛分数，确认顺位后按三个阶段 Ban / 选曲 / 抽曲、录分并自动晋级，详见维护手册第 14 节。
 
+OBS 对阵控件位于 `/<系列>/<日期>/obs`，例如 `/centurylink/20261227/obs`。在 OBS 添加「浏览器」来源并填写完整网址，建议宽 960、高 720，背景透明，无需登录。已公布且进行中的对阵按机台排序，多场每 3 秒轮换、500ms 淡入淡出；单场固定显示，无比赛时显示等待状态。八猫杯控件显示已结束，不轮询赛事接口。使用与验证见维护手册第 17 节（本地实现，尚未发布）。
+
 - 正式网站：[tournaments.ourtaiko.org](https://tournaments.ourtaiko.org)
 - 生产：Next.js / Vercel + MongoDB Atlas，登录使用既有 OurTaiko SSO。
 - 维护入口：[维护手册](docs/MAINTENANCE.md)；Codex / 其他代码助手先读 [AGENTS.md](AGENTS.md)。
