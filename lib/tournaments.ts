@@ -23,6 +23,7 @@ export const tournaments = [{
   edition: "20260927",
   date: "2026-09-27",
   displayDate: "2026 年 9 月 27 日",
+  archived: true,
   description: "暹罗、狸花、布偶，三个组别的太鼓对决。查看赛事总结、完整对阵与比赛成绩。",
 }, {
   id: CENTURYLINK_TOURNAMENT_ID,
@@ -33,5 +34,6 @@ export const tournaments = [{
   edition: "20261227",
   date: "2026-12-27",
   displayDate: "2026 年 12 月 27 日",
+  archived: false,
   description: "8 位选手的双败淘汰正赛：排位赛定序，经第一、第二阶段，最终在决赛阶段决出冠军。",
 }] as const;

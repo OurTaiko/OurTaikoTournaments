@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { build } from 'esbuild';
 import { existsSync } from 'node:fs';
 
-const result = await build({ entryPoints: ['app/page.tsx', 'app/hachicats/20260927/page.tsx', 'app/centurylink/20261227/page.tsx', 'components/auth/sso-context.tsx'], outdir: 'unused-browser-check', bundle: true, platform: 'browser', write: false, metafile: true, logLevel: 'silent' });
+const result = await build({ entryPoints: ['app/page.tsx', 'app/hachicats/20260927/page.tsx', 'app/centurylink/20261227/page.tsx', 'components/auth/sso-context.tsx', 'components/obs/obs-overlay.tsx'], outdir: 'unused-browser-check', bundle: true, platform: 'browser', write: false, metafile: true, logLevel: 'silent' });
 const forbidden = Object.keys(result.metafile.inputs).filter(path =>
   /(?:^|\/)lib\/(?:.*\.server|runtime(?:\.cloudflare)?|mongodb|mongo-tournaments|tournament-documents|sql-database|tournament-scope|tournament-access|store|demo-song-library|song-library|centurylink-song-library|tournament-seed)\.ts$/.test(path) ||
   /(?:^|\/)data\/(?:songs|designated-songs|players)\.json$/.test(path) ||
