@@ -35,7 +35,8 @@ export function SsoProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (cause) {
       if (request === sequence.current) {
-        setSession({ user: null, demoAllowed: false });
+        // A failed verification is not a confirmed logout. Keep the last identity;
+        // useTournamentAccess still blocks management while error is set.
         setError(cause instanceof Error ? cause.message : "无法连接登录服务，请重试。");
       }
     } finally {
@@ -48,11 +49,17 @@ export function SsoProvider({ children }: { children: React.ReactNode }) {
     void refresh();
     const onFocus = () => { if (!mutation.current) void refresh(); };
     window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onFocus);
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") onFocus();
+    }, 60_000);
     return () => {
       // Invalidate outstanding requests, not a DOM ref.
       // eslint-disable-next-line react-hooks/exhaustive-deps
       sequence.current++;
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onFocus);
+      window.clearInterval(interval);
     };
   }, [refresh]);
   const authenticate = useCallback(async (action: "demo" | "logout") => {

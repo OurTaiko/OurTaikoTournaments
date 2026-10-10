@@ -49,8 +49,14 @@ export function mongoDatabase(getDb: () => Promise<Db>): Database {
       const row = await (await sessions()).findOne({ _id: id, expires: { $gt: now } });
       return row ? { id: row._id, body: row.body, expires: row.expires } : null;
     },
-    async deleteSession(id) {
-      return (await (await sessions()).deleteOne({ _id: id })).deletedCount === 1;
+    async updateSession(id, previousBody, body, now) {
+      return (await (await sessions()).updateOne(
+        { _id: id, body: previousBody, expires: { $gt: now } },
+        { $set: { body } },
+      )).matchedCount === 1;
+    },
+    async deleteSession(id, previousBody) {
+      return (await (await sessions()).deleteOne({ _id: id, ...(previousBody === undefined ? {} : { body: previousBody }) })).deletedCount === 1;
     },
 
   };

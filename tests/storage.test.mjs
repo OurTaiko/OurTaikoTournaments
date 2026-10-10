@@ -15,5 +15,6 @@ try {
   assert.equal(run(`const a=await db.updateTournament({id:'test',revision:1,body:'updated'},0); const b=await db.updateTournament({id:'test',revision:1,body:'stale'},0); console.log(a,b,(await db.getTournament('test')).body)`), 'true false updated');
   assert.equal(run(`console.log((await db.getTournament('test')).body)`), 'updated');
   assert.equal(run(`await db.saveSession({id:'s',body:'session',expires:100}); console.log(!!await db.getSession('s',99), await db.getSession('s',100),await db.deleteSession('s'),await db.deleteSession('s'))`), 'true null true false');
+  assert.equal(run(`await db.saveSession({id:'cas',body:'original',expires:Date.now()+60000}); const wins=await Promise.all(['one','two'].map(body=>db.updateSession('cas','original',body,Date.now()))); console.log(wins.filter(Boolean).length,await db.deleteSession('cas','original'),await db.updateSession('cas','one','late',Date.now()+120000),await db.deleteSession('cas'),await db.updateSession('cas','one','resurrect',Date.now()))`), '1 false false true false');
   console.log('PASS SQLite restart persistence, non-overwriting initialization, revision CAS, expiry boundary and one-use session deletion.');
 } finally { await rm(dir, { recursive: true, force: true }); }

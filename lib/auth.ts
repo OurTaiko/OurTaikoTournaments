@@ -2,13 +2,22 @@ import { safeReturnTo } from "./auth-navigation";
 import * as oidc from "openid-client";
 import { db, runtime, isDemo } from "./store";
 import { RuleError } from "./rules";
-import { introspectSession } from "./sso-session";
+import { introspectSession, revokeSession } from "./sso-session";
+import { openRefreshToken, sealRefreshToken } from "./session-crypto";
+import type { SessionRow } from "./database";
+export const loginLifetime = 7 * 86400;
+const refreshWindow = 60_000;
+const refreshLeaseDuration = 60_000;
+const unavailable = () => new RuleError("暂时无法验证登录状态，已保留登录，请稍后重试。", 503);
 type AuthSession = {
   kind: "user" | "demo";
   sub: string;
   name: string;
   username: string;
   token?: string;
+  refreshToken?: string;
+  accessExpiresAt?: number;
+  refreshLease?: { owner: string; until: number };
 };
 type Attempt = {
   kind: "attempt";
@@ -83,26 +92,101 @@ export async function config() {
     },
   );
 }
+async function revokeTokens(session: AuthSession) {
+  await revokeSession({ SSO_ISSUER: runtime.SSO_ISSUER, SSO_CLIENT_ID: runtime.SSO_CLIENT_ID, SSO_CLIENT_SECRET: runtime.SSO_CLIENT_SECRET }, {
+    accessToken: session.token,
+    refreshToken: session.refreshToken
+      ? openRefreshToken(session.refreshToken, runtime.SSO_CLIENT_SECRET, session.sub) : undefined,
+  });
+}
+
+async function renewSession(row: SessionRow): Promise<SessionRow | null> {
+  const deadline = Date.now() + 10_000;
+  for (;;) {
+    const session = JSON.parse(row.body) as AuthSession;
+    if (session.kind !== "user" || !session.refreshToken ||
+        (session.accessExpiresAt ?? 0) > Date.now() + refreshWindow) return row;
+    if (session.refreshLease && session.refreshLease.until > Date.now()) {
+      if (Date.now() >= deadline) throw unavailable();
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const latest = await db().getSession(row.id, Date.now());
+      if (!latest) return null;
+      row = latest;
+      continue;
+    }
+    // CAS in the shared database serializes refreshes across Vercel instances.
+    const locked = JSON.stringify({ ...session, refreshLease: {
+      owner: oidc.randomState(), until: Date.now() + refreshLeaseDuration,
+    } });
+    if (!await db().updateSession(row.id, row.body, locked, Date.now())) {
+      const latest = await db().getSession(row.id, Date.now());
+      if (!latest) return null;
+      row = latest;
+      if (Date.now() >= deadline) throw unavailable();
+      continue;
+    }
+    let renewed: AuthSession | undefined;
+    try {
+      const tokens = await oidc.refreshTokenGrant(await config(),
+        openRefreshToken(session.refreshToken, runtime.SSO_CLIENT_SECRET, session.sub));
+      if (!tokens.access_token || !Number.isFinite(tokens.expires_in) || tokens.expires_in! <= 0 ||
+          (tokens.claims()?.sub && tokens.claims()!.sub !== session.sub)) throw unavailable();
+      renewed = { ...session, token: tokens.access_token,
+        refreshToken: tokens.refresh_token
+          ? sealRefreshToken(tokens.refresh_token, runtime.SSO_CLIENT_SECRET, session.sub)
+          : session.refreshToken,
+        accessExpiresAt: Date.now() + tokens.expires_in! * 1000 };
+      delete renewed.refreshLease;
+      const body = JSON.stringify(renewed);
+      if (!await db().updateSession(row.id, locked, body, Date.now())) {
+        // Logout/expiry must never be undone by a refresh that was already in flight.
+        await revokeTokens(renewed).catch(() => {});
+        return null;
+      }
+      return { ...row, body };
+    } catch (error) {
+      if (error instanceof oidc.ResponseBodyError && error.error === "invalid_grant") {
+        await db().deleteSession(row.id, locked);
+        return null;
+      }
+      // If persistence failed after rotation, do not discard the new credentials.
+      if (renewed) {
+        try {
+          if (await db().updateSession(row.id, locked, JSON.stringify(renewed), Date.now()))
+            return { ...row, body: JSON.stringify(renewed) };
+        } catch { /* Keep the lease until it expires; never expose upstream errors. */ }
+      } else {
+        await db().updateSession(row.id, locked, row.body, Date.now()).catch(() => {});
+      }
+      throw unavailable();
+    }
+  }
+}
+
 export async function viewer(req: Request): Promise<Viewer | null> {
-  const s = await readSession(req);
-  if (!s || s.kind === "attempt") return null;
-  if (s.kind === "demo") {
-    return demoAllowed(req)
-      ? { id: "local-demo", name: "本地演示管理员", username: "demo", admin: true, demo: true }
-      : null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const saved = await db().getSession(sessionId(req), Date.now());
+    const row = saved && await renewSession(saved);
+    if (!row) return null;
+    const s = JSON.parse(row.body) as AuthSession | Attempt;
+    if (s.kind === "attempt") return null;
+    if (s.kind === "demo") {
+      return demoAllowed(req)
+        ? { id: "local-demo", name: "本地演示管理员", username: "demo", admin: true, demo: true }
+        : null;
+    }
+    const identity = await introspectSession({ SSO_ISSUER: runtime.SSO_ISSUER, SSO_CLIENT_ID: runtime.SSO_CLIENT_ID, SSO_CLIENT_SECRET: runtime.SSO_CLIENT_SECRET }, { subject: s.sub, token: s.token });
+    if (!identity) {
+      // An old in-flight check must not delete a concurrently refreshed session.
+      if (await db().deleteSession(row.id, row.body)) return null;
+      continue;
+    }
+    // Recheck local logout and absolute expiry after the upstream round trip.
+    if (!await db().getSession(row.id, Date.now())) return null;
+    return { id: identity.id, name: identity.nickname || identity.username,
+      username: identity.username, admin: identity.isAdmin, demo: false };
   }
-  const identity = await introspectSession({ SSO_ISSUER: runtime.SSO_ISSUER, SSO_CLIENT_ID: runtime.SSO_CLIENT_ID, SSO_CLIENT_SECRET: runtime.SSO_CLIENT_SECRET }, { subject: s.sub, token: s.token });
-  if (!identity) {
-    await removeSession(sessionId(req));
-    return null;
-  }
-  return {
-    id: identity.id,
-    name: identity.nickname || identity.username,
-    username: identity.username,
-    admin: identity.isAdmin,
-    demo: false,
-  };
+  throw unavailable();
 }
 export function demoAllowed(req: Request) {
   return (
@@ -163,7 +247,9 @@ export async function callback(req: Request) {
   if (!claims?.sub) throw new RuleError("登录身份无效。");
   const info = await oidc.fetchUserInfo(c, tokens.access_token, claims.sub);
   const username = String(info.preferred_username || "");
-  const lifetime = Math.max(1, Math.min(tokens.expires_in ?? 3600, 3600));
+  if (!tokens.refresh_token || !Number.isFinite(tokens.expires_in) || tokens.expires_in! <= 0)
+    throw new RuleError("登录服务未提供续期凭据，请稍后重试。", 503);
+  const lifetime = loginLifetime;
   const id = await saveSession(
     {
       kind: "user",
@@ -171,6 +257,8 @@ export async function callback(req: Request) {
       name: String(info.nickname || username),
       username,
       token: tokens.access_token,
+      refreshToken: sealRefreshToken(tokens.refresh_token, runtime.SSO_CLIENT_SECRET, claims.sub),
+      accessExpiresAt: Date.now() + tokens.expires_in! * 1000,
     },
     lifetime,
   );
@@ -188,7 +276,7 @@ export async function logout(req: Request) {
   await removeSession(sessionId(req));
   if (s?.kind === "user" && s.token)
     try {
-      await oidc.tokenRevocation(await config(), s.token);
+      await revokeTokens(s);
     } catch {
       /* Local session is already revoked even if SSO is unavailable. */
     }

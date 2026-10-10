@@ -177,6 +177,18 @@ SSO Application 所有者、Django 工作人员 / 超级用户、其他 Applicat
 同名重建账号拥有不同用户 ID，不继承旧角色。OIDC 登录仍使用授权码、state、nonce、PKCE；登录本身不等于管理员。
 SSO 超时、配置错误、格式异常或身份不符均返回 503 并拒绝操作，不回退旧名单；明确的失效 token 清理本站 session。
 
+### 七天登录与自动续期
+
+新登录的 Cookie 与数据库会话均在登录后 7 天到期，续期不延长这个绝对期限。旧的一小时会话继续使用到原到期时间，重新登录后获得七天会话。服务端保存访问令牌、其到期时间和 AES-256-GCM 加密的刷新令牌；加密密钥由现有 SSO_CLIENT_SECRET 派生并绑定用户 ID，凭据不返回浏览器。更换此密钥后，已有续期凭据无法解密，需要重新登录。
+
+每次读取身份时，访问令牌不足一分钟有效期便自动续期；即使网站闲置超过一小时，也可在七天内恢复。MongoDB / SQLite 通过会话 body 的条件更新领取 60 秒续期租约，跨实例和多标签页只允许一个续期请求。等待者最多等待 10 秒，其后返回可重试的 503；进程中断后租约可超时恢复。更新只改 body，不改 expires 或 MongoDB expiresAt。退出时删除会话并撤销刷新、访问令牌；在途续期不能重新创建已删除的会话。
+
+续期后仍实时向 SSO 验证身份和角色。改密、撤销应用授权、禁用账号导致的无效 token / invalid_grant 会清理会话；临时网络错误、SSO 503 或配置错误保留会话并返回 503，不放行管理操作。网络超时无法保证上游没有完成令牌轮换；若之后 SSO 明确拒绝旧刷新令牌，仍须重新登录。
+
+前端在页面打开、窗口聚焦、网络恢复及可见页面每分钟重新验证。验证失败保留最近的账号显示并提示重试，管理权限仍暂时关闭；只有成功确认 user=null 或主动退出才清空身份。首次加载离线时不会从本地缓存假定用户已登录。
+
+验证：`npm run test:sessions`、`npm run test:admins`、`npm run test:storage`、隔离 Atlas 测试、`npm run typecheck`、`npm run build`。浏览器需检查离线/503恢复、明确撤权后的退出及 390px 登录页。正式赛事只读核对，不录分或重置。
+
 ### 从旧名单切换
 
 先备份当前 Atlas 赛事、曲库及旧绑定，按生效部署的允许名单和 `(issuer, subject)` 绑定核对 SSO 用户，
@@ -345,7 +357,7 @@ node --env-file=.data/private-test-atlas.env tests/mongodb.test.mjs
 
 `/` 是 OurTaiko 赛事目录，条目定义于 `lib/tournaments.ts`。原八猫杯完整页面迁至 `/hachicats/20260927`，保留五个页签、比赛管理和总结。页面迁移本身不修改数据库；赛事键变更见下方迁移流程，不改变现有 API 的八猫杯归属。新增赛事必须提供独立的数据读取与服务端权限检查；目录条目本身不会创建赛事或授权。
 
-根布局 `app/layout.tsx` 挂载 `components/auth/sso-context.tsx` 的 `SsoProvider`。所有赛事客户端可调用 `useSSO()` 共享身份、加载 / 错误状态、刷新、SSO 跳转、本地演示登录及退出；页面不再各自查询 session。窗口获得焦点时重新验证身份；验证失败清除客户端身份并显示重试入口。服务端仍逐请求向 SSO 验证权限。`user.admin` 仍为现有 HachiCats Application 角色，不可用于授权其他赛事。
+根布局 `app/layout.tsx` 挂载 `components/auth/sso-context.tsx` 的 `SsoProvider`。所有赛事客户端可调用 `useSSO()` 共享身份、加载 / 错误状态、刷新、SSO 跳转、本地演示登录及退出；页面不再各自查询 session。窗口获得焦点、网络恢复及可见页面每分钟重新验证身份；验证失败保留最近的账号显示并提示重试，管理操作暂停，明确确认会话失效时才清除身份。服务端仍逐请求向 SSO 验证权限。`user.admin` 仍为现有 HachiCats Application 角色，不可用于授权其他赛事。
 
 `/login?returnTo=...` 是通用账号页。安全站内路径随 OIDC attempt 存储，成功返回原路径，失败保留返回目标并显示错误；不接受外部地址或认证 / API 循环目标。原 `hachicats_session` Cookie 保留 `Path=/`，兼容已有会话，token 不进入 React Context。SSO callback 保持 `/api/auth/callback`，无需变更现有注册回调。
 

@@ -49,3 +49,22 @@ export async function introspectSession(
     throw unavailable();
   }
 }
+
+// The SSO discovery document does not advertise OAuth token revocation. Use the
+// authenticated application endpoint, which also revokes the rotated token family.
+export async function revokeSession(config: SsoConfig, tokens: { accessToken?: string; refreshToken?: string }) {
+  const unavailable = () => new RuleError("暂时无法向 OurTaiko 撤销登录，请稍后重试。", 503);
+  try {
+    if (!config.SSO_CLIENT_ID || !config.SSO_CLIENT_SECRET || !config.SSO_ISSUER) throw unavailable();
+    const issuer = new URL(config.SSO_ISSUER);
+    const local = issuer.protocol === "http:" && ["localhost", "127.0.0.1"].includes(issuer.hostname);
+    if ((issuer.protocol !== "https:" && !local) || issuer.username || issuer.password || issuer.search || issuer.hash)
+      throw unavailable();
+    const response = await fetch(new URL("/internal/v1/web/revoke", issuer), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Service-ID": config.SSO_CLIENT_ID, "X-Service-Key": config.SSO_CLIENT_SECRET },
+      body: JSON.stringify(tokens), cache: "no-store", redirect: "error", signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok) throw unavailable();
+  } catch { throw unavailable(); }
+}

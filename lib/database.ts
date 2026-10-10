@@ -19,7 +19,8 @@ export interface Database {
   saveTournamentBackup(row: TournamentBackup): Promise<void>;
   saveSession(row: SessionRow): Promise<void>;
   getSession(id: string, now: number): Promise<SessionRow | null>;
-  deleteSession(id: string): Promise<boolean>;
+  updateSession(id: string, previousBody: string, body: string, now: number): Promise<boolean>;
+  deleteSession(id: string, previousBody?: string): Promise<boolean>;
 }
 import type { SongLibrary } from './song-library';
 import type { CenturyLinkSongLibrary } from './centurylink-song-library';
