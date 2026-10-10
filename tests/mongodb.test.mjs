@@ -12,7 +12,7 @@ await mkdir('.data', { recursive: true });
 const dir = await mkdtemp(resolve('.data/mongodb-test-'));
 const clients = [0, 1].map(() => new MongoClient(process.env.MONGODB_URI, { maxPoolSize: 5, serverSelectionTimeoutMS: 10000 }));
 try {
-  await build({ stdin: { contents: `export * from './lib/mongodb'; export * from './lib/mongo-schema'; export * from './lib/migrate-tournament-schema'; export * from './lib/tournament-documents'; export * from './lib/tournament-seed'; export * from './lib/tournament'; export * from './lib/rules'; export * from './lib/reset-tournament'; export {demoSongLibrary} from './lib/demo-song-library'; export {makeCenturyLink} from './lib/centurylink'; export {applyClPlayerAction} from './lib/centurylink-rules';`, resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', external: ['mongodb'], outfile: dir + '/mongodb.cjs' });
+  await build({ stdin: { contents: `export * from './lib/mongodb'; export {updateTournamentPeople} from './lib/mongo-tournaments'; export * from './lib/mongo-schema'; export * from './lib/migrate-tournament-schema'; export * from './lib/tournament-documents'; export * from './lib/tournament-seed'; export * from './lib/tournament'; export * from './lib/rules'; export * from './lib/reset-tournament'; export {demoSongLibrary} from './lib/demo-song-library'; export {makeCenturyLink} from './lib/centurylink'; export {applyClPlayerAction} from './lib/centurylink-rules';`, resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', external: ['mongodb'], outfile: dir + '/mongodb.cjs' });
   const api = (await import(dir + '/mongodb.cjs')).default;
   const db = clients[0].db(name);
   const adapters = clients.map(c => api.mongoDatabase(async () => c.db(name)));
@@ -104,7 +104,35 @@ try {
   // CenturyLink roster reorder/removal swaps rosterOrder under a unique index; commits must not collide.
   const cl = 'centurylink-atlas-test';
   let clState = api.makeCenturyLink();
-  await adapters[0].createTournament({ id: cl, revision: 0, body: JSON.stringify(clState) });
+  const people = {organizers:['event-host'],admins:['event-admin']};
+  await adapters[0].createTournament({ id: cl, revision: 0, body: JSON.stringify(clState) },people);
+  assert.deepEqual(await adapters[1].getTournamentPeople(cl),people);
+  assert.deepEqual(await adapters[0].getTournamentPeople('demo'),{organizers:[],admins:[]});
+  assert.equal(await adapters[0].getTournamentPeople('missing'),null);
+  assert(!JSON.stringify(await adapters[0].getTournament(cl)).includes('event-host'),'Public state must not contain access metadata');
+  const beforePeople=await db.collection('tournaments').findOne({_id:cl});
+  const childrenBefore=await db.collection('matches').find({tournamentId:cl}).sort({_id:1}).toArray();
+  const changedPeople={organizers:['next-host'],admins:[]};
+  assert.equal(await api.updateTournamentPeople(db,cl,99,changedPeople),false);
+  assert.equal(await db.collection('tournament_people_backups').countDocuments(),0);
+  assert.equal(await api.updateTournamentPeople(db,cl,0,changedPeople),true);
+  assert.deepEqual((await db.collection('tournament_people_backups').findOne({tournamentId:cl})).snapshot,beforePeople);
+  assert.deepEqual(await db.collection('matches').find({tournamentId:cl}).sort({_id:1}).toArray(),childrenBefore);
+  assert.deepEqual(await adapters[1].getTournamentPeople(cl),changedPeople);
+  assert.equal(await api.updateTournamentPeople(db,cl,1,changedPeople),true);
+  assert.equal(await db.collection('tournament_people_backups').countDocuments(),1,'Identical config is a no-op');
+  await db.command({collMod:'tournament_people_backups',validator:{tournamentId:{$ne:cl}},validationLevel:'strict'});
+  await assert.rejects(api.updateTournamentPeople(db,cl,1,people));
+  assert.deepEqual(await adapters[0].getTournamentPeople(cl),changedPeople);
+  assert.equal((await adapters[0].getTournament(cl)).revision,1);
+  await db.command({collMod:'tournament_people_backups',validator:{}});
+  // Failure after backup insertion must roll back the backup and metadata together.
+  await db.command({collMod:'tournaments',validator:{revision:{$ne:2}},validationLevel:'strict'});
+  await assert.rejects(api.updateTournamentPeople(db,cl,1,people));
+  assert.equal(await db.collection('tournament_people_backups').countDocuments(),1);
+  assert.deepEqual(await adapters[0].getTournamentPeople(cl),changedPeople);
+  await api.ensureTournamentSchema(db);
+  clState=JSON.parse((await adapters[0].getTournament(cl)).body);
   const clWrite = async action => {
     const next = api.applyClPlayerAction(clState, action);
     assert(await adapters[0].updateTournament({ id: cl, revision: next.revision, body: JSON.stringify(next) }, clState.revision));
@@ -117,7 +145,8 @@ try {
   await clWrite({ type: 'remove', id: clState.players[0].id });
   assert.deepEqual(clState.players.map(p => p.name), ['A', 'C']);
   assert.equal(await db.collection('tournament_participants').countDocuments({ tournamentId: cl }), 2);
-  console.log('PASS isolated Atlas migration/idempotency, native collections, old-writer rejection, competing stations/CAS, atomic advancement, write failure rollback, reset+backup transaction, scope isolation, sessions and CenturyLink roster reorder/removal.');
+  assert.deepEqual(await adapters[0].getTournamentPeople(cl),changedPeople,'Scoring/roster writes preserve people metadata');
+  console.log('PASS isolated Atlas metadata initialization, privacy, CAS, backup rollback and persistence; migration/idempotency, native collections, old-writer rejection, competing stations/CAS, atomic advancement, write failure rollback, reset+backup transaction, scope isolation, sessions and CenturyLink roster reorder/removal.');
 } finally {
   await clients[0].db(name).dropDatabase(); // This unique database was created by this test only.
   await Promise.all(clients.map(c => c.close()));

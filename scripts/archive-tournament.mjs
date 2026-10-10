@@ -11,7 +11,9 @@ const get = async path => {
   if (!response.ok) throw new Error(`${base + path}: HTTP ${response.status}`);
   return response.json();
 };
-const [{ tournament, demo }, { catalog, pools, stale, incomplete }] = await Promise.all([get(''), get('/songs')]);
+const [{ tournament, demo }, { catalog, pools, stale, incomplete }, { organizerNames }] = await Promise.all([get(''), get('/songs'), get('/organizers')]);
+if (!Array.isArray(organizerNames) || !organizerNames.every(name => typeof name === 'string' && name.trim()))
+  throw new Error('Organizer nicknames are unavailable; retry later');
 if (demo) throw new Error('Refusing to archive demo data');
 if (stale || incomplete) throw new Error('Song metadata is stale or incomplete; retry later');
 const open = tournament.matches.filter(m => !m.published || !['complete', 'bye'].includes(m.status));
@@ -19,5 +21,5 @@ if (open.length) throw new Error(`Tournament is not finished: ${open.map(m => m.
 
 const id = `${series}-${edition}`;
 const file = new URL(`../data/archive/${id}.json`, import.meta.url);
-writeFileSync(file, JSON.stringify({ id, archivedAt: new Date().toISOString(), source: base, tournament, catalog, pools }, null, 2) + '\n');
+writeFileSync(file, JSON.stringify({ id, archivedAt: new Date().toISOString(), source: base, organizerNames, tournament, catalog, pools }, null, 2) + '\n');
 console.log(`Archived ${id} at revision ${tournament.revision}: ${tournament.matches.length} matches, ${Object.keys(catalog).length} songs.`);

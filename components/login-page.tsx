@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import SiteBrand from "@/components/site-brand";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, ArrowUpRight, ShieldCheck, Trophy } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, ShieldCheck } from "lucide-react";
 import { useSSO } from "@/components/auth/sso-context";
-import { brand, brandIcon, edition, login as loginLink, primaryButton, secondaryButton, textButton, topbar, topbarInner } from "@/components/styles";
+import { login as loginLink, primaryButton, secondaryButton, textButton, topbar, topbarInner } from "@/components/styles";
 
 const loginError = "rounded-[10px] bg-[#fff2f0] p-3 text-[#b42318] text-[13px] leading-[1.7] text-left mt-5 wrap-anywhere";
 
@@ -30,15 +31,15 @@ export default function LoginPage({ returnTo, authError }: { returnTo: string; a
     <>
       <header className={topbar}>
         <div className={topbarInner}>
-          <Link className={brand} href="/"><span className={brandIcon}><Trophy size={25} /></span>OurTaiko<span className={edition}>赛事</span></Link>
+          <SiteBrand />
           <Link className={loginLink} aria-label="返回" href={returnTo}><ArrowLeft size={16} /><span>返回</span></Link>
         </div>
       </header>
       <main className="min-h-[calc(100svh-75px)] grid place-items-center py-12 px-5 mobile:py-8 mobile:[align-items:start]">
-        <section className="w-full max-w-[460px] p-10 rounded-[16px] bg-white text-center shadow-[0_4px_12px_rgb(0_0_0/8%)] mobile:py-[30px] mobile:px-6" aria-labelledby="login-heading">
+        <section className="w-full max-w-[460px] p-10 rounded-[16px] bg-card text-center border border-line border-t-4 border-t-taiko-red shadow-[0_5px_0_#e7dfd4] mobile:py-[30px] mobile:px-6" aria-labelledby="login-heading">
           <span className="inline-flex items-center justify-center w-16 h-16 rounded-[18px] bg-accent text-primary mb-6"><ShieldCheck size={30} /></span>
           <h1 id="login-heading" className="text-[28px] font-[650] my-3 tracking-[-0.6px]">{user ? "你的赛事账号" : "登录 OurTaiko"}</h1>
-          <p className="text-[14px] leading-[1.8] text-[#6e6e73] wrap-anywhere">{user ? `${user.name}，欢迎回来。` : "一个 OurTaiko 账号，连接每一场赛事。"}</p>
+          <p className="text-[14px] leading-[1.8] text-muted-foreground wrap-anywhere">{user ? `${user.name}，欢迎回来。` : "一个 OurTaiko 账号，连接每一场赛事。"}</p>
           {error && <p className={loginError} role="alert">{error}</p>}
           {sessionError && <div className={loginError} role="alert"><p>{sessionError}</p><button className={textButton} disabled={loading || busy} onClick={() => void refresh()}>重新验证</button></div>}
           {loading ? <p role="status">正在验证登录状态…</p> : (
@@ -52,7 +53,7 @@ export default function LoginPage({ returnTo, authError }: { returnTo: string; a
               </>}
             </div>
           )}
-          <p className="border-t border-line pt-6 mt-7 text-[12px] leading-[1.9] text-[#77777f]">观看赛况无需登录。<br />各赛事管理权限由主办方授权。</p>
+          <p className="border-t border-line pt-6 mt-7 text-[12px] leading-[1.9] text-muted-foreground">观看赛况无需登录。<br />各赛事管理权限由主办方授权。</p>
           <Link className="inline-flex items-center gap-1.5 mt-[18px] text-primary text-[13px]" href="/"><ArrowLeft size={14} />浏览全部赛事</Link>
         </section>
       </main>

@@ -58,7 +58,7 @@ try {
   hidden.bans = ['siamese-3', 'siamese-1'];
   hidden.scores = [{songId:'special:siamese:final', a:123, b:456}];
   const row = { id: 'hachicats-20260927', revision: 42, body: JSON.stringify(api.tournamentState(event), null, 2) };
-  await db.createTournament(row);
+  await db.createTournament(row, {organizers:['grace0512','Nue'],admins:[]});
   // Unrelated records deliberately reuse the same match IDs. Scope must choose the parent document.
   await db.createTournament({ ...row, id: 'another-tournament' });
   await db.createTournament({ ...row, id: 'demo' });
@@ -69,12 +69,12 @@ try {
   await db.saveSession({ id: 'test-user', body: JSON.stringify({kind:'user', sub:'stable-user', token:'test-token'}), expires: Date.now() + 120000 });
   sql = new DatabaseSync(process.env.DATABASE_PATH);
   const libraryBytes = sql.prepare('SELECT body FROM song_libraries WHERE id=?').get('hachicats-20260927').body;
-  let admin = true, unavailable = false, networkCalls = 0;
+  let admin = true, unavailable = false, networkCalls = 0, username = 'existing-user';
   globalThis.fetch = async url => {
     networkCalls++;
     if (String(url).includes('/internal/v1/web/introspect')) {
       if (unavailable) throw Error('SSO unavailable');
-      return Response.json({user:{id:'stable-user',username:'existing-user',nickname:'Existing admin',isAdmin:admin}, expiresAt:new Date(Date.now()+60000).toISOString()});
+      return Response.json({user:{id:'stable-user',username,nickname:'Existing admin',isAdmin:admin}, expiresAt:new Date(Date.now()+60000).toISOString()});
     }
     assert.equal(String(url), 'https://cdn.ourtaiko.org/api/cnsongs');
     return Response.json([...Array.from({length:14}, (_, i) => ({id:i+1,song_name:'Sample '+(i+1),level_4:8})), {id:900001,song_name:'PRIVATE TEST SENTINEL',level_5:10}]);
@@ -109,7 +109,7 @@ try {
   assert.equal(await db.getTournament('edition-1'), null, 'Legacy storage ID must not be recreated');
   console.log('PASS existing event maps in place; scoped and legacy reads agree and preserve exact stored bytes/revisions and song mappings.');
 
-  const methods = ['getTournament','getSongLibrary','createTournament','createSongLibrary','updateTournament','saveTournamentBackup','getSession'];
+  const methods = ['getTournament','getTournamentPeople','getSongLibrary','createTournament','createSongLibrary','updateTournament','saveTournamentBackup','getSession'];
   const originals = Object.fromEntries(methods.map(name => [name, db[name]]));
   let storageCalls = 0;
   for (const name of methods) db[name] = async (...args) => { storageCalls++; return originals[name](...args); };
@@ -145,6 +145,9 @@ try {
   assert.deepEqual(await snapshot('hachicats-20260927'),row);
   console.log('PASS unknown/raw storage IDs fail before I/O; scoped roles, revocation, SSO failure, anonymous access and Origin checks fail closed.');
 
+  // Event organizers without the website role can use actual scoped and legacy writes.
+  admin=false; username='grace0512';
+  for (const handler of [api.score,api.players,api.reset]) assert.equal((await handler(request('',{},true,'https://untrusted.example'),context())).status,403);
   const live = event.matches[2];
   const save = {type:'save',revision:42,matchRevision:40,scores:live.scores.map(s=>({...s,a:765432,b:654321}))};
   assert.equal((await api.score(request('',save),context())).status,200);
@@ -157,6 +160,7 @@ try {
   assert.equal(nextEvent.matches.find(m=>m.id===live.id).revision,43);
   assert.equal((await api.legacyScore(request('',save),{params:Promise.resolve({id:live.id})})).status,409,'Legacy clients share the same revision guard');
   assert.equal((await api.score(request('',save),context())).status,409);
+  username='Nue';
   const legacySave = {...save,revision:43,matchRevision:43};
   assert.equal((await api.legacyScore(request('',legacySave),{params:Promise.resolve({id:live.id})})).status,200);
   assert.equal((await snapshot('hachicats-20260927')).revision,44);
@@ -173,7 +177,7 @@ try {
   const demoPublic = await (await api.state(request(),context())).json();
   assert.equal(demoPublic.demo,true); assert.equal(demoPublic.tournament.revision,42);
   assert.equal((await snapshot('hachicats-20260927')).revision,44);
-  assert.equal(api.canManageTournament(api.resolveTournamentScope(publicId,false),{admin:true,demo:true}),false,'Demo identity cannot authorize production scope');
+  assert.equal(await api.canManageTournament(api.resolveTournamentScope(publicId,false),{admin:true,demo:true}),false,'Demo identity cannot authorize production scope');
   console.log('PASS scoped/legacy writes use the same CAS, preserve unrelated matches and records, retain library references, and isolate demo from hachicats-20260927.');
 } finally {
   sql?.close();

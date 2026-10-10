@@ -33,7 +33,7 @@ try {
   if (mode === '--apply') {
     if (!existing) await libraries.insertOne(expected);
     // createTournament is create-if-absent inside a transaction; an existing event is left untouched.
-    await repository.createTournament({ id, revision: 0, body: JSON.stringify(lib.makeCenturyLink()) });
+    await repository.createTournament({ id, revision: 0, body: JSON.stringify(lib.makeCenturyLink()) }, { organizers: ['fei'], admins: [] });
   }
   const stored = await libraries.findOne({ _id: id });
   // Avoid printing either document if verification fails.

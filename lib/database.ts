@@ -1,3 +1,4 @@
+import type { TournamentPeople } from './tournament-people';
 export interface PreparedQuery {
   bind(...values: (string | number | null)[]): PreparedQuery;
   first<T = Record<string, unknown>>(): Promise<T | null>;
@@ -13,7 +14,8 @@ export interface Database {
   createSongLibrary(library: StoredSongLibrary): Promise<void>;
   ping(): Promise<void>;
   getTournament(id: string): Promise<TournamentRow | null>;
-  createTournament(row: TournamentRow): Promise<void>;
+  getTournamentPeople(id: string): Promise<TournamentPeople | null>;
+  createTournament(row: TournamentRow, people?: TournamentPeople): Promise<void>;
   updateTournament(row: TournamentRow, previous: number): Promise<boolean>;
   updateTournamentWithBackup?(row: TournamentRow, previous: number, backup: TournamentBackup): Promise<boolean>;
   saveTournamentBackup(row: TournamentBackup): Promise<void>;

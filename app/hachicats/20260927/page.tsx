@@ -2,6 +2,8 @@
 // HachiCats 2026 has finished; the page renders a frozen public snapshot.
 // Regenerate with scripts/archive-tournament.mjs, never by hand.
 import Link from "next/link";
+import { UsersRound } from "lucide-react";
+import SiteFooter from "@/components/site-footer";
 import { useState, useEffect } from "react";
 import {
   Cat,
@@ -105,7 +107,7 @@ export default function Home() {
         <span className={s.matchMeta}>
           <span>
             {String(m.index + 1).padStart(2, "0")}{" "}
-            <span className={cn("hidden mobile:inline", m.round === 3 && "inline text-[#626975]")}>
+            <span className={cn("hidden mobile:inline", m.round === 3 && "inline text-muted-foreground")}>
               / {m.round === 4 ? "季军赛" : roundNames[m.round]}
             </span>
           </span>
@@ -133,7 +135,7 @@ export default function Home() {
           >
             <span className={s.seed}>{m[side]?.seed ?? "—"}</span>
             <span className={s.playerProfile}>
-              <span className={cn(s.playerName, won && s.winnerText, !won && m.status === "complete" && "text-[#797981]", won && m.status === "bye" && "after:content-['_↗'] after:text-[12px]")}>{m[side]?.name ?? "等待晋级"}</span>
+              <span className={cn(s.playerName, won && s.winnerText, !won && m.status === "complete" && "text-muted-foreground", won && m.status === "bye" && "after:content-['_↗'] after:text-[12px]")}>{m[side]?.name ?? "等待晋级"}</span>
               {m[side] && <PlayerRating rating={m[side].rating} />}
             </span>
             <span className={cn(s.score, won && s.winnerText)}>
@@ -176,6 +178,7 @@ export default function Home() {
                 猫鼓旗舰店 · 上海
               </span>
             </div>
+            <p className={cn(s.eventDetail, "mt-3 items-start text-[14px] text-muted-foreground mobile:text-[12px]")}><UsersRound aria-hidden="true" className="mt-1 size-4 shrink-0" /><span className="min-w-0 break-words">主办方：{archive.organizerNames.join("、")}</span></p>
             <Link className={s.galleryButton} href="/hachicats/20260927/gallery">
               <Images size={16} />
               赛事相册
@@ -220,16 +223,16 @@ export default function Home() {
         {view === "summary" && <TournamentChampions tournament={tournament} loaded={loaded} onOpen={setSelected} />}
         {view !== "rules" && <div className="flex items-center justify-between mt-7 mb-[30px] mobile:my-[23px]">
           <Tabs value={group} onValueChange={(v) => setGroup(v as GroupId)} className="mobile:w-full">
-            <TabsList className="bg-[#e9e9ed]! p-1! h-11! rounded-[12px]! gap-[3px] mobile:w-full">
+            <TabsList className="bg-muted! p-1! h-11! rounded-[12px]! gap-[3px] mobile:w-full">
               {groups.map((g) => (
-                <TabsTrigger value={g.id} key={g.id} className="min-w-[112px] py-2 px-4 text-[14px] leading-[calc(1.25/0.875)] rounded-[9px]! data-[state=active]:bg-white! data-[state=active]:shadow-[0_2px_5px_#00000007]! mobile:min-w-0! mobile:py-2! mobile:px-[11px]!">
+                <TabsTrigger value={g.id} key={g.id} className="min-w-[112px] py-2 px-4 text-[14px] leading-[calc(1.25/0.875)] rounded-[9px]! data-[state=active]:bg-card! data-[state=active]:shadow-[0_2px_5px_#00000007]! mobile:min-w-0! mobile:py-2! mobile:px-2! mobile:text-[12px]">
                   {g.name}
-                  <span className="text-[11px] text-[#818189] ml-1.5">16 人</span>
+                  <span className="text-[11px] text-muted-foreground ml-1.5">16 人</span>
                 </TabsTrigger>
               ))}
             </TabsList>
           </Tabs>
-          <span className="text-[12px] text-[#85858c] tracking-[1px] mobile:hidden">
+          <span className="text-[12px] text-muted-foreground tracking-[1px] mobile:hidden">
             {groups.find((g) => g.id === group)?.en} ·{" "}
             {groups.find((g) => g.id === group)?.range}
           </span>
@@ -301,10 +304,10 @@ export default function Home() {
                 <span className={s.legendNote}>单败淘汰 · 半决赛败者进入季军赛</span>
               </div>
             </section>
-            <section className="mt-6 p-5 border border-[#e4e4e9] rounded-[12px]" aria-label="替补区">
+            <section className="mt-6 p-5 border border-line rounded-[12px]" aria-label="替补区">
               <div className={s.sectionHeading}><h2 className={s.sectionTitle}>替补区 <span className={s.count}>{reserves(tournament, group).length}</span></h2>
               </div>
-              <div className="flex flex-wrap gap-3">{reserves(tournament, group).map(p => <div className="flex items-center gap-2.5 py-2.5 px-3.5 bg-[#f4f4f7] rounded-[8px]" key={p.id}><b>{p.name}</b><PlayerRating rating={p.rating} /></div>)}</div>
+              <div className="flex flex-wrap gap-3">{reserves(tournament, group).map(p => <div className="flex items-center gap-2.5 py-2.5 px-3.5 bg-secondary rounded-[8px]" key={p.id}><b>{p.name}</b><PlayerRating rating={p.rating} /></div>)}</div>
               {!reserves(tournament, group).length && <p className={s.muted}>本组暂无替补选手。</p>}
             </section>
           </>
@@ -402,13 +405,7 @@ export default function Home() {
             </div>
           </section>
         )}
-        <footer className={s.footer}>
-          <span className={s.footerBrand}>
-            <Cat size={17} />
-            HachiCats · 第一届八猫杯
-          </span>
-          <span>赛果存档 · 曲名与星级来自 OurTaiko</span>
-        </footer>
+        <SiteFooter note="赛果存档 · 曲名与星级来自 OurTaiko" />
       </main>
       <Sheet open={!!selected} onOpenChange={(v) => !v && setSelected(null)}>
         <SheetContent className={s.matchSheet}>
@@ -426,7 +423,7 @@ export default function Home() {
                   <div key={side} className={side === "b" ? "col-start-3" : undefined}>
                     <h2 className={s.contestantName}>{selected[side]?.name ?? "待定"}</h2>
                     {selected[side] && firstAttacker === selected[side].id && (
-                      <span className="inline-flex items-center gap-1 mb-[5px] py-[3px] px-[7px] rounded-[5px] bg-[#e8f2ff] text-[#0066c7] text-[11px] font-semibold leading-[1.3]" title="Rating 低于对手至少 0.50，可先攻">
+                      <span className="inline-flex items-center gap-1 mb-[5px] py-[3px] px-[7px] rounded-[5px] bg-soft-blue text-taiko-blue text-[11px] font-semibold leading-[1.3]" title="Rating 低于对手至少 0.50，可先攻">
                         <Flag size={12} aria-hidden="true" />先攻
                       </span>
                     )}

@@ -197,7 +197,7 @@ export default function MatchEditor({
       {match.round === 0 && (
         <section className="p-[18px] border border-line rounded-[12px] mb-6 bg-[#f8f9fc]" aria-labelledby="lineup-heading">
           <h3 id="lineup-heading" className="text-[15px] font-semibold mb-2">参赛选手 / 替补</h3>
-          <p className="text-[12px] text-[#6e6e73] mb-4 leading-[1.8]">{canReplace(match)
+          <p className="text-[12px] text-muted-foreground mb-4 leading-[1.8]">{canReplace(match)
             ? "选择同组正赛选手可互换位置；选择替补则由其上场，原选手转为替补。换人会清空相关比赛的选曲草稿。"
             : "本场已开赛、公布或录分，参赛选手已锁定。"}</p>
           <div className="grid gap-3 [&_select:disabled]:opacity-55 phone:[&_select]:text-[16px]">

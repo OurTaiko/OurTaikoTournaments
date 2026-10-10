@@ -12,31 +12,37 @@
   --color-card-foreground: var(--foreground);
   --color-popover: var(--card);
   --color-popover-foreground: var(--foreground);
-  --color-primary: #0071e3;
+  --color-primary: #b9382a;
   --color-primary-foreground: #fff;
-  --color-secondary: #f5f5f7;
-  --color-secondary-foreground: #1d1d1f;
-  --color-muted: #ededf0;
-  --color-muted-foreground: #6e6e73;
-  --color-accent: #edf5ff;
-  --color-accent-foreground: #0071e3;
+  --color-secondary: #f8f2e8;
+  --color-secondary-foreground: #382d2a;
+  --color-muted: #f1e9db;
+  --color-muted-foreground: #726761;
+  --color-accent: #fff0e7;
+  --color-accent-foreground: #b9382a;
   --color-destructive: #c92f26;
-  --color-border: #e5e5e9;
-  --color-input: #e5e5e9;
-  --color-ring: #0071e3;
+  --color-border: #e7dfd4;
+  --color-input: #e7dfd4;
+  --color-ring: #087c95;
   --color-line: var(--line);
+  --color-ink: #382d2a;
+  --color-taiko-red: #dc4839;
+  --color-taiko-blue: #087c95;
+  --color-soft-blue: #e9f5f3;
+  --color-soft-yellow: #fff2cc;
+  --color-soft-purple: #f1eafb;
   --radius-lg: 16px;
   --radius-md: 12px;
   --radius-sm: 8px;
 }
-/* Gallery pages: dark, photo-first palette. */
+/* Gallery pages: warm paper palette; the photo lightbox keeps its own dark surface. */
 @theme {
-  --color-g-bg: #0b0b0d;
-  --color-g-surface: #161618;
-  --color-g-text: #f5f5f7;
-  --color-g-muted: #a1a1a6;
-  --color-g-soft: #d2d2d7;
-  --color-g-accent: #2997ff;
+  --color-g-bg: #fffef9;
+  --color-g-surface: #f4eddf;
+  --color-g-text: #382d2a;
+  --color-g-muted: #726761;
+  --color-g-soft: #625650;
+  --color-g-accent: #087c95;
   --animate-gallery-rise: gallery-rise 0.9s var(--ease-apple) both;
   --animate-gallery-rise-1: gallery-rise 0.9s var(--ease-apple) 0.08s both;
   --animate-gallery-rise-2: gallery-rise 0.9s var(--ease-apple) 0.16s both;
@@ -65,12 +71,12 @@
 }
 :root,
 .dark {
-  --background: #f5f5f7;
-  --foreground: #1d1d1f;
-  --card: #fff;
-  --blue: #0071e3;
-  --muted: #6e6e73;
-  --line: #e6e6eb;
+  --background: #f8f2e8;
+  --foreground: #382d2a;
+  --card: #fffef9;
+  --blue: #087c95;
+  --muted: #726761;
+  --line: #e7dfd4;
   --ease-apple: cubic-bezier(0.25, 0.1, 0.25, 1);
   color-scheme: light;
 }
@@ -83,10 +89,10 @@
     background: var(--background);
     color: var(--foreground);
     font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC",
+      var(--font-chill), "Hiragino Maru Gothic ProN", "PingFang SC",
       "Microsoft YaHei", sans-serif;
     font-size: 16px;
-    line-height: 1.5;
+    line-height: 1.8;
     -webkit-font-smoothing: antialiased;
   }
   body:has([data-gallery-page]) {
@@ -110,18 +116,16 @@
       transform 0.22s var(--ease-apple);
     cursor: pointer;
   }
-  button:active,
-  a:active {
-    transform: scale(0.98);
-  }
   button:disabled {
     cursor: not-allowed;
     opacity: 0.45;
   }
   button:focus-visible,
   a:focus-visible,
-  input:focus-visible {
-    outline: 3px solid #0071e360;
+  input:focus-visible,
+  select:focus-visible,
+  summary:focus-visible {
+    outline: 3px solid #087c95;
     outline-offset: 3px;
   }
   a {
@@ -138,7 +142,7 @@
   h2,
   h3 {
     font-weight: 600;
-    letter-spacing: -0.035em;
+    letter-spacing: -0.025em;
   }
   svg {
     flex-shrink: 0;

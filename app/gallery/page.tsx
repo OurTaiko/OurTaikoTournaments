@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, CalendarDays, Camera, MapPin } from "lucide-react";
 import GalleryRail from "@/components/gallery/gallery-rail";
+import SiteFooter from "@/components/site-footer";
 import GalleryTopbar from "@/components/gallery/gallery-topbar";
 import * as s from "@/components/styles";
 import { galleries, galleryPhotos } from "@/lib/gallery";
@@ -35,15 +36,15 @@ export default function GalleryIndex() {
             <Image src={gallery.cover.image} alt={gallery.cover.alt} placeholder="blur" fill preload
               className="-z-2 object-cover [transition:transform_1.2s_var(--ease-apple)] group-hover:[transform:scale(1.03)]"
               sizes="(max-width: 1240px) 100vw, 1200px" />
-            <div className="grid justify-items-start gap-3 p-10 mobile:p-6">
-              <p className={cn(s.galleryKicker, "text-g-soft")}>{gallery.series}</p>
+            <div className="grid justify-items-start gap-3 p-10 mobile:p-6 text-white">
+              <p className={cn(s.galleryKicker, "text-white/85")}>{gallery.series}</p>
               <h2 id={`${gallery.tournamentId}-title`} className="text-[clamp(32px,4.6vw,54px)] tracking-[-0.04em]">{gallery.name}</h2>
-              <div className={s.galleryMeta}>
+              <div className={cn(s.galleryMeta, "text-white/90")}>
                 <span className={s.galleryMetaItem}><CalendarDays size={15} />{gallery.displayDate}</span>
                 <span className={s.galleryMetaItem}><MapPin size={15} />{gallery.location}</span>
                 <span className={s.galleryMetaItem}><Camera size={15} />{galleryPhotos(gallery).length} 张照片</span>
               </div>
-              <span className={cn(s.galleryPill, "mt-1.5 group-hover:bg-white")}>打开相册<ArrowUpRight size={16} /></span>
+              <span className={cn(s.galleryPill, "mt-1.5 group-hover:bg-card")}>打开相册<ArrowUpRight size={16} /></span>
             </div>
           </Link>
           <div className="flex justify-between items-baseline gap-5 mt-7 mb-4 text-g-muted text-[15px] mobile:flex-col mobile:gap-2">
@@ -55,12 +56,12 @@ export default function GalleryIndex() {
       </section>)}
       {upcoming.length > 0 && <section className={cn(s.galleryWrap, "pb-10")} aria-labelledby="upcoming-title">
         <h2 id="upcoming-title" className="text-[24px] mb-[18px]">即将到来</h2>
-        {upcoming.map(event => <Link key={event.id} href={event.href} className="flex justify-between items-center gap-5 py-[26px] px-[30px] border border-dashed border-[rgb(255_255_255/18%)] rounded-[18px] not-first-of-type:mt-3 hover:border-[rgb(255_255_255/34%)] hover:bg-[rgb(255_255_255/3%)] mobile:flex-col mobile:items-start mobile:p-[22px]">
+        {upcoming.map(event => <Link key={event.id} href={event.href} className="flex justify-between items-center gap-5 py-[26px] px-[30px] border border-dashed border-line rounded-[18px] not-first-of-type:mt-3 hover:border-taiko-blue hover:bg-soft-blue mobile:flex-col mobile:items-start mobile:p-[22px]">
           <div><p className={s.galleryKicker}>{event.series}</p><h3 className="text-[22px] mt-1.5">{event.name}</h3></div>
           <span className="inline-flex items-center gap-[7px] text-g-muted text-[14px]"><CalendarDays size={15} />{event.displayDate} · 赛后更新照片</span>
         </Link>)}
       </section>}
-      <footer className={cn(s.galleryWrap, s.galleryFooter)}><span className={s.footerBrand}>OurTaiko Tournaments · 赛事相册</span><span>照片版权归拍摄者及主办方所有</span></footer>
+      <SiteFooter className={cn(s.galleryWrap, s.galleryFooter)} note="照片版权归拍摄者及主办方所有" />
     </main>
   </div>;
 }

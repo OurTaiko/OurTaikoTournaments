@@ -14,7 +14,7 @@ type Props = {
   onSave: (action: ClPlayerAction, revision: number) => Promise<boolean>;
 };
 
-const iconButton = "inline-flex items-center justify-center w-8 h-8 border border-line rounded-[8px] bg-white text-[#4a4a52]";
+const iconButton = "inline-flex items-center justify-center w-8 h-8 border border-line rounded-[8px] bg-card text-[#4a4a52]";
 
 export function ClPlayerManager({ tournament, disabled, onSave }: Props) {
   const [draft, setDraft] = useState<{ id: string | null; name: string; revision: number } | null>(null);
@@ -108,7 +108,7 @@ export function ClRankingManager({ tournament, disabled, onSave }: Props) {
       {order.map((id, i) => {
         const tieWithNext = !confirmed && i < order.length - 1 && score(id) !== null && score(id) === score(order[i + 1]);
         return <li key={id} className="flex items-center gap-2.5 flex-wrap py-[9px] px-3 bg-[#f8f9fc] rounded-[10px] text-[14px] text-left">
-          <span className="w-7 text-[#7a7a82] tabular-nums">#{i + 1}</span><b>{name(id)}</b>
+          <span className="w-7 text-muted-foreground tabular-nums">#{i + 1}</span><b>{name(id)}</b>
           <span className="ml-auto tabular-nums text-[#4a4a52]">{score(id)?.toLocaleString() ?? "—"}</span>
           {tieWithNext && <button className={st.textButton} disabled={disabled} onClick={() => swap(i)}>同分 · 与下一位交换</button>}
         </li>;

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowDown, ArrowUpRight, CalendarDays, Camera, MapPin } from "lucide-react";
+import SiteFooter from "@/components/site-footer";
 import GalleryTopbar from "@/components/gallery/gallery-topbar";
 import TournamentGallery from "@/components/gallery/tournament-gallery";
 import * as s from "@/components/styles";
@@ -19,13 +20,13 @@ export default function HachiCatsGallery() {
   return <div className={s.galleryPage} data-gallery-page>
     <GalleryTopbar><Link href={gallery.tournamentHref}>赛果存档</Link></GalleryTopbar>
     <main>
-      <section className="relative flex items-end min-h-[min(86svh,820px)] overflow-hidden isolate after:content-[''] after:absolute after:inset-0 after:-z-1 after:bg-[linear-gradient(90deg,rgb(11_11_13/72%)_0%,rgb(11_11_13/30%)_55%,transparent_80%),linear-gradient(180deg,rgb(11_11_13/35%)_0%,transparent_28%,rgb(11_11_13/62%)_60%,var(--color-g-bg)_100%)] mobile:min-h-[78svh]" aria-labelledby="gallery-title">
+      <section className="relative flex items-end text-white min-h-[min(86svh,820px)] overflow-hidden isolate after:content-[''] after:absolute after:inset-0 after:-z-1 after:bg-[linear-gradient(90deg,rgb(11_11_13/72%)_0%,rgb(11_11_13/30%)_55%,transparent_80%),linear-gradient(180deg,rgb(11_11_13/35%)_0%,transparent_28%,rgb(11_11_13/62%)_60%,rgb(56_45_42/85%)_100%)] mobile:min-h-[78svh]" aria-labelledby="gallery-title">
         <Image className="-z-2 object-cover animate-gallery-hero" src={gallery.cover.image} alt={gallery.cover.alt} placeholder="blur" fill preload sizes="100vw" />
         <div className={cn(s.galleryWrap, "w-full pb-16 grid gap-[18px] justify-items-start mobile:pb-10 mobile:gap-3.5")}>
-          <p className={cn(s.galleryKicker, "animate-gallery-rise")}>{gallery.series} · GALLERY</p>
+          <p className={cn(s.galleryKicker, "animate-gallery-rise text-white/80")}>{gallery.series} · GALLERY</p>
           <h1 id="gallery-title" className="text-[clamp(44px,7vw,88px)] leading-[1.04] tracking-[-0.045em] [text-shadow:0_2px_30px_rgb(0_0_0/35%)] animate-gallery-rise-1">{gallery.name}</h1>
-          <p className={cn(s.galleryLede, "animate-gallery-rise-2")}>{gallery.summary}</p>
-          <div className={cn(s.galleryMeta, "animate-gallery-rise-3")}>
+          <p className={cn(s.galleryLede, "animate-gallery-rise-2 text-white/90")}>{gallery.summary}</p>
+          <div className={cn(s.galleryMeta, "animate-gallery-rise-3 text-white/90")}>
             <span className={s.galleryMetaItem}><CalendarDays size={15} />{gallery.displayDate}</span>
             <span className={s.galleryMetaItem}><MapPin size={15} />{gallery.location}</span>
             <span className={s.galleryMetaItem}><Camera size={15} />{galleryPhotos(gallery).length} 张照片</span>
@@ -37,7 +38,7 @@ export default function HachiCatsGallery() {
         </div>
       </section>
       <TournamentGallery tournamentId={gallery.tournamentId} />
-      <footer className={cn(s.galleryWrap, s.galleryFooter)}><span className={s.footerBrand}>HachiCats · 第一届八猫杯 · 赛事相册</span><span>照片版权归拍摄者及主办方所有</span></footer>
+      <SiteFooter className={cn(s.galleryWrap, s.galleryFooter)} note="照片版权归拍摄者及主办方所有" />
     </main>
   </div>;
 }

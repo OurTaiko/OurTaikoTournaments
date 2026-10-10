@@ -4,11 +4,12 @@ import { existsSync } from 'node:fs';
 
 const result = await build({ entryPoints: ['app/page.tsx', 'app/hachicats/20260927/page.tsx', 'app/centurylink/20261227/page.tsx', 'components/auth/sso-context.tsx', 'components/obs/obs-overlay.tsx'], outdir: 'unused-browser-check', bundle: true, platform: 'browser', write: false, metafile: true, logLevel: 'silent' });
 const forbidden = Object.keys(result.metafile.inputs).filter(path =>
-  /(?:^|\/)lib\/(?:.*\.server|runtime(?:\.cloudflare)?|mongodb|mongo-tournaments|tournament-documents|sql-database|tournament-scope|tournament-access|store|demo-song-library|song-library|centurylink-song-library|tournament-seed)\.ts$/.test(path) ||
+  /(?:^|\/)lib\/(?:.*\.server|runtime(?:\.cloudflare)?|mongodb|mongo-tournaments|tournament-documents|tournament-people|sql-database|tournament-scope|tournament-access|store|demo-song-library|song-library|centurylink-song-library|tournament-seed)\.ts$/.test(path) ||
   /(?:^|\/)data\/(?:songs|designated-songs|players)\.json$/.test(path) ||
+  /(?:^|\/)config\/tournaments\/.*\.json$/.test(path) ||
   path.includes('node_modules/server-only/'),
 );
-assert.deepEqual(forbidden, [], 'Browser graph must not contain database, private-library or demo seed modules');
+assert.deepEqual(forbidden, [], 'Browser graph must not contain database, private-library, event access configuration or demo seed modules');
 assert.equal(existsSync('data/songs.json'), false, 'Real event song references must not be restored to source');
 assert.equal(existsSync('data/designated-songs.json'), false, 'Real designated songs must not be restored to source');
 console.log('PASS browser dependency graph excludes database readers, private libraries and sample seeds; retired source JSON is absent.');
