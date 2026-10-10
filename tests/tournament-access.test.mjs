@@ -97,7 +97,7 @@ try {
   let lookupCalls=0;
   globalThis.fetch = async (url,options) => {
     lookupCalls++;
-    assert.equal(new URL(url).pathname,'/internal/v1/users/lookup');
+    assert.equal(new URL(url).pathname,'/internal/v1/users/lookup-by-username');
     assert.deepEqual(JSON.parse(options.body),{usernames:['fei']});
     assert.equal(options.headers['X-Service-Key'],'test-only');
     return Response.json({users:[{username:'fei',nickname:'测试昵称'}, {username:'unrelated',nickname:'ignored'}]});

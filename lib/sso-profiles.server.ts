@@ -12,7 +12,7 @@ export async function organizerNicknames(usernames: readonly string[]): Promise<
     const local = issuer.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(issuer.hostname);
     if ((issuer.protocol !== 'https:' && !local) || issuer.username || issuer.password || issuer.search || issuer.hash)
       throw unavailable();
-    const response = await fetch(new URL('/internal/v1/users/lookup', issuer), {
+    const response = await fetch(new URL('/internal/v1/users/lookup-by-username', issuer), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Service-ID': SSO_CLIENT_ID, 'X-Service-Key': SSO_CLIENT_SECRET },
       body: JSON.stringify({ usernames }),

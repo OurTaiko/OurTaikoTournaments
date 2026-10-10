@@ -204,7 +204,7 @@ node --env-file=<private env> scripts/set-tournament-people.mjs centurylink-2026
 
 工具只接受已登记且未存档赛事；默认只读。写入在 snapshot 事务内将原赛事元信息备份到私有 `tournament_people_backups`，通过原 revision CAS 更新 organizers / admins，revision 增加 1；相同配置不写入。比赛、选手、曲库集合不修改；版本冲突或备份失败时全部回滚。该备份仅用于人员元信息恢复，不是整届赛果备份；恢复应以新 revision 再次更新，不能覆盖整个旧文档或倒退版本。
 
-进行中赛事详情通过本赛事 `/organizers` 接口读取 organizer username 后向 SSO 查询昵称；仅昵称可缓存 60 秒，授权名单和 SSO 身份不缓存。缺少昵称、查询故障或未配置凭据时返回 503，页面显示重试，绝不显示 username。需要先部署 SSO 的 usernames lookup 扩展并为本站 Application 开启 allow_profiles，现有凭据保持不变。人员名单不会进入公开赛况、HTML、props 或客户端依赖。
+进行中赛事详情通过本赛事 `/organizers` 接口读取 organizer username 后向 SSO 查询昵称；仅昵称可缓存 60 秒，授权名单和 SSO 身份不缓存。缺少昵称、查询故障或未配置凭据时返回 503，页面显示重试，绝不显示 username。需要先部署 SSO 的 独立的 `/internal/v1/users/lookup-by-username` 接口并为本站 Application 开启 allow_profiles，现有凭据保持不变。人员名单不会进入公开赛况、HTML、props 或客户端依赖。
 
 已结束赛事在原 `data/archive/<赛事 ID>.json` 中用顶层 `organizerNames` 数组保存公开昵称（八猫杯为 `["涵涵","鵺"]`），与赛果共用一个存档文件，不保留 username / 管理员名单。八猫杯使用上述两个昵称，页面直接渲染静态文件，不请求人员接口、SSO 或数据库。后续存档工具先从公开 `/organizers` 获取全部昵称，将昵称与赛果写入同一个存档文件；不能在昵称查询失败时用 username 代替。存档脚本不删除数据库，移除正式赛事仍需单独维护流程。
 

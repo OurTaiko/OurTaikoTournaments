@@ -91,7 +91,7 @@ GitHub `OurTaiko/OurTaikoTournaments` 的 `main` 分支连接 Vercel 项目 `van
 
 管理权限为 `SSO isAdmin || organizers.includes(username) || admins.includes(username)`。主办方自动有本赛事管理权限。网站管理员仍来自原 HachiCats Application 的实时身份查询。数据库名单变化在下次请求生效，无需重新部署。
 
-进行中赛事详情只显示 SSO 昵称；查询失败显示加载失败与重试，绝不回退 username。需要 SSO 支持 usernames lookup 及本站 Application 的资料查询权限。已结束赛事改用 `data/archive/<赛事 ID>.json` 的 `organizerNames`，不查数据库或 SSO，也不保存账号及管理员名单。八猫杯静态主办方为「涵涵、鵺」。
+进行中赛事详情只显示 SSO 昵称；查询失败显示加载失败与重试，绝不回退 username。需要 SSO 支持 独立的 `/internal/v1/users/lookup-by-username` 接口 及本站 Application 的资料查询权限。已结束赛事改用 `data/archive/<赛事 ID>.json` 的 `organizerNames`，不查数据库或 SSO，也不保存账号及管理员名单。八猫杯静态主办方为「涵涵、鵺」。
 
 已有赛事补充 / 调整人员使用 `scripts/set-tournament-people.mjs`：默认只读预检，写入需提供当前 revision，事务内备份元信息后按版本更新；不重置比赛。具体命令与发布状态见维护手册第 4 节。
 
