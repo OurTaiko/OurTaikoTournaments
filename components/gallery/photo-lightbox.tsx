@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { GalleryPhoto } from "@/lib/gallery";
 import { cn } from "@/lib/utils";
 
-const button = "grid place-items-center w-11 h-11 rounded-[50%] bg-[rgb(255_255_255/10%)] text-g-text hover:bg-[rgb(255_255_255/20%)]";
+const button = "grid place-items-center w-11 h-11 rounded-[50%] bg-[rgb(255_255_255/10%)] text-[#fffef9] hover:bg-[rgb(255_255_255/20%)]";
 const arrow = cn(button, "absolute top-1/2 [translate:0_-50%] mobile:top-auto mobile:bottom-[18px] mobile:[translate:none]");
 
 /** Full-screen viewer shared by the gallery pages: arrow keys, swipe and wrap-around. */
@@ -24,7 +24,7 @@ export default function PhotoLightbox({ photos, index, onIndexChange, title }: {
   return <Dialog.Root open={!!photo} onOpenChange={open => !open && onIndexChange(null)}>
     <Dialog.Portal>
       <Dialog.Overlay className="fixed inset-0 z-60 bg-[rgb(0_0_0/94%)] backdrop-blur-[10px] data-[state=open]:animate-gallery-fade" />
-      <Dialog.Content className="fixed inset-0 z-[61] grid grid-rows-[auto_1fr_auto] text-g-text outline-none data-[state=open]:animate-gallery-fade" aria-describedby={undefined} onKeyDown={event => {
+      <Dialog.Content className="fixed inset-0 z-[61] grid grid-rows-[auto_1fr_auto] text-[#fffef9] outline-none data-[state=open]:animate-gallery-fade" aria-describedby={undefined} onKeyDown={event => {
         if (event.key === "ArrowRight") { event.preventDefault(); go(1); }
         if (event.key === "ArrowLeft") { event.preventDefault(); go(-1); }
       }}>
@@ -54,7 +54,7 @@ export default function PhotoLightbox({ photos, index, onIndexChange, title }: {
           </>}
           <div className="grid justify-items-center gap-1 pt-3.5 px-6 pb-[22px] text-center text-[14px] mobile:px-[72px] mobile:pb-6">
             {photo.caption && <b>{photo.caption}</b>}
-            <span className="text-g-muted text-[13px]">{photo.alt}</span>
+            <span className="text-[#bfb6ae] text-[13px]">{photo.alt}</span>
           </div>
         </>}
       </Dialog.Content>

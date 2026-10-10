@@ -529,11 +529,23 @@ node --env-file=<私有环境文件> scripts/init-centurylink.mjs .data/centuryl
 全站样式已从手写 CSS 迁移为 Tailwind CSS v4 工具类，写在各组件的 `className` 上；`components/gallery/gallery.css` 已删除，`app/globals.css` 不再包含组件样式。
 
 - **断点：** 沿用原来的桌面优先断点，用自定义变体表示：`mobile:` = `max-width: 760px`，`phone:` = `max-width: 640px`。不要换成 Tailwind 默认的 `sm:` / `md:`（移动优先、阈值不同）。
-- **主题：** `@theme` 中定义站点色（`primary` 等）、`line` 边框色、相册深色色板 `g-bg` / `g-surface` / `g-text` / `g-muted` / `g-soft` / `g-accent`，以及相册动画 `animate-gallery-*`。滚动渐显用 `@utility reveal-on-scroll`（`animation-timeline` 必须写在 `animation` 简写之后，工具类排序无法保证，故单独定义）。
+- **主题：** `@theme` 中定义站点色（`primary` 等）、`line` 边框色、相册纸面色板 `g-bg` / `g-surface` / `g-text` / `g-muted` / `g-soft` / `g-accent`，以及相册动画 `animate-gallery-*`。滚动渐显用 `@utility reveal-on-scroll`（`animation-timeline` 必须写在 `animation` 简写之后，工具类排序无法保证，故单独定义）。
 - **基础样式：** 字体、链接、按钮过渡与按下效果、焦点环、标题字重等元素规则在 `@layer base`。未分层的 CSS 优先级高于所有工具类，不要在 `globals.css` 中新增未分层规则。
 - **共用类：** `components/styles.ts` 导出顶栏、事件头、主 tab、比赛卡片、曲目行、规则卡、比赛详情抽屉、比分表、录分编辑器、选手管理与相册等类组合。用 `cn()` 组合或覆盖；tailwind-merge 会按顺序去重冲突类，后出现的字号类会去掉前面的 `leading-*`。
 - **shadcn 组件：** 原来通过全局 `[data-slot=…]` 选择器覆盖的样式（遮罩颜色、抽屉关闭按钮、确认框圆角与阴影、说明文字行高）已直接写进 `components/ui/sheet.tsx`、`alert-dialog.tsx`；`TabsTrigger` 去掉了 `transition-all`，使用站点统一的按钮过渡。
 - **测试：** `tests/match-summary.test.mjs` 按结构（`<h4>` 与列表）而不是 CSS 类名检查选曲记录，修改样式不应影响它。
+
+### OurTaiko 太鼓视觉（2026-10-10，本地实现，尚未发布）
+
+目录、登录、八猫杯存档、世纪汇实时赛事与管理、相册及 OBS 控件统一使用暖白纸面、深棕正文、红蓝强调和圆体。目录首屏使用柔化太鼓背景与两侧装饰贴纸，赛事卡片为桌面双列、手机单列；其他页面保持信息和操作优先。主操作按钮使用深红底、深棕描边和实体底影，辅助按钮采用浅黄 / 浅青；表单、比赛卡片与表格仅使用细分隔线。焦点轮廓为蓝色，按钮位移遵循减少动态效果偏好。
+
+- `app/globals.css` 管理暖色主题及 `g-*` 相册色板，`components/styles.ts` 管理共用组件类组合。相册浏览页改为暖白背景，照片封面保留深色遮罩和白色说明，灯箱仍为独立深色背景。
+- `components/site-brand.tsx` / `site-footer.tsx` 复用 OurTaiko 原始品牌图标；八猫杯和世纪汇保留各自的页头身份。OBS 的透明页面背景、只读轮询、轮换和赛况数据逻辑不变，面板改为纸面风格。
+- 字体、首页背景、贴纸与品牌图标位于 `public/ourtaiko/`。`app/layout.tsx` 用 `next/font/local` 加载 `ChillRoundF.woff2`，设置 `display: swap`，不调用外部字体服务。保留该目录中的 `NOTICE`、`UPSTREAM-README.md`，站点页脚提供素材致谢；这些文件的来源说明不构成新的素材授权。
+- 仅修改展示层，不修改赛事 ID、API、权限、公开数据过滤、存档文件或数据库映射。八猫杯与相册继续静态预渲染。
+- 验证时按照 README 启动服务，清空 `MONGODB_URI` / `MONGODB_DB`，为本次演示指定独立 `DATABASE_PATH`。检查 320 / 390px 手机、760 / 850px 临界宽度及 1280px 桌面，覆盖目录链接、两届赛事标签、比赛抽屉、登录 / 演示管理、选手编辑、相册章节与灯箱；检查横向溢出、控制台、图片和键盘焦点。用 `npm test`、`npm run typecheck`、`npm run lint`、`npm run build` 验证现有行为及静态路由。
+
+本次本地验证：`npm test`、类型检查、lint 与生产构建通过；已在浏览器检查首页、两届赛事、登录 / 演示管理、相册的桌面与手机布局，320px 管理抽屉可选择长曲名并生成录分栏；赛果详情、相册翻页与 Esc 关闭正常。仅演示库录入排位分数，未连接或修改正式库。部分演示曲目的上游元数据缺失时继续显示编号 / 未知星级提示。未提交、推送或部署；OBS 桌面客户端与真实手机硬件未实测。
 
 ### 迁移验证
 

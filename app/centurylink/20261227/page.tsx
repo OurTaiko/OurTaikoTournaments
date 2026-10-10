@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import SiteFooter from "@/components/site-footer";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight, CalendarDays, ChevronRight, Drum, GitBranch, ListOrdered, MapPin, Medal, Music2,
@@ -27,11 +28,11 @@ import type { ClPlayerAction } from "@/lib/centurylink-rules";
 import * as s from "@/components/styles";
 import { cn } from "@/lib/utils";
 
-const avatar = "flex items-center justify-center mt-auto mx-auto mb-2.5 w-11 h-11 rounded-[50%] bg-[#f2f4f8] text-[#707783] text-[20px] font-medium mobile:w-8 mobile:h-8 mobile:text-[15px] mobile:mb-2";
+const avatar = "flex items-center justify-center mt-auto mx-auto mb-2.5 w-11 h-11 rounded-[50%] bg-secondary text-muted-foreground text-[20px] font-medium mobile:w-8 mobile:h-8 mobile:text-[15px] mobile:mb-2";
 const versusName = "block wrap-anywhere text-[19px] font-semibold mobile:text-[13px]";
 const liveTotal = "block text-[13px] tabular-nums text-primary mt-[5px] mobile:text-[11px]";
 const poolTitle = "text-[15px] mt-0 mb-3 flex gap-2 items-baseline";
-const poolNote = "text-[#8a8a93] text-[12px] font-medium";
+const poolNote = "text-muted-foreground text-[12px] font-medium";
 const songLink = "text-inherit hover:text-primary hover:underline hover:underline-offset-3 focus-visible:text-primary focus-visible:underline focus-visible:underline-offset-3";
 const tournamentId = CENTURYLINK_TOURNAMENT_ID;
 const apiPath = tournamentApiPath(tournamentId);
@@ -184,7 +185,7 @@ export default function CenturyLinkPage() {
         <button className={cn(s.matchCard, m.status === "live" && s.matchLive, m.id === "G14" && "border-[#d7b24a] bg-[#fffdf6]")} onClick={() => void openMatch(m)}
           aria-label={`${m.id} ${definition.title} ${name(m.a) ?? "待定"} 对 ${name(m.b) ?? "待定"}`}>
           <span className={s.matchMeta}>
-            <span><b className="text-[#3a3a40] font-semibold">{m.id}</b> · {definition.title}</span>
+            <span><b className="text-foreground font-semibold">{m.id}</b> · {definition.title}</span>
             <span className={cn(s.matchStatus, m.status === "live" && "text-primary")}>{m.status === "live" ? <><i className={s.dot} />进行中 · {m.station} 台</> : m.status === "complete" ? "已结束" : m.status === "bye" ? "判定胜负" : "待开始"}</span>
           </span>
           {(["a", "b"] as const).map((side, i) => {
@@ -193,7 +194,7 @@ export default function CenturyLinkPage() {
             <span key={side} className={s.player}>
               <span className={s.seed}>{clSeed(tournament, m[side]) ?? "—"}</span>
               <span className={s.playerProfile}>
-                <span className={cn(s.playerName, !m[side] && "text-[#a0a0a8] text-[12px]", won && s.winnerText, !won && m.status === "complete" && "text-[#797981]", won && m.status === "bye" && "after:content-['_↗'] after:text-[12px]")}>{name(m[side]) ?? sourceLabel(m.id, side)}</span>
+                <span className={cn(s.playerName, !m[side] && "text-muted-foreground text-[12px]", won && s.winnerText, !won && m.status === "complete" && "text-muted-foreground", won && m.status === "bye" && "after:content-['_↗'] after:text-[12px]")}>{name(m[side]) ?? sourceLabel(m.id, side)}</span>
               </span>
               <span className={cn(s.score, won && s.winnerText)}>{m.scores.length ? score[i].toLocaleString() : "—"}</span>
             </span>
@@ -210,7 +211,7 @@ export default function CenturyLinkPage() {
       <header className={s.topbar}>
         <div className={s.topbarInner}>
           <Link className={s.brand} href="/"><span className={s.brandIcon}><Drum size={24} /></span>CenturyLink<span className={s.edition}>世纪汇店赛</span></Link>
-          <span className={s.localTag}>{demo ? "本地 Demo" : "第二届"}</span>
+          <span className={cn(s.localTag, "shrink-0 max-[360px]:hidden")}>{demo ? "本地 Demo" : "第二届"}</span>
           <Link className={s.login} href={loginHref(pagePath + "?manage=1")} aria-label={user ? "账号" : "登录"}>
             <ShieldCheck size={16} /><span>{user ? user.name : "登录"}</span><ArrowUpRight size={15} />
           </Link>
@@ -249,7 +250,7 @@ export default function CenturyLinkPage() {
         </div>
         {connectionError && <div role="alert" className="mt-5 rounded-[10px] p-3.5 bg-[#fff1ef] text-[#ab332a] text-[14px]">{connectionError} <button className="ml-2.5 underline" onClick={() => void load()}>重新连接</button></div>}
         {canManage && view === "bracket" && (
-          <div className="mt-[18px] py-3 px-4 flex items-center gap-[15px] bg-[#e8f1fc] rounded-[10px] text-[#275b95] text-[12px] mobile:text-[11px] mobile:gap-2 mobile:flex-wrap mobile:p-2.5">
+          <div className="mt-[18px] py-3 px-4 flex items-center gap-[15px] bg-soft-blue rounded-[10px] text-taiko-blue text-[12px] mobile:text-[11px] mobile:gap-2 mobile:flex-wrap mobile:p-2.5">
             <span className="flex items-center gap-[7px] mobile:w-full"><ShieldCheck size={16} />{user?.demo ? "演示管理模式" : user?.name}</span>
             <button className="p-[5px] ml-auto mobile:ml-0" onClick={() => { setSelected(null); setManage(!manage); }}>
               {manage ? "正在管理 · 切换为观众" : "观众视图 · 切换为管理"}
@@ -257,7 +258,7 @@ export default function CenturyLinkPage() {
             <button className="p-[5px] mobile:ml-auto" onClick={() => void signOut()}>退出</button>
           </div>
         )}
-        {opening && <div className="fixed z-40 top-20 left-1/2 [transform:translateX(-50%)] py-3.5 px-[22px] rounded-[12px] bg-white shadow-[0_4px_18px_#00000010] text-[14px]" role="status">正在打开比赛…</div>}
+        {opening && <div className="fixed z-40 top-20 left-1/2 [transform:translateX(-50%)] py-3.5 px-[22px] rounded-[12px] bg-card shadow-[0_4px_18px_#00000010] text-[14px]" role="status">正在打开比赛…</div>}
 
         {view === "bracket" && <>
           <section className="mt-7">
@@ -268,26 +269,26 @@ export default function CenturyLinkPage() {
             {live.length ? <div className="grid grid-cols-2 gap-[18px] mobile:gap-3">{live.map(m => {
               const score = matchScore(m);
               return (
-                <button className="border border-[#d6e5fa] bg-white rounded-[18px] text-left overflow-hidden shadow-[0_3px_12px_#00000003] hover:border-[#93b9e6] mobile:rounded-[14px]" onClick={() => void openMatch(m)} key={m.id}>
+                <button className="border border-taiko-blue/30 bg-card rounded-[18px] text-left overflow-hidden shadow-[0_3px_12px_#00000003] hover:border-taiko-blue mobile:rounded-[14px]" onClick={() => void openMatch(m)} key={m.id}>
                   <div className="py-[17px] px-[22px] flex justify-between items-center text-[12px] mobile:p-3">
                     <span className="flex gap-[7px] items-center text-primary font-semibold text-[11px] tracking-[1px] mobile:text-[9px] mobile:tracking-[0.4px]"><i className={s.dot} />LIVE · {m.station} 台</span>
-                    <span className="flex gap-[5px] text-[#74747d] items-center mobile:text-[9px] mobile:[&_svg]:hidden">{m.id} · {clDefinition(m.id).title}<ChevronRight size={16} /></span>
+                    <span className="flex gap-[5px] text-muted-foreground items-center mobile:text-[9px] mobile:[&_svg]:hidden">{m.id} · {clDefinition(m.id).title}<ChevronRight size={16} /></span>
                   </div>
-                  <div className="mx-[22px] mb-1.5 text-[#505866] text-[12px] font-semibold mobile:mx-3 mobile:text-[11px]">{clStages[m.round - 1].name}</div>
+                  <div className="mx-[22px] mb-1.5 text-muted-foreground text-[12px] font-semibold mobile:mx-3 mobile:text-[11px]">{clStages[m.round - 1].name}</div>
                   <div className="grid grid-cols-[1fr_44px_1fr] items-center text-center pt-2.5 px-[18px] pb-[25px] mobile:grid-cols-[1fr_20px_1fr] mobile:pt-2 mobile:px-2 mobile:pb-4">
                     <div className="min-w-0">
                       <span className={avatar}>{name(m.a)?.slice(0, 1).toUpperCase()}</span>
                       <b className={versusName}>{name(m.a)}</b>
                       <span className={liveTotal}>{score[0].toLocaleString()}</span>
                     </div>
-                    <span className="text-[12px] text-[#a5a5ae] font-[550] mobile:text-[9px]">VS</span>
+                    <span className="text-[12px] text-muted-foreground font-[550] mobile:text-[9px]">VS</span>
                     <div className="min-w-0">
                       <span className={avatar}>{name(m.b)?.slice(0, 1).toUpperCase()}</span>
                       <b className={versusName}>{name(m.b)}</b>
                       <span className={liveTotal}>{score[1].toLocaleString()}</span>
                     </div>
                   </div>
-                  <div className="flex gap-2 items-center py-3 px-[22px] border-t border-[#f1f1f4] text-[12px] text-[#6e6e73] [&_svg]:text-[#92929b] mobile:py-2.5 mobile:px-3 mobile:text-[10px] mobile:gap-[5px]">
+                  <div className="flex gap-2 items-center py-3 px-[22px] border-t border-line text-[12px] text-muted-foreground [&_svg]:text-muted-foreground mobile:py-2.5 mobile:px-3 mobile:text-[10px] mobile:gap-[5px]">
                     <Music2 size={15} />
                     <span className="mobile:overflow-hidden mobile:text-ellipsis mobile:whitespace-nowrap">{clSongName(m.scores.find(s => s.a === null || s.b === null)?.songId ?? m.scores.at(-1)?.songId ?? "", catalog)}</span>
                     <span className="ml-auto whitespace-nowrap mobile:hidden mobile:overflow-hidden mobile:text-ellipsis">{m.scores.filter(s => s.a !== null && s.b !== null).length} / {m.scores.length} 首已录分</span>
@@ -302,22 +303,22 @@ export default function CenturyLinkPage() {
               <span className={s.sectionNote}>已完成 {completed} / {clBracket.length} 场</span>
             </div>
             {tournament.ranking.status !== "complete" && loaded && (
-              <p className="-mt-1 mb-[18px] text-[#6e6e73] text-[13px]">排位赛确认后生成首轮对阵：1 号对 8 号、2 号对 7 号、3 号对 6 号、4 号对 5 号。</p>
+              <p className="-mt-1 mb-[18px] text-muted-foreground text-[13px]">排位赛确认后生成首轮对阵：1 号对 8 号、2 号对 7 号、3 号对 6 号、4 号对 5 号。</p>
             )}
             <Tabs value={String(stage)} onValueChange={v => setStage(Number(v) as ClStage)} className={s.mobileRounds}>
               <TabsList className={s.mobileRoundsList}>{clStages.map(st => <TabsTrigger key={st.round} value={String(st.round)} className={s.mobileRoundsTab}>{st.name}</TabsTrigger>)}</TabsList>
             </Tabs>
             <div className="flex flex-col gap-[22px]">
               {clStages.map(st => (
-                <section key={st.round} className={cn("bg-white border border-line rounded-[18px] pt-5 px-[22px] pb-[22px] mobile:hidden mobile:p-4 mobile:rounded-[16px]", stage === st.round && "mobile:block")} aria-label={st.name}>
+                <section key={st.round} className={cn("bg-card border border-line rounded-[18px] pt-5 px-[22px] pb-[22px] mobile:hidden mobile:p-4 mobile:rounded-[16px]", stage === st.round && "mobile:block")} aria-label={st.name}>
                   <header className="flex items-baseline justify-between gap-3 mb-4 flex-wrap">
-                    <h3 className="m-0 text-[17px] flex items-baseline gap-2">{st.name}<small className="text-[#8a8a93] text-[12px] font-medium">{st.en}</small></h3>
-                    <span className="text-[#7a7a82] text-[12px]">{st.summary} · 曲库 {st.pool}</span>
+                    <h3 className="m-0 text-[17px] flex items-baseline gap-2">{st.name}<small className="text-muted-foreground text-[12px] font-medium">{st.en}</small></h3>
+                    <span className="text-muted-foreground text-[12px]">{st.summary} · 曲库 {st.pool}</span>
                   </header>
                   <div className={cn("grid gap-[18px] [align-items:start] mobile:grid-cols-[1fr]", stageColumns[st.round].length === 2 ? "grid-cols-[2fr_1fr]" : "grid-cols-3")}>
                     {stageColumns[st.round].map((column, index) => (
                       <div key={column.title}>
-                        <div className={cn(s.roundTitle, "flex-col items-start gap-0.5")}><span className="font-semibold text-[#3a3a40]">{column.title}</span><small className={s.roundTitleNote}>{column.note}</small></div>
+                        <div className={cn(s.roundTitle, "flex-col items-start gap-0.5")}><span className="font-semibold text-foreground">{column.title}</span><small className={s.roundTitleNote}>{column.note}</small></div>
                         <div className={stageColumns[st.round].length === 2 && index === 0 ? "grid flex-col grid-cols-2 gap-3 mobile:grid-cols-[1fr]" : "flex flex-col gap-3"}>
                           {column.ids.map(id => matchCard(tournament.matches.find(m => m.id === id) ?? initial.matches.find(m => m.id === id)!))}
                         </div>
@@ -336,9 +337,9 @@ export default function CenturyLinkPage() {
           <section className="mt-[30px]" aria-label="最终排名">
             <div className={s.sectionHeading}><h2 className={s.sectionTitle}><Medal size={19} />最终排名</h2><span className={s.sectionNote}>随比赛结果自动更新</span></div>
             <ol className="list-none p-0 m-0 grid grid-cols-4 gap-2.5 mobile:grid-cols-2">{standings.map((row, i) => (
-              <li key={i} className="flex items-center gap-2.5 bg-white border border-line rounded-[12px] py-3 px-3.5 text-[14px] min-w-0">
-                <span className="text-[11px] text-[#7a7a82] whitespace-nowrap">{row.place}</span>
-                <b className={cn("overflow-hidden text-ellipsis whitespace-nowrap text-[#a0a0a8] font-medium", row.playerId && "text-foreground font-semibold")}>{name(row.playerId) ?? "待定"}</b>
+              <li key={i} className="flex items-center gap-2.5 bg-card border border-line rounded-[12px] py-3 px-3.5 text-[14px] min-w-0">
+                <span className="text-[11px] text-muted-foreground whitespace-nowrap">{row.place}</span>
+                <b className={cn("overflow-hidden text-ellipsis whitespace-nowrap text-muted-foreground font-medium", row.playerId && "text-foreground font-semibold")}>{name(row.playerId) ?? "待定"}</b>
                 {i === 0 && row.playerId && <Trophy size={16} className="text-[#c79a1c] ml-auto shrink-0" />}
               </li>
             ))}</ol>
@@ -457,7 +458,7 @@ export default function CenturyLinkPage() {
         )}
 
         {view === "admin" && (
-          <section className="py-[55px] px-[25px] text-center bg-white rounded-[18px] flex items-center flex-col gap-4 mobile:py-[35px] mobile:px-[22px]">
+          <section className="py-[55px] px-[25px] text-center bg-card rounded-[18px] flex items-center flex-col gap-4 mobile:py-[35px] mobile:px-[22px]">
             <ShieldCheck size={34} className="text-primary" />
             <h2>赛事管理</h2>
             {sessionLoading ? <p role="status" className={s.adminText}>正在验证登录状态…</p> : sessionError ? <>
@@ -498,10 +499,7 @@ export default function CenturyLinkPage() {
             />}
           </section>
         )}
-        <footer className={s.footer}>
-          <span className={s.footerBrand}><Drum size={17} />CenturyLink · 第二届世纪汇单店赛</span>
-          <span>{demo ? "曲库与选手为演示数据" : "赛况自动同步"}</span>
-        </footer>
+        <SiteFooter note={demo ? "曲库与选手为演示数据" : "第二届世纪汇单店赛 · 赛况自动同步"} />
       </main>
       <Sheet open={!!selected} onOpenChange={v => !v && setSelected(null)}>
         <SheetContent className={s.matchSheet}>
