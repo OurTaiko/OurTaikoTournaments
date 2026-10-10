@@ -2,6 +2,10 @@
   "id": "hachicats-20260927",
   "archivedAt": "2026-09-29T00:36:48.874Z",
   "source": "https://tournaments.ourtaiko.org/api/tournaments/hachicats/20260927",
+  "organizerNames": [
+    "涵涵",
+    "鵺"
+  ],
   "tournament": {
     "rosters": {
       "siamese": [

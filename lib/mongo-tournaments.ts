@@ -1,3 +1,6 @@
+import { randomUUID } from 'node:crypto';
+import type { TournamentPeople } from './tournament-people';
+import { parseTournamentPeople, tournamentPeopleFromDocument } from './tournament-people';
 import { isDeepStrictEqual } from 'node:util';
 import type { ClientSession, Db, Document, TransactionOptions } from 'mongodb';
 import { MongoServerError } from 'mongodb';
@@ -12,7 +15,7 @@ export async function withTournamentTransaction<T>(db: Db, action: (session: Cli
   try { return await session.withTransaction(() => action(session), transactionOptions); }
   finally { await session.endSession(); }
 }
-type LegacyDocument = { _id: string; revision: number; body: string; schemaVersion?: 1; maintenance?: boolean };
+type LegacyDocument = { organizers?: string[]; admins?: string[]; _id: string; revision: number; body: string; schemaVersion?: 1; maintenance?: boolean };
 export async function readTournamentDocuments(db: Db, id: string, session: ClientSession): Promise<TournamentRow | null> {
   const meta = await db.collection<TournamentDocument | LegacyDocument>('tournaments').findOne({ _id: id }, { session });
   if (!meta) return null;
@@ -34,7 +37,7 @@ function backupDocument({ id, body, ...row }: TournamentBackup) {
 // Changes are computed from a consistent read; a global revision CAS fences every commit.
 // The API may calculate rules outside this transaction: stale revisions cannot commit.
 export function mongoTournamentRepository(getDb: () => Promise<Db>): Pick<Database,
-  'getTournament' | 'createTournament' | 'updateTournament' | 'saveTournamentBackup' | 'updateTournamentWithBackup'> {
+  'getTournament' | 'getTournamentPeople' | 'createTournament' | 'updateTournament' | 'saveTournamentBackup' | 'updateTournamentWithBackup'> {
   async function update(row: TournamentRow, previous: number, backup?: TournamentBackup) {
     if (!Number.isSafeInteger(previous) || previous < 0 || row.revision !== previous + 1)
       throw new Error('Tournament revisions must increase by one');
@@ -51,7 +54,7 @@ export function mongoTournamentRepository(getDb: () => Promise<Db>): Pick<Databa
       if (backup) {
         if (backup.tournamentId !== row.id || backup.revision !== previous ||
             !isDeepStrictEqual(JSON.parse(backup.body), JSON.parse(current.body))) throw new Error('Backup does not match current tournament');
-        await db.collection<Document & { _id: string }>('tournament_backups').insertOne(backupDocument(backup), { session });
+        await db.collection<Document & { _id: string }>('tournament_backups').insertOne({ ...backupDocument(backup), ...tournamentPeopleFromDocument(meta) }, { session });
       }
       if (meta.schemaVersion !== 3) {
         const result = await collection.updateOne({ _id: row.id, revision: previous, maintenance: { $ne: true } },
@@ -89,8 +92,13 @@ export function mongoTournamentRepository(getDb: () => Promise<Db>): Pick<Databa
   }
   return {
     async getTournament(id) { const db = await getDb(); return withTournamentTransaction(db, s => readTournamentDocuments(db, id, s)); },
-    async createTournament(row) {
+    async getTournamentPeople(id) {
+      const meta = await (await getDb()).collection<TournamentDocument>('tournaments').findOne({ _id: id }, { projection: { organizers: 1, admins: 1 } });
+      return meta ? tournamentPeopleFromDocument(meta) : null;
+    },
+    async createTournament(row, people) {
       const candidate = splitTournament(row);
+      if (people) Object.assign(candidate.tournament, parseTournamentPeople(people));
       const db = await getDb();
       try { await withTournamentTransaction(db, async session => {
         const tournaments = db.collection<TournamentDocument>('tournaments');
@@ -108,4 +116,26 @@ export function mongoTournamentRepository(getDb: () => Promise<Db>): Pick<Databa
     updateTournamentWithBackup: (row, previous, backup) => update(row, previous, backup),
     async saveTournamentBackup(row) { await (await getDb()).collection<Document & { _id: string }>('tournament_backups').insertOne(backupDocument(row)); },
   };
+}
+
+/** Explicit maintenance only: back up metadata and CAS the same tournament revision. */
+export async function updateTournamentPeople(db: Db, id: string, previous: number, input: TournamentPeople) {
+  const people = parseTournamentPeople(input);
+  if (!Number.isSafeInteger(previous) || previous < 0 || previous >= Number.MAX_SAFE_INTEGER)
+    throw new Error('Invalid tournament revision');
+  return withTournamentTransaction(db, async session => {
+    const collection = db.collection<TournamentDocument>('tournaments');
+    const meta = await collection.findOne({ _id: id }, { session });
+    if (!meta || meta.revision !== previous) return false;
+    if (meta.schemaVersion !== 3 || meta.maintenance) throw new Error('Tournament is not available for metadata updates');
+    if (isDeepStrictEqual(tournamentPeopleFromDocument(meta), people)) return true;
+    await db.collection<Document & { _id: string }>('tournament_people_backups').insertOne({
+      _id: randomUUID(), tournamentId: id, revision: previous,
+      createdAt: new Date().toISOString(), snapshot: meta,
+    }, { session });
+    const result = await collection.updateOne({ _id: id, schemaVersion: 3, revision: previous, maintenance: { $ne: true } },
+      { $set: { ...people, revision: previous + 1, updatedAt: new Date().toISOString() } }, { session });
+    if (result.matchedCount !== 1) throw new Error('Tournament commit conflict');
+    return true;
+  });
 }

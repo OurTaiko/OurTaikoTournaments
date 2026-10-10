@@ -6,13 +6,10 @@ const definitions = {
   [HACHICATS_TOURNAMENT_ID]: {
     demoStorageId: 'demo',
     format: 'hachicats-single-elimination',
-    authorization: 'existing-hachicats-sso-role',
   },
-  // Explicitly granted: the same SSO client (OurTaikoTournament) admin role manages this event.
   [CENTURYLINK_TOURNAMENT_ID]: {
     demoStorageId: 'demo-centurylink',
     format: 'centurylink-double-elimination',
-    authorization: 'ourtaiko-tournaments-sso-role',
   },
 } as const;
 

@@ -1,8 +1,14 @@
+import { parseTournamentPeople } from './tournament-people';
 import type { Database, SqlDatabase } from './database';
 
 // Keep the existing SQLite/D1 storage available for local demos and rollback.
 export function sqlDatabase(sql: SqlDatabase): Database {
   const songTable = () => sql.prepare('CREATE TABLE IF NOT EXISTS song_libraries (id TEXT PRIMARY KEY NOT NULL, body TEXT NOT NULL)').run();
+  let peopleReady: Promise<unknown> | undefined;
+  const peopleColumn = () => peopleReady ??= (async () => {
+    const column = await sql.prepare("SELECT COUNT(*) AS count FROM pragma_table_info('tournaments') WHERE name = 'people'").first<{ count: number }>();
+    if (!column?.count) await sql.prepare('ALTER TABLE tournaments ADD COLUMN people TEXT').run();
+  })().catch(error => { peopleReady = undefined; throw error; });
   return {
     async getSongLibrary(id) {
       await songTable();
@@ -19,8 +25,15 @@ export function sqlDatabase(sql: SqlDatabase): Database {
     },
     async ping() { await sql.prepare('SELECT 1 AS ok').first(); },
     getTournament: (id) => sql.prepare('SELECT id, revision, body FROM tournaments WHERE id = ?').bind(id).first(),
-    async createTournament(row) {
-      await sql.prepare('INSERT OR IGNORE INTO tournaments (id, revision, body) VALUES (?, ?, ?)').bind(row.id, row.revision, row.body).run();
+    async getTournamentPeople(id) {
+      await peopleColumn();
+      const row = await sql.prepare('SELECT people FROM tournaments WHERE id = ?').bind(id).first<{ people: string | null }>();
+      return row ? parseTournamentPeople(row.people ? JSON.parse(row.people) : { organizers: [], admins: [] }) : null;
+    },
+    async createTournament(row, people) {
+      const encoded = people ? JSON.stringify(parseTournamentPeople(people)) : null;
+      await peopleColumn();
+      await sql.prepare('INSERT OR IGNORE INTO tournaments (id, revision, body, people) VALUES (?, ?, ?, ?)').bind(row.id, row.revision, row.body, encoded).run();
     },
     async updateTournament(row, previous) {
       const result = await sql.prepare('UPDATE tournaments SET body = ?, revision = ? WHERE id = ? AND revision = ?').bind(row.body, row.revision, row.id, previous).run();

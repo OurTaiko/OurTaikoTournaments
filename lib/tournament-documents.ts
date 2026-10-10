@@ -41,6 +41,7 @@ export type TournamentDocument = {
   _id: string; schemaVersion: 3; revision: number; updatedAt: string;
   groups: string[]; participantCount: number; matchCount: number;
   maintenance?: boolean;
+  organizers?: string[]; admins?: string[];
   // Formats other than the original HachiCats layout keep event-level state here.
   format?: 'centurylink'; ranking?: CenturyLink['ranking'];
 };

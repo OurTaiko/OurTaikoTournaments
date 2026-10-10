@@ -2,6 +2,7 @@
 // HachiCats 2026 has finished; the page renders a frozen public snapshot.
 // Regenerate with scripts/archive-tournament.mjs, never by hand.
 import Link from "next/link";
+import { UsersRound } from "lucide-react";
 import SiteFooter from "@/components/site-footer";
 import { useState, useEffect } from "react";
 import {
@@ -177,6 +178,7 @@ export default function Home() {
                 猫鼓旗舰店 · 上海
               </span>
             </div>
+            <p className={cn(s.eventDetail, "mt-3 items-start text-[14px] text-muted-foreground mobile:text-[12px]")}><UsersRound aria-hidden="true" className="mt-1 size-4 shrink-0" /><span className="min-w-0 break-words">主办方：{archive.organizerNames.join("、")}</span></p>
             <Link className={s.galleryButton} href="/hachicats/20260927/gallery">
               <Images size={16} />
               赛事相册

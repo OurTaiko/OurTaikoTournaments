@@ -35,7 +35,8 @@ export function useTournamentAccess(tournamentId: string) {
   // Revalidating the same identity must not unmount an editor and discard unsaved scores.
   // A different identity, role, event, or failed verification immediately loses access.
   const current = user && access?.user.id === user.id && access.user.admin === user.admin &&
-    access.user.demo === user.demo && access.tournamentId === tournamentId ? access : null;
+    access.user.username === user.username && access.user.demo === user.demo &&
+    access.tournamentId === tournamentId ? access : null;
   return {
     canManage: !loading && !error && !!user && !!current?.canManage,
     loading: loading || (!!user && !error && !current),

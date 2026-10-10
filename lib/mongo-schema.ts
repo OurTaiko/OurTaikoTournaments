@@ -5,6 +5,8 @@ const nativeTournament = { $and: [
   { schemaVersion: 3, body: { $exists: false }, rosters: { $exists: false }, matches: { $exists: false } },
   { $jsonSchema: { bsonType: 'object', required: ['_id', 'revision', 'updatedAt', 'groups', 'participantCount', 'matchCount'], properties: {
     _id: { bsonType: 'string' }, revision: { bsonType: ['int', 'long', 'double'], minimum: 0 },
+    organizers: { bsonType: 'array', maxItems: 100, items: { bsonType: 'string', minLength: 1, maxLength: 24, pattern: '^\\S+$' } },
+    admins: { bsonType: 'array', maxItems: 100, items: { bsonType: 'string', minLength: 1, maxLength: 24, pattern: '^\\S+$' } },
     updatedAt: { bsonType: 'string' }, groups: { bsonType: 'array', items: { bsonType: 'string' } },
     participantCount: { bsonType: ['int', 'long', 'double'], minimum: 0 }, matchCount: { bsonType: ['int', 'long', 'double'], minimum: 0 },
   } } },

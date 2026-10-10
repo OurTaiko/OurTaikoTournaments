@@ -46,7 +46,7 @@ OurTaiko 社区的太鼓赛事网站：Next.js 16（App Router，webpack 构建�
 - 用户要求修改功能或部署，不等于要求重置正式赛事。发布前后保留并核对现有比分、选曲、胜者、晋级和 revision。
 - Atlas 赛事为 schemaVersion 3：元信息在 `tournaments`，选手及 rating 在 `tournament_participants`，比赛及比分在 `matches`，`data/players.json` 仅用于首次迁移 / 本地初始化；正式曲库在数据库 `song_libraries`。不要把未公布的指定曲写进源码、文档、测试、种子、日志、提交说明或前端构建产物。已结束赛事的静态存档（`data/archive/`）只能由 `scripts/archive-tournament.mjs` 从公开接口生成，仅含已公布数据，`tests/archive.test.mjs` 负责校验。
 - 未公布的指定曲只通过鉴权后的比赛详情接口返回；公开曲库须按该场比赛的公布状态过滤。保留 `server-only` 边界和前端依赖图测试。旧 Git 历史曾含真实配置，不要据此迁移就把仓库改为公开。
-- 管理员权限来自 SSO 的 HachiCats Application → Client roles。每次管理请求通过内部 web/introspect 验证本应用 token 与稳定用户 ID，读取 isAdmin；不信任旧 ADMIN_USERNAMES、Atlas admins 或前端状态。SSO 失败必须拒绝管理操作。
+- 管理员权限为 SSO HachiCats Application 的 isAdmin、数据库赛事文档的 organizers、admins 的并集。每次管理请求通过内部 web/introspect 验证本应用 token 与稳定用户 ID，读取当前 isAdmin 和 username；配置按 username 精确区分大小写，不按昵称匹配。不信任旧 ADMIN_USERNAMES、Atlas admins 或前端状态。SSO 失败必须拒绝管理操作。进行中赛事的主办方与管理员 username 保存在 tournaments 文档的 organizers / admins，只能服务端读取；已结束赛事在 data/archive/<赛事 ID>.json 的 organizerNames 字段保存公开昵称，不再查 SSO 或数据库。不能公开账号名单。
 - 写入比赛须校验 Origin、管理员和 revision。Atlas 跨集合读取使用 snapshot 事务，写入通过整届 revision CAS 与事务同步提交，不能绕过 repository 单独改比分 / 晋级。重置 / 恢复须先备份，再按当前 revision 条件更新；版本只递增。不要删除生产赛事文档来“重新初始化”。
 - 保持选手 ID、曲目内部 ID 与比赛 ID 稳定。已录分曲目的 `songID` / `difficultyIndex` 映射不能因整理数据被改写。
 - 凭证及原始备份仅保存在被忽略的私有目录或对应平台的 Secret 中。不要输出 `.env`、会话 token、完整私有数据库文档。

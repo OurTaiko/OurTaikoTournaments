@@ -4,7 +4,7 @@ import { withTournamentScope, type TournamentParams } from '@/lib/tournament-api
 
 export function GET(req: Request, { params }: { params: Promise<TournamentParams> }) {
   return withTournamentScope(params, async scope => Response.json(
-    { canManage: canManageTournament(scope, await viewer(req)) },
+    { canManage: await canManageTournament(scope, await viewer(req)) },
     { headers: { 'Cache-Control': 'no-store' } },
   ));
 }

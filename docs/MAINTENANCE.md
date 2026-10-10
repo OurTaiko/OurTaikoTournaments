@@ -1,6 +1,6 @@
 # HachiCats 维护手册
 
-最后核对：2026-09-30。本文以同一提交中的代码为依据；线上环境变量、账号权限和赛事进度在实际维护时重新核对。文档不保存凭证、真实指定曲或当前比分。
+最后核对：2026-10-10。本文以同一提交中的代码为依据；线上环境变量、账号权限和赛事进度在实际维护时重新核对。文档不保存凭证、真实指定曲或当前比分。
 
 ## 1. 生产环境与已知边界
 
@@ -14,7 +14,7 @@
 | 数据库 | MongoDB Atlas `OurTaiko` 集群，数据库 `tournaments`，东京区域 |
 | SSO | `https://sso.ourtaiko.org`，Application 名称 `HachiCats` |
 | 正式回调 | `https://hachicats.ourtaiko.org/api/auth/callback` |
-| 管理员权限来源 | SSO Client roles，选择 HachiCats Application；按稳定用户 ID 授权 |
+| 管理员权限来源 | SSO HachiCats Client role，或数据库赛事文档中的主办方 / 管理员 username |
 
 SSO 继续运行在原来的服务上。HachiCats 原有的 1Panel / Docker 服务已经退役，仓库已移除 Docker 构建、Compose 和忽略配置，以及专用于容器部署的 Next.js standalone 输出与启动命令。现行发布入口是 Vercel 的 `npm run build`；SQLite 适配器仅用于本地演示与测试。Vinext / Cloudflare / D1 路线及其脚本、Drizzle 配置已移除。
 
@@ -22,7 +22,7 @@ SSO 继续运行在原来的服务上。HachiCats 原有的 1Panel / Docker 服�
 
 **已存档（本分支，尚未发布）：** 赛事于 2026-09-27 结束。`/hachicats/20260927` 改为静态页面，从 `data/archive/hachicats-20260927.json` 渲染最终赛果，不再轮询接口，也不再提供管理 tab。存档由 `node scripts/archive-tournament.mjs https://tournaments.ourtaiko.org hachicats 20260927` 从公开接口生成，只含已公布数据；生成前脚本会校验全部场次已公布并结束。Atlas 中的赛事、曲库和备份保持不变，后端接口及管理组件暂时保留。
 
-**尚未实现：** 独立的赛前「公布决赛曲 / 季军曲」按钮、网页曲库编辑器、本站管理员编辑器（管理员在 SSO 后台维护）、备份恢复按钮、单场赛果撤销 / 改判、完整操作审计日志。讨论过这些功能不代表已经上线。
+**尚未实现：** 独立的赛前「公布决赛曲 / 季军曲」按钮、网页曲库编辑器、本站管理员编辑器（网站角色在 SSO 后台维护，赛事角色在 tournaments 元信息中维护）、备份恢复按钮、单场赛果撤销 / 改判、完整操作审计日志。讨论过这些功能不代表已经上线。
 
 ## 2. 前后端如何部署
 
@@ -45,7 +45,8 @@ flowchart LR
 
 | 文件 | 职责 |
 | --- | --- |
-| `app/hachicats/20260927/page.tsx` | 静态赛果存档：赛事总结、赛事对阵、分组曲库（含已公布指定曲）、赛事指南四个 tab 及只读比赛详情；不请求赛事接口 |
+| `app/hachicats/20260927/page.tsx` | 静态赛果存档：赛事总结、赛事对阵、分组曲库（含已公布指定曲）、赛事指南四个 tab 及只读比赛详情；不请求赛况 / 曲库 / 主办方接口，主办方昵称来自静态文件 |
+| `app/centurylink/20261227/page.tsx` | 世纪汇实时赛事页面：赛程、排位、曲库、指南与管理；通过服务端接口读取赛况及权限 |
 | `app/gallery/page.tsx` / `app/hachicats/20260927/gallery/page.tsx` | 赛事相册总览与八猫杯相册（静态页面），见第 15 节 |
 | `data/gallery/*.json` / `scripts/gallery-metadata.mjs` | 各赛事相册清单（照片、描述、章节）及尺寸 / 模糊占位生成脚本 |
 | `lib/gallery.ts` / `components/gallery/` | 读取并解析相册清单；灯箱与横向胶片条 |
@@ -79,6 +80,7 @@ flowchart LR
 | `GET /api/tournaments/hachicats/20260927/songs` | 36 首普通曲及符合公布条件的指定曲；返回 `catalog`、`pools`、刷新状态 |
 | `GET /api/tournaments` | 公开赛事目录，不包含数据键、权限策略或私有曲库 |
 | `GET /api/tournaments/hachicats/20260927/access` | 当前账号对本赛事的 `canManage`，未登录为 false；SSO 故障返回 503 |
+| `GET /api/tournaments/[series]/[edition]/organizers` | 公开主办方昵称，获取失败返回 503，不返回 username 或管理员名单；进行中赛事读取元信息，已结束赛事读取静态昵称 |
 | `GET /api/session` | 当前用户及管理员状态；不返回 token |
 | `GET /api/health` | 数据库 ping；200 不代表 SSO、曲库文档或上游曲名接口一定正常 |
 | `GET /api/tournaments/hachicats/20260927/matches/[id]` | 仅管理员；该场私有草稿、本组曲库、该场指定曲和赛事 revision |
@@ -99,7 +101,7 @@ flowchart LR
 
 | 集合 | 关键字段 / 行为 |
 | --- | --- |
-| `tournaments` | schemaVersion 3 元信息：`_id`、`revision`、`updatedAt`、groups 和记录计数；没有 body |
+| `tournaments` | schemaVersion 3 元信息：`_id`、`revision`、`updatedAt`、groups 和记录计数；organizers / admins 保存 SSO username；没有 body |
 | `tournament_participants` | 原生选手字段；`tournamentId + playerId` 唯一，rosterOrder 保留名册顺序 |
 | `matches` | 原生比赛及 scores / picks / bans；`tournamentId + matchId` 唯一，matchOrder 保留数组顺序 |
 | `song_libraries` | `_id` 同上；`version: 1`；原生对象 `pools`、`designated` |
@@ -158,7 +160,7 @@ node --env-file=.data/migration/atlas.env scripts/migrate-players.mjs --verify
 | `MONGODB_DB` | `tournaments` |
 | `SSO_ISSUER` | `https://sso.ourtaiko.org` |
 | `SSO_CLIENT_ID` / `SSO_CLIENT_SECRET` | 已登记的 HachiCats 客户端；密钥保存为 Secret |
-| SSO 后台的接口权限 | HachiCats 仅开启“允许网站令牌查询和撤销”；游戏、资料查询无需开启 |
+| SSO 后台的接口权限 | 鉴权开启“允许网站令牌查询和撤销”；主办方昵称还需开启资料查询（allow_profiles），游戏接口不需要开启 |
 
 本地 `DATABASE_PATH` 用于 SQLite。`ADMIN_USERNAMES` / `ADMIN_USERNAME` 已不再读取，也没有默认管理员。内部请求复用现有 `SSO_CLIENT_ID` / `SSO_CLIENT_SECRET`，不新增服务凭据。
 
@@ -169,13 +171,46 @@ Atlas 原专用应用账号为 `hachicats_app`；切换数据库名后，应确�
 ### 添加或移除管理员
 
 1. 在 OurTaiko SSO 后台进入 **Client roles**，选择用户及 **HachiCats** Application。
-2. 勾选 **Is admin** 并保存即授权；取消勾选或删除该角色即撤权。不需要修改 Vercel 配置或重新部署。
+2. 勾选 **Is admin** 并保存即获得所有已登记赛事的管理权限；取消勾选或删除只移除网站角色，若仍在某赛事主办方 / 管理员名单内则保留该赛事权限。不需要修改 Vercel 配置或重新部署。
 3. 后端每次管理请求用当前 access token 调用 `/internal/v1/web/introspect`，核对返回 ID 与本站 session 的 sub 一致，并严格读取布尔值 isAdmin。
 4. 已打开页面可刷新以更新按钮显示；服务端角色变化在下一次请求生效，已发出的请求不追溯取消。
 
 SSO Application 所有者、Django 工作人员 / 超级用户、其他 Application 的 ClientRole 均不授予本站管理员权限。
-同名重建账号拥有不同用户 ID，不继承旧角色。OIDC 登录仍使用授权码、state、nonce、PKCE；登录本身不等于管理员。
-SSO 超时、配置错误、格式异常或身份不符均返回 503 并拒绝操作，不回退旧名单；明确的失效 token 清理本站 session。
+SSO 角色按稳定 ID 绑定；赛事名单按 username 绑定，因此同名重新注册会匹配同一配置。改名、注销或交接账号时需同步维护赛事配置。OIDC 登录仍使用授权码、state、nonce、PKCE；登录本身不等于管理员。
+SSO 超时、配置错误、格式异常或身份不符均返回 503 并拒绝操作，配置名单不能绕过有效身份验证；明确的失效 token 清理本站 session。
+
+### 进行中赛事人员与静态存档
+
+进行中赛事的人员数据直接存放于 `tournaments` 文档，两个字段都是 username 数组，例如世纪汇：
+
+```json
+{
+  "_id": "centurylink-20261227",
+  "organizers": ["fei"],
+  "admins": []
+}
+```
+
+`lib/tournament-people.ts` 校验列表，`getTournamentPeople` 仅供服务端读取该场元信息，不加载比赛 / 曲库。旧记录未配置字段时视为空名单；无记录不会被请求自动创建。SQLite 本地适配在 tournaments 增加 people JSON 列，和比赛 body 分开存放。录分、选手编辑和重置不会覆盖人员字段；Atlas 重置备份同时保存人员列表。
+
+每次管理请求先通过 SSO 验证本应用 token、账号状态和稳定 sub，再按 `isAdmin || organizers.includes(username) || admins.includes(username)` 判断。username 精确区分大小写，不按昵称或旧 session 名称匹配。演示身份仅能管理演示作用域。名单变化在下一次请求生效，无需部署；单独移除一种授权不影响另外两种授权。
+
+新建世纪汇时 `init-centurylink.mjs` 仅在创建新文档时初始化主办方 fei；重复执行不能覆盖既有人员。不要为了设置人员重跑初始化。修改已有赛事时，先准备忽略目录下的私有 JSON（`{"organizers":["fei"],"admins":[]}`），使用：
+
+```sh
+node --env-file=<private env> scripts/set-tournament-people.mjs centurylink-20261227 <private people.json>
+node --env-file=<private env> scripts/set-tournament-people.mjs centurylink-20261227 <private people.json> --apply --revision <预检版本>
+```
+
+工具只接受已登记且未存档赛事；默认只读。写入在 snapshot 事务内将原赛事元信息备份到私有 `tournament_people_backups`，通过原 revision CAS 更新 organizers / admins，revision 增加 1；相同配置不写入。比赛、选手、曲库集合不修改；版本冲突或备份失败时全部回滚。该备份仅用于人员元信息恢复，不是整届赛果备份；恢复应以新 revision 再次更新，不能覆盖整个旧文档或倒退版本。
+
+进行中赛事详情通过本赛事 `/organizers` 接口读取 organizer username 后向 SSO 查询昵称；仅昵称可缓存 60 秒，授权名单和 SSO 身份不缓存。缺少昵称、查询故障或未配置凭据时返回 503，页面显示重试，绝不显示 username。需要先部署 SSO 的 usernames lookup 扩展并为本站 Application 开启 allow_profiles，现有凭据保持不变。人员名单不会进入公开赛况、HTML、props 或客户端依赖。
+
+已结束赛事在原 `data/archive/<赛事 ID>.json` 中用顶层 `organizerNames` 数组保存公开昵称（八猫杯为 `["涵涵","鵺"]`），与赛果共用一个存档文件，不保留 username / 管理员名单。八猫杯使用上述两个昵称，页面直接渲染静态文件，不请求人员接口、SSO 或数据库。后续存档工具先从公开 `/organizers` 获取全部昵称，将昵称与赛果写入同一个存档文件；不能在昵称查询失败时用 username 代替。存档脚本不删除数据库，移除正式赛事仍需单独维护流程。
+
+验证：`tests/tournament-access.test.mjs` 使用临时 SQLite 验证数据库名单即时生效、三类权限并集、跨赛事隔离、SSO 故障拒绝与静态昵称零数据库 / SSO 查询；`tests/archive.test.mjs` 验证八猫杯昵称。`tests/mongodb.test.mjs` 仅在随机隔离库验证原生字段创建、私有字段过滤、CAS、事务备份 / 回滚，以及后续赛事写入保留名单。浏览器检查八猫杯桌面与手机静态名义。代码尚未部署。
+
+2026-10-10 已为正式 `centurylink-20261227` 写入 organizers=[fei]、admins=[]，元信息 revision 从 64 增至 65；原元信息已事务备份至 `tournament_people_backups`。更新前后 14 场比赛、8 位选手及 1 份曲库的完整文档摘要一致。名单写入不等于后端已发布，新权限规则仍需部署本次代码。`npm test`、storage / admins 测试、隔离 Atlas 事务测试、typecheck、lint、生产构建均通过；八猫杯 390px 与桌面已验证「涵涵、鵺」。
 
 ### 七天登录与自动续期
 
@@ -324,7 +359,7 @@ node --env-file=.data/private-test-atlas.env tests/mongodb.test.mjs
 | SSO 中设置角色但没权限 | 检查用户稳定 ID、HachiCats Application、Is admin，以及该应用网站令牌权限；不能选择 Fanmade 的角色 |
 | 401 | 会话不存在、过期或 SSO token 无效；重新登录，检查 Cookie 与实际域名 |
 | 403「请求来源不匹配」 | Origin 与 `APP_ORIGIN` 是否完全一致；是否混用 localhost / 127.0.0.1 / Vercel 预览域名 |
-| 403「没有管理权限」 | SSO 返回本应用 isAdmin=false；前端按钮状态不作为权限依据 |
+| 403「没有管理权限」 | SSO 返回本应用 isAdmin=false 且 username 不在本赛事 organizers / admins；前端按钮状态不作为权限依据 |
 | 503「无法验证登录权限」 | 检查 SSO 可用性、现有应用凭据及网站令牌接口权限；不得回退旧管理员名单 |
 | 409 | 新录分窗口：同场 / 参赛选手改变需重开本场；若提示「其他比赛正在更新」，保留输入并稍后重试。旧页面仍按整届版本检查，刷新网页升级；不能强制覆盖 |
 | 503 / 数据库连接失败 | MongoDB Secret、数据库名、账号权限、Atlas 网络规则、服务端日志；不要输出连接串 |
@@ -355,9 +390,9 @@ node --env-file=.data/private-test-atlas.env tests/mongodb.test.mjs
 
 ## 10. 赛事平台与共享登录（本地实现，尚未发布）
 
-`/` 是 OurTaiko 赛事目录，条目定义于 `lib/tournaments.ts`。原八猫杯完整页面迁至 `/hachicats/20260927`，保留五个页签、比赛管理和总结。页面迁移本身不修改数据库；赛事键变更见下方迁移流程，不改变现有 API 的八猫杯归属。新增赛事必须提供独立的数据读取与服务端权限检查；目录条目本身不会创建赛事或授权。
+`/` 是 OurTaiko 赛事目录，条目定义于 `lib/tournaments.ts`。八猫杯页面位于 `/hachicats/20260927`，现为四个页签的静态赛果存档，包含只读比赛详情和总结。页面迁移本身不修改数据库；赛事键变更见下方迁移流程，不改变现有 API 的八猫杯归属。新增赛事必须提供独立的数据读取与服务端权限检查；目录条目本身不会创建赛事或授权。
 
-根布局 `app/layout.tsx` 挂载 `components/auth/sso-context.tsx` 的 `SsoProvider`。所有赛事客户端可调用 `useSSO()` 共享身份、加载 / 错误状态、刷新、SSO 跳转、本地演示登录及退出；页面不再各自查询 session。窗口获得焦点、网络恢复及可见页面每分钟重新验证身份；验证失败保留最近的账号显示并提示重试，管理操作暂停，明确确认会话失效时才清除身份。服务端仍逐请求向 SSO 验证权限。`user.admin` 仍为现有 HachiCats Application 角色，不可用于授权其他赛事。
+根布局 `app/layout.tsx` 挂载 `components/auth/sso-context.tsx` 的 `SsoProvider`。所有赛事客户端可调用 `useSSO()` 共享身份、加载 / 错误状态、刷新、SSO 跳转、本地演示登录及退出；页面不再各自查询 session。窗口获得焦点、网络恢复及可见页面每分钟重新验证身份；验证失败保留最近的账号显示并提示重试，管理操作暂停，明确确认会话失效时才清除身份。服务端仍逐请求向 SSO 验证权限。`user.admin` 仍为现有 HachiCats Application 的网站角色，覆盖已登记赛事；赛事专属权限通过 `/access` 计算。
 
 `/login?returnTo=...` 是通用账号页。安全站内路径随 OIDC attempt 存储，成功返回原路径，失败保留返回目标并显示错误；不接受外部地址或认证 / API 循环目标。原 `hachicats_session` Cookie 保留 `Path=/`，兼容已有会话，token 不进入 React Context。SSO callback 保持 `/api/auth/callback`，无需变更现有注册回调。
 
@@ -370,7 +405,7 @@ node --env-file=.data/private-test-atlas.env tests/mongodb.test.mjs
 - `lib/tournaments.ts` 是公开目录；`lib/tournament-scope.ts` 是服务端允许列表，明确绑定 `hachicats-20260927` → 正式 `hachicats-20260927` / 演示 `demo`。赛事、曲库与重置备份的 `tournamentId` 统一使用该正式 ID；旧键通过事务脚本迁移。
 - `lib/tournament-api/` 保存共用处理器。新动态路由先解析已注册赛事，再将同一 scope 传入赛况读写、曲库读取、权限和重置。未知 ID 返回 404，发生在身份验证、数据库读取及初始化之前。旧 API 固定解析为八猫杯，复用这些处理器，因此旧页面仍可工作且与新页面共用 CAS。
 - 正式数据、名册 ID、比赛 ID、曲目内部 ID、songID / difficultyIndex、revision 和比赛进度均不因部署而改变。原有 hydration / legacy special 引用展示兼容保持不变；读取不写回数据库。
-- 每次管理请求仍实时调用原 SSO introspect；`requireTournamentAdmin` 仅为八猫杯显式接受旧客户端 isAdmin。应用显示名可更改，客户端 ID、Secret、回调和 Cookie 保持兼容。`Viewer.id` 为稳定 SSO 用户 ID；浏览器使用 `/access` 的 `canManage`，不将全局 `user.admin` 当所有赛事的授权。同一账号重新验证权限不会卸载编辑器；失效身份或权限错误会停止显示管理 UI。
+- 每次管理请求仍实时调用原 SSO introspect；`requireTournamentAdmin` 对已登记赛事采用 SSO isAdmin 与本赛事 organizers / admins 的并集。应用显示名可更改，客户端 ID、Secret、回调和 Cookie 保持兼容。`Viewer.id` 为稳定 SSO 用户 ID；浏览器使用 `/access` 的 `canManage`，同时纳入全局 `user.admin` 和数据库赛事名单授权。同一账号重新验证权限不会卸载编辑器；失效身份或权限错误会停止显示管理 UI。
 - 已公布条件、私有比赛鉴权、Origin、matchRevision / revision、CAS 重试、重置前完整备份和版本递增逻辑保持原样。匹配错误 ID 的曲库拒绝服务，不能读取其他赛事配置作为兜底。所有权限和数据错误响应禁止缓存。
 
 验证覆盖：`tests/tournament-scope.test.mjs` 使用临时 SQLite 和伪 SSO / 曲名服务，检查新旧接口响应一致、读前读后赛事和曲库原始字节一致、未知 ID 不发生 I/O、匿名 / 普通用户 / 实时撤权 / SSO 故障 / Origin 拒绝、旧新客户端相互版本冲突，以及相同 match ID 的其他记录不受影响。`tests/songs.test.mjs` 的全部 64 种指定曲公布组合、并发录分、选手管理和重置测试已改为经过实际 scoped route，浏览器依赖测试排除 scope / access / 存储与私有曲库模块。
@@ -479,7 +514,7 @@ Vercel 查询到当前 production 仍为 `b50e1fd`，本次未提交、推送或
 
 - 「比赛曲库」页的曲名链接到 `https://wiki.ourtaiko.org/songs/{songID}`（新标签页打开）；主办方已确认全部曲目公开，32 首普通曲及 6 首指定曲 / 决胜曲在开赛前即显示名称、星级和链接。
 - 未开始（未公布）的比赛不公开 Ban / 选曲 / 比分；排位分数在第一次保存后公开。指定曲与决胜曲不再根据排位状态或是否使用过滤；匿名访问 `/songs` 即可读取全部 38 个曲目条目，重置也不会隐藏曲目。实际曲目映射仍从数据库读取，不进入源码或前端依赖图；八猫杯的公布过滤规则保持原样。
-- 管理权限：在 `lib/tournament-scope.ts` 以 `ourtaiko-tournaments-sso-role` 显式登记，与八猫杯使用同一 SSO Client role（Is admin）。如需分开授权，需要新的角色来源，不能靠前端判断。
+- 管理权限：沿用 SSO 网站管理员（Is admin），并与数据库 `tournaments/centurylink-20261227` 的 organizers / admins 取并集（第 4 节）。
 - 所有写入沿用 Origin、管理员、整届 revision CAS；比赛写入另校验 `matchRevision`，其他场次并发时重放。
 
 ### 日常操作

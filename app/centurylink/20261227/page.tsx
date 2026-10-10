@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import TournamentOrganizers from "@/components/tournament-organizers";
 import SiteFooter from "@/components/site-footer";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -226,6 +227,7 @@ export default function CenturyLinkPage() {
               <span className={s.eventDetail}><CalendarDays size={16} />2026.12.27 · 周日</span>
               <span className={s.eventDetail}><MapPin size={16} />酷玩空间世纪汇店</span>
             </div>
+            <TournamentOrganizers tournamentId={CENTURYLINK_TOURNAMENT_ID} />
             <a className={s.galleryButton} href={pagePath + "/obs"} target="_blank" rel="noreferrer">
               <Radio size={16} />OBS 对阵控件<ArrowUpRight size={15} />
             </a>
