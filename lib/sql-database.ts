@@ -30,8 +30,14 @@ export function sqlDatabase(sql: SqlDatabase): Database {
       await sql.prepare('INSERT INTO sessions (id, body, expires) VALUES (?, ?, ?)').bind(row.id, row.body, row.expires).run();
     },
     getSession: (id, now) => sql.prepare('SELECT id, body, expires FROM sessions WHERE id = ? AND expires > ?').bind(id, now).first(),
-    async deleteSession(id) {
-      return (await sql.prepare('DELETE FROM sessions WHERE id = ?').bind(id).run()).meta.changes > 0;
+    async updateSession(id, previousBody, body, now) {
+      return (await sql.prepare('UPDATE sessions SET body = ? WHERE id = ? AND body = ? AND expires > ?').bind(body, id, previousBody, now).run()).meta.changes > 0;
+    },
+    async deleteSession(id, previousBody) {
+      const query = previousBody === undefined
+        ? sql.prepare('DELETE FROM sessions WHERE id = ?').bind(id)
+        : sql.prepare('DELETE FROM sessions WHERE id = ? AND body = ?').bind(id, previousBody);
+      return (await query.run()).meta.changes > 0;
     },
 
   };

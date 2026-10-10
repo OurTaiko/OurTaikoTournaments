@@ -90,7 +90,14 @@ try {
   await adapters[0].saveSession({ id: 'session', body: 'test-session', expires });
   assert(await adapters[1].getSession('session', expires - 1));
   assert.equal(await adapters[1].getSession('session', expires), null);
+  const winners = await Promise.all(adapters.map((a, i) => a.updateSession('session', 'test-session', 'winner-' + i, expires - 1)));
+  assert.equal(winners.filter(Boolean).length, 1);
+  assert.equal(await adapters[0].deleteSession('session', 'test-session'), false);
+  assert.equal((await adapters[1].getSession('session', expires - 1)).expires, expires);
+  assert.equal((await db.collection('sessions').findOne({_id:'session'})).expiresAt.getTime(), expires);
+  assert.equal(await adapters[0].updateSession('session', 'winner-' + winners.indexOf(true), 'expired', expires), false);
   assert.equal((await Promise.all(adapters.map(a => a.deleteSession('session')))).filter(Boolean).length, 1);
+  assert.equal(await adapters[0].updateSession('session', 'winner-' + winners.indexOf(true), 'resurrect', expires - 1), false);
   // Lost child data must fail closed; never initialize an empty tournament over it.
   await db.collection('matches').deleteOne({ tournamentId: 'other' });
   await assert.rejects(adapters[0].getTournament('other'));
